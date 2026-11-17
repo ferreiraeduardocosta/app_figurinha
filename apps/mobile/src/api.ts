@@ -44,6 +44,19 @@ export interface Perfil {
   pacoteDiario: { disponivel: boolean; proximoEm: string | null };
   garantia: { pacotesParaEpica: number; pacotesParaLendaria: number };
   album: { coladas: number; total: number };
+  pacotesBonus: number;
+  recompensas: { tipo: 'PAGINA' | 'ALBUM'; chave: string; criadaEm: string }[];
+}
+
+export interface RecompensaNova {
+  tipo: 'PAGINA' | 'ALBUM';
+  chave: string;
+  pacotes: number;
+}
+
+export interface ResultadoPacote {
+  figurinhas: FigurinhaSorteada[];
+  recompensas: RecompensaNova[];
 }
 
 export interface ItemAlbum {
@@ -124,8 +137,9 @@ export const api = {
   sair: (token: string) => chamar<void>('POST', '/auth/sair', token),
   perfil: (token: string) => chamar<Perfil>('GET', '/eu', token),
   album: (token: string) => chamar<Album>('GET', '/album', token),
-  abrirPacoteDiario: (token: string) =>
-    chamar<{ figurinhas: FigurinhaSorteada[] }>('POST', '/pacotes/diario', token),
+  abrirPacote: (token: string, origem: 'diario' | 'bonus') => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),
   balcao: (token: string, codigo: string) =>
-    chamar<{ recebida: string; consumidas: Record<string, number> }>('POST', '/balcao', token, { codigo }),
+    chamar<{ recebida: string; consumidas: Record<string, number>; recompensas: RecompensaNova[] }>('POST', '/balcao', token, {
+      codigo,
+    }),
 };

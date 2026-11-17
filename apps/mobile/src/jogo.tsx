@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Album, api, Clube, ErroApi, Figurinha, FigurinhaSorteada, Perfil, Sessao } from './api';
+import { Album, api, Clube, ErroApi, Figurinha, Perfil, RecompensaNova, ResultadoPacote, Sessao } from './api';
 import { apagarSessao, lerSessao, salvarSessao } from './armazenamento';
 
 interface Jogo {
@@ -15,8 +15,8 @@ interface Jogo {
   cadastrar(apelido: string, email: string, senha: string): Promise<void>;
   sair(): Promise<void>;
   recarregar(): Promise<void>;
-  abrirPacoteDiario(): Promise<FigurinhaSorteada[]>;
-  trocarNoBalcao(codigo: string): Promise<void>;
+  abrirPacote(origem: 'diario' | 'bonus'): Promise<ResultadoPacote>;
+  trocarNoBalcao(codigo: string): Promise<RecompensaNova[]>;
   tentarDeNovo(): void;
 }
 
@@ -114,16 +114,17 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       recarregar: async () => {
         if (sessao) await carregarJogador(sessao);
       },
-      abrirPacoteDiario: async () => {
+      abrirPacote: async (origem) => {
         if (!sessao) throw new Error('Sem sessão.');
-        const r = await api.abrirPacoteDiario(sessao.token);
+        const r = await api.abrirPacote(sessao.token, origem);
         await carregarJogador(sessao);
-        return r.figurinhas;
+        return r;
       },
       trocarNoBalcao: async (codigo) => {
         if (!sessao) throw new Error('Sem sessão.');
-        await api.balcao(sessao.token, codigo);
+        const r = await api.balcao(sessao.token, codigo);
         await carregarJogador(sessao);
+        return r.recompensas;
       },
       tentarDeNovo: () => setTentativa((t) => t + 1),
     }),

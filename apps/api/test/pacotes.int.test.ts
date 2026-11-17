@@ -78,7 +78,7 @@ describe.skipIf(!temBanco)('PacotesService (integração)', () => {
   it('troca 4 repetidas por uma figurinha que falta no balcão', async () => {
     await prisma.itemAlbum.create({ data: { usuarioId, figurinhaCodigo: 'TUB-05', quantidade: 5 } });
     const r = await servico.trocarNoBalcao(usuarioId, 'UNI-05');
-    expect(r).toEqual({ recebida: 'UNI-05', consumidas: { 'TUB-05': 4 } });
+    expect(r).toEqual({ recebida: 'UNI-05', consumidas: { 'TUB-05': 4 }, recompensas: [] });
 
     const itens = await prisma.itemAlbum.findMany({ where: { usuarioId }, orderBy: { figurinhaCodigo: 'asc' } });
     expect(itens.map((i) => [i.figurinhaCodigo, i.quantidade])).toEqual([

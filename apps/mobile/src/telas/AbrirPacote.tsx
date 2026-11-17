@@ -1,19 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ErroApi, FigurinhaSorteada } from '../api';
+import { ErroApi, FigurinhaSorteada, RecompensaNova } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Figurinha } from '../componentes/Figurinha';
+import { AvisoRecompensas } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
 import { cores, estiloRaridade } from '../tema';
 
 type Etapa = 'fechado' | 'abrindo' | 'revelando' | 'resumo';
 
-export function AbrirPacote({ aoFechar, aoVerAlbum }: { aoFechar: () => void; aoVerAlbum: (secao?: string) => void }) {
-  const { abrirPacoteDiario, porCodigo, clubes } = useJogo();
+export function AbrirPacote({
+  origem,
+  aoFechar,
+  aoVerAlbum,
+}: {
+  origem: 'diario' | 'bonus';
+  aoFechar: () => void;
+  aoVerAlbum: (secao?: string) => void;
+}) {
+  const { abrirPacote, porCodigo, clubes } = useJogo();
   const { width } = useWindowDimensions();
   const [etapa, setEtapa] = useState<Etapa>('fechado');
   const [sorteadas, setSorteadas] = useState<FigurinhaSorteada[]>([]);
+  const [recompensas, setRecompensas] = useState<RecompensaNova[]>([]);
   const [indice, setIndice] = useState(0);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -33,8 +43,9 @@ export function AbrirPacote({ aoFechar, aoVerAlbum }: { aoFechar: () => void; ao
     animacao.start();
     try {
       // O sorteio é feito no servidor; a animação dura pelo menos 900 ms para dar suspense.
-      const [resultado] = await Promise.all([abrirPacoteDiario(), new Promise((r) => setTimeout(r, 900))]);
-      setSorteadas(resultado);
+      const [resultado] = await Promise.all([abrirPacote(origem), new Promise((r) => setTimeout(r, 900))]);
+      setSorteadas(resultado.figurinhas);
+      setRecompensas(resultado.recompensas);
       setIndice(0);
       setEtapa('revelando');
     } catch (e) {
@@ -83,7 +94,7 @@ export function AbrirPacote({ aoFechar, aoVerAlbum }: { aoFechar: () => void; ao
               <Path d="M4 8 L12 12 L20 8 M12 12 V21" fill="none" stroke="#FBBF24" strokeWidth={1.4} strokeLinejoin="round" />
             </Svg>
             <Text style={estilos.pacoteTitulo}>Liga Aurora</Text>
-            <Text style={estilos.pacoteSub}>Temporada 1 · 5 figurinhas</Text>
+            <Text style={estilos.pacoteSub}>{origem === 'bonus' ? 'Pacote de recompensa' : 'Temporada 1'} · 5 figurinhas</Text>
           </Animated.View>
           {erro && (
             <Text style={estilos.erro} accessibilityRole="alert">
@@ -138,6 +149,7 @@ export function AbrirPacote({ aoFechar, aoVerAlbum }: { aoFechar: () => void; ao
     <View style={estilos.tela}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <Text style={estilos.resumoTitulo}>Pacote aberto!</Text>
+        <AvisoRecompensas recompensas={recompensas} />
         <Text style={estilos.resumoSub}>
           {novas === 0 ? 'Nenhuma figurinha nova desta vez.' : `${novas} ${novas === 1 ? 'figurinha nova' : 'figurinhas novas'} para o álbum.`}
         </Text>

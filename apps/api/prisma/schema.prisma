@@ -35,6 +35,11 @@ enum AcaoAdmin {
   EXCLUIR
 }
 
+enum TipoRecompensa {
+  PAGINA
+  ALBUM
+}
+
 enum OrigemPacote {
   DIARIO
   MOEDAS
@@ -97,7 +102,10 @@ model Usuario {
   pacotesSemLendaria   Int       @default(0)
   /// Último pacote diário grátis aberto (controle de 1 por dia).
   ultimoPacoteDiarioEm DateTime?
+  /// Pacotes ganhos como recompensa e ainda não abertos.
+  pacotesBonus         Int       @default(0)
   album                ItemAlbum[]
+  recompensas          Recompensa[]
   aberturas            AberturaPacote[]
   sessoes              Sessao[]
 }
@@ -152,4 +160,17 @@ model AlteracaoAdmin {
   criadoEm        DateTime  @default(now())
 
   @@index([criadoEm])
+}
+
+/// Recompensa já entregue. A chave única impede entregar a mesma recompensa duas vezes.
+/// PAGINA: chave = nome da seção do álbum. ALBUM: chave = "T1" (temporada).
+model Recompensa {
+  id        String         @id @default(uuid())
+  usuario   Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+  tipo      TipoRecompensa
+  chave     String
+  criadaEm  DateTime       @default(now())
+
+  @@unique([usuarioId, tipo, chave])
 }

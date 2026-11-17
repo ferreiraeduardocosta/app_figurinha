@@ -26,7 +26,7 @@ export default function App() {
 }
 
 type Aba = 'inicio' | 'album';
-type Sobreposta = null | 'pacote' | 'probabilidades';
+type Sobreposta = null | 'diario' | 'bonus' | 'probabilidades';
 
 function Raiz() {
   const { carregando, erroInicial, sessao, perfil, tentarDeNovo } = useJogo();
@@ -49,9 +49,10 @@ function Raiz() {
   if (!sessao) return <Entrar />;
   if (!perfil) return <ActivityIndicator color={cores.destaque} style={{ flex: 1 }} />;
 
-  if (sobreposta === 'pacote') {
+  if (sobreposta === 'diario' || sobreposta === 'bonus') {
     return (
       <AbrirPacote
+        origem={sobreposta}
         aoFechar={() => setSobreposta(null)}
         aoVerAlbum={(secao) => {
           setSecaoAlbum(secao);
@@ -67,7 +68,7 @@ function Raiz() {
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
         {aba === 'inicio' ? (
-          <Inicio aoAbrirPacote={() => setSobreposta('pacote')} aoVerProbabilidades={() => setSobreposta('probabilidades')} />
+          <Inicio aoAbrirPacote={(origem) => setSobreposta(origem)} aoVerProbabilidades={() => setSobreposta('probabilidades')} />
         ) : (
           <Album key={secaoAlbum} secaoInicial={secaoAlbum} />
         )}

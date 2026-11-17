@@ -15,6 +15,12 @@ de jogadores de uma liga de futebol fictícia, a **Liga Aurora**.
 
 Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 
+### Recompensas
+
+| Página completa no balcão | Pacote de recompensa | Troféu do álbum completo |
+|---|---|---|
+| ![Recompensa](docs/capturas/recompensa-02-balcao-recompensa.png) | ![Bônus](docs/capturas/recompensa-04-inicio-bonus.png) | ![Troféu](docs/capturas/recompensa-06-campeao.png) |
+
 ### Painel de administração (`/admin`)
 
 | Resumo e conferência do sorteio | Edição de figurinha |

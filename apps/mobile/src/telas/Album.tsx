@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { ErroApi, Figurinha as DadosFigurinha } from '../api';
+import { ErroApi, Figurinha as DadosFigurinha, RecompensaNova } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Escudo } from '../componentes/Escudo';
 import { EspacoVazio, Figurinha } from '../componentes/Figurinha';
+import { AvisoRecompensas } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
 import { cores, estiloRaridade } from '../tema';
 
@@ -17,7 +18,11 @@ const ROTULO_TIPO: Record<string, string> = {
 };
 
 export function Album({ secaoInicial }: { secaoInicial?: string }) {
-  const { figurinhas, clubes, album } = useJogo();
+  const { figurinhas, clubes, album, perfil } = useJogo();
+  const paginasCompletas = useMemo(
+    () => new Set((perfil?.recompensas ?? []).filter((r) => r.tipo === 'PAGINA').map((r) => r.chave)),
+    [perfil],
+  );
   const { width } = useWindowDimensions();
   const secoes = useMemo(() => [...new Set(figurinhas.map((f) => f.secao))], [figurinhas]);
   const [secao, setSecao] = useState(secaoInicial ?? secoes[0]);
@@ -45,10 +50,15 @@ export function Album({ secaoInicial }: { secaoInicial?: string }) {
               key={s}
               accessibilityRole="tab"
               accessibilityState={{ selected: ativa }}
-              accessibilityLabel={s}
+              accessibilityLabel={paginasCompletas.has(s) ? `${s}, página completa` : s}
               onPress={() => setSecao(s)}
               style={[estilos.aba, ativa && estilos.abaAtiva]}
             >
+              {paginasCompletas.has(s) && (
+                <View style={estilos.selo}>
+                  <Text style={estilos.seloTexto}>✓</Text>
+                </View>
+              )}
               {clube ? (
                 <Escudo sigla={clube.sigla} tamanho={30} />
               ) : (
@@ -64,6 +74,7 @@ export function Album({ secaoInicial }: { secaoInicial?: string }) {
           <Text style={estilos.titulo}>{secao}</Text>
           <Text style={estilos.progresso}>
             {coladasSecao} de {daSecao.length} coladas
+            {paginasCompletas.has(secao) ? ' · página completa, recompensa recebida' : ' · complete a página e ganhe 1 pacote'}
           </Text>
         </View>
         <View style={estilos.grade}>
@@ -100,6 +111,7 @@ function Detalhe({ figurinha: f, aoFechar }: { figurinha: DadosFigurinha; aoFech
   const { width } = useWindowDimensions();
   const [trocando, setTrocando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [ganhas, setGanhas] = useState<RecompensaNova[]>([]);
   const item = album?.itens.find((i) => i.codigo === f.codigo);
   const r = estiloRaridade[f.raridade];
   const custo = album?.balcao.repetidasPorNova ?? 4;
@@ -109,7 +121,7 @@ function Detalhe({ figurinha: f, aoFechar }: { figurinha: DadosFigurinha; aoFech
     setErro(null);
     setTrocando(true);
     try {
-      await trocarNoBalcao(f.codigo);
+      setGanhas(await trocarNoBalcao(f.codigo));
     } catch (e) {
       setErro(e instanceof ErroApi || e instanceof Error ? e.message : 'Não foi possível trocar.');
     } finally {
@@ -126,6 +138,9 @@ function Detalhe({ figurinha: f, aoFechar }: { figurinha: DadosFigurinha; aoFech
           <EspacoVazio codigo={f.codigo} rotulo={r.nome} largura={Math.min(220, width - 120)} />
         )}
 
+        <View style={{ alignSelf: 'stretch' }}>
+          <AvisoRecompensas recompensas={ganhas} />
+        </View>
         <View style={{ alignSelf: 'stretch', gap: 8 }}>
           <Text style={estilos.detalheTitulo}>{item ? f.apelido ?? f.nome : `${f.codigo} · ${r.nome}`}</Text>
           {item ? (
@@ -182,6 +197,19 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
   },
   abaAtiva: { borderColor: cores.destaque, borderWidth: 2, backgroundColor: cores.destaque },
+  selo: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#FBBF24',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  seloTexto: { fontSize: 11, fontWeight: '800', color: cores.tinta },
   abaTexto: { fontSize: 13, fontWeight: '700', color: cores.tinta },
   cabecalho: { gap: 2 },
   titulo: { fontSize: 26, fontWeight: '800', color: cores.tinta, textTransform: 'uppercase' },

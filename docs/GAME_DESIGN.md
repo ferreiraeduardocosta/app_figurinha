@@ -61,7 +61,9 @@ e das Feras (DRA × LEO).
 | Lendas da Liga | 1 ídolo aposentado por clube (LEN-01 a LEN-08) | 8 |
 | Grandes Momentos | 1 lance histórico por clube (MOM-01 a MOM-08) | 8 |
 
-Recompensas: página de clube completa = 1 pacote; álbum completo = figurinha exclusiva.
+Recompensas (entregues pelo servidor, uma única vez cada):
+- **Página completa** (cada clube, Lendas e Momentos: 10 páginas) = 1 pacote de recompensa.
+- **Álbum completo** = Troféu Liga Aurora — Temporada 1, peça exclusiva que não sai em pacote.
 
 ### Raridades
 
@@ -107,6 +109,17 @@ Resultado da simulação (2.000 coleções por cenário):
 
 No cenário recomendado com trocas: ~43 dias sem gastar, ou ~R$ 21 para completar em 30 dias.
 
+Com os 10 pacotes de recompensa por página completa (simulação de 1.500 coleções):
+
+| Cenário | Sem recompensa | Com recompensa |
+|---|---|---|
+| Com trocas (mediana) | 69 pacotes | **59 pacotes** |
+| Sozinho (mediana) | 85 pacotes | **78 pacotes** |
+
+A mediana com trocas ficou 1 pacote abaixo da meta mínima (60). Se o beta mostrar
+o álbum acabando rápido demais, dá para dar a recompensa só para páginas de clube
+(8 em vez de 10) ou subir o balcão para 5→1.
+
 ### Loja (hipóteses para o beta)
 
 | Oferta | Pacotes | Preço |
@@ -145,7 +158,7 @@ No cenário recomendado com trocas: ~43 dias sem gastar, ou ~R$ 21 para completa
 | Fase | Entrega | Marco |
 |---|---|---|
 | 0. Fundação ✅ | Universo, fichas, economia, kit visual | Este documento |
-| 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅; falta arte final e recompensas | Beta fechado |
+| 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; falta arte final e teste em celular | Beta fechado |
 | 2. Trocas | Amigos, propostas, mercado de repetidas, push | Beta aberto |
 | 3. Monetização | Loja IAP (RevenueCat), tela de probabilidades, garantia mínima | v1.0 nas lojas |
 | 4. Engajamento | Rodadas simuladas, missões, ranking, Bafo | Retenção |

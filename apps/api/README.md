@@ -38,10 +38,15 @@ Com login (`Authorization: Bearer <token>`):
 | GET | `/eu` | Perfil: moedas, pacote diário, garantia e progresso |
 | GET | `/album` | Figurinhas do jogador e repetidas por raridade |
 | POST | `/pacotes/diario` | Abre o pacote grátis do dia (1 por dia, meia-noite de Brasília) |
+| POST | `/pacotes/bonus` | Abre um pacote de recompensa (ganho ao completar uma página) |
 | POST | `/balcao` | `{ codigo }`: troca 4 repetidas da mesma raridade pela figurinha |
 
+Abrir pacote e trocar no balcão também devolvem `recompensas`: páginas
+completadas (`PAGINA`, +1 pacote de recompensa cada) e álbum completo
+(`ALBUM`, Troféu Liga Aurora). Cada recompensa é entregue uma única vez.
+
 Erros vêm como `{ codigo, mensagem }` (ex.: `PACOTE_DIARIO_JA_ABERTO`,
-`REPETIDAS_INSUFICIENTES`, `CREDENCIAIS_INVALIDAS`).
+`REPETIDAS_INSUFICIENTES`, `SEM_PACOTE_BONUS`, `CREDENCIAIS_INVALIDAS`).
 
 ## Painel de administração
 

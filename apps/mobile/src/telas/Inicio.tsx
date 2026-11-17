@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Botao } from '../componentes/Botao';
+import { Trofeu } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
 import { cores } from '../tema';
 
@@ -13,7 +14,13 @@ function contagem(ate: string | null): string {
   return `${h}h ${String(m).padStart(2, '0')}min`;
 }
 
-export function Inicio({ aoAbrirPacote, aoVerProbabilidades }: { aoAbrirPacote: () => void; aoVerProbabilidades: () => void }) {
+export function Inicio({
+  aoAbrirPacote,
+  aoVerProbabilidades,
+}: {
+  aoAbrirPacote: (origem: 'diario' | 'bonus') => void;
+  aoVerProbabilidades: () => void;
+}) {
   const { perfil, recarregar, sair } = useJogo();
   const [atualizando, setAtualizando] = useState(false);
   const [, setRelogio] = useState(0);
@@ -27,6 +34,8 @@ export function Inicio({ aoAbrirPacote, aoVerProbabilidades }: { aoAbrirPacote: 
   if (!perfil) return null;
   const { coladas, total } = perfil.album;
   const pct = total ? coladas / total : 0;
+  const campeao = perfil.recompensas.some((r) => r.tipo === 'ALBUM');
+  const paginas = perfil.recompensas.filter((r) => r.tipo === 'PAGINA').length;
 
   return (
     <ScrollView
@@ -71,6 +80,7 @@ export function Inicio({ aoAbrirPacote, aoVerProbabilidades }: { aoAbrirPacote: 
         >
           <View style={[estilos.barraCheia, { width: `${Math.round(pct * 100)}%` }]} />
         </View>
+        <Text style={estilos.paginas}>{paginas} de 10 páginas completas · cada página completa vale 1 pacote</Text>
       </View>
 
       <View style={[estilos.cartao, { backgroundColor: cores.tinta, borderColor: cores.tinta }]}>
@@ -78,13 +88,34 @@ export function Inicio({ aoAbrirPacote, aoVerProbabilidades }: { aoAbrirPacote: 
         <Text style={[estilos.pacoteTitulo]}>Pacote Liga Aurora</Text>
         <Text style={{ color: '#D1D5DB', fontSize: 14, marginBottom: 14 }}>5 figurinhas</Text>
         {perfil.pacoteDiario.disponivel ? (
-          <Botao titulo="Abrir pacote" onPress={aoAbrirPacote} />
+          <Botao titulo="Abrir pacote" onPress={() => aoAbrirPacote('diario')} />
         ) : (
           <View style={estilos.espera}>
             <Text style={estilos.esperaTexto}>Próximo pacote grátis em {contagem(perfil.pacoteDiario.proximoEm)}</Text>
           </View>
         )}
       </View>
+
+      {perfil.pacotesBonus > 0 && (
+        <View style={[estilos.cartao, { borderColor: '#FBBF24', borderWidth: 2 }]}>
+          <Text style={estilos.rotulo}>Pacotes de recompensa</Text>
+          <Text style={estilos.bonusTexto}>
+            Você tem {perfil.pacotesBonus} {perfil.pacotesBonus === 1 ? 'pacote' : 'pacotes'} por completar páginas do álbum.
+          </Text>
+          <Botao titulo="Abrir pacote de recompensa" onPress={() => aoAbrirPacote('bonus')} />
+        </View>
+      )}
+
+      {campeao && (
+        <View style={[estilos.cartao, estilos.trofeu]}>
+          <Trofeu tamanho={88} />
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={[estilos.rotulo, { color: '#FBBF24' }]}>Exclusivo</Text>
+            <Text style={estilos.trofeuTitulo}>Troféu Liga Aurora</Text>
+            <Text style={{ color: '#D1D5DB', fontSize: 14 }}>Álbum da Temporada 1 completo.</Text>
+          </View>
+        </View>
+      )}
 
       <View style={estilos.cartao}>
         <Text style={estilos.rotulo}>Garantia mínima</Text>
@@ -139,6 +170,10 @@ const estilos = StyleSheet.create({
   pacoteTitulo: { fontSize: 26, fontWeight: '800', color: '#FFFFFF', textTransform: 'uppercase' },
   espera: { minHeight: 52, borderRadius: 14, borderWidth: 1, borderColor: '#3F4453', alignItems: 'center', justifyContent: 'center', padding: 12 },
   esperaTexto: { color: '#FFFFFF', fontSize: 15, fontWeight: '600', textAlign: 'center' },
+  paginas: { fontSize: 13, color: cores.apagado, marginTop: 6 },
+  bonusTexto: { fontSize: 15, color: cores.tinta, marginBottom: 10 },
+  trofeu: { backgroundColor: '#17122E', borderColor: '#FBBF24', flexDirection: 'row', alignItems: 'center', gap: 14 },
+  trofeuTitulo: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', textTransform: 'uppercase' },
   link: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   linkTexto: { fontSize: 15, fontWeight: '700', color: cores.destaque },
 });

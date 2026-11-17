@@ -195,6 +195,8 @@ async function telaResumo(alvo) {
       cartao('Pacotes abertos', r.aberturas),
       cartao('Pacotes hoje', r.aberturasHoje),
       cartao('Figurinhas no álbum', r.figurinhasNoCatalogo),
+      cartao('Páginas completadas', r.paginasCompletas),
+      cartao('Álbuns completos', r.albunsCompletos),
     ),
     h('h2', {}, 'Conferência do sorteio'),
     h('p', { class: 'aviso' },

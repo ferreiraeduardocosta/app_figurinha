@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, OnModuleInit, UnprocessableEntityException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { OrigemPacote, Prisma, Usuario } from '@prisma/client';
 import {
   CatalogoPorRaridade,
   ErroRegra,
@@ -13,11 +13,13 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal, proximaMeiaNoite } from './dia';
 import { CONFIG_ECONOMIA } from './economia';
+import { RecompensaNova, entregarRecompensas } from './recompensas';
 import { rngSeguro } from './rng-seguro';
-
 
 export interface ResultadoAbertura {
   figurinhas: (FigurinhaSorteada & { nova: boolean })[];
+  /** Recompensas conquistadas com este pacote (página ou álbum completo). */
+  recompensas: RecompensaNova[];
 }
 
 type Tx = Prisma.TransactionClient;
@@ -47,7 +49,10 @@ export class PacotesService implements OnModuleInit {
 
   /** Perfil do jogador: moedas, pacote diário e progresso no álbum. */
   async perfil(usuarioId: string, agora = new Date()) {
-    const u = await this.prisma.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
+    const u = await this.prisma.usuario.findUniqueOrThrow({
+      where: { id: usuarioId },
+      include: { recompensas: { select: { tipo: true, chave: true, criadaEm: true }, orderBy: { criadaEm: 'asc' } } },
+    });
     const coladas = await this.prisma.itemAlbum.count({ where: { usuarioId, quantidade: { gt: 0 } } });
     const abertoHoje = !!u.ultimoPacoteDiarioEm && diaLocal(u.ultimoPacoteDiarioEm) === diaLocal(agora);
     return {
@@ -61,6 +66,8 @@ export class PacotesService implements OnModuleInit {
         pacotesParaLendaria: CONFIG_ECONOMIA.garantia.lendariaACadaPacotes - u.pacotesSemLendaria,
       },
       album: { coladas, total: await this.prisma.figurinha.count() },
+      pacotesBonus: u.pacotesBonus,
+      recompensas: u.recompensas,
     };
   }
 
@@ -90,55 +97,72 @@ export class PacotesService implements OnModuleInit {
           proximoEm: proximaMeiaNoite(agora),
         });
       }
-
-      const resultado = abrirPacote(
-        this.catalogo,
-        CONFIG_ECONOMIA,
-        { pacotesSemEpica: usuario.pacotesSemEpica, pacotesSemLendaria: usuario.pacotesSemLendaria },
-        this.rng,
-      );
-
-      const jaTinha = new Set(
-        (
-          await tx.itemAlbum.findMany({
-            where: { usuarioId, figurinhaCodigo: { in: resultado.figurinhas.map((f) => f.codigo) } },
-            select: { figurinhaCodigo: true },
-          })
-        ).map((i) => i.figurinhaCodigo),
-      );
-
-      const porCodigo = new Map<string, { quantidade: number; brilhantes: number }>();
-      for (const f of resultado.figurinhas) {
-        const atual = porCodigo.get(f.codigo) ?? { quantidade: 0, brilhantes: 0 };
-        atual.quantidade += 1;
-        if (f.brilhante) atual.brilhantes += 1;
-        porCodigo.set(f.codigo, atual);
-      }
-      for (const [codigo, { quantidade, brilhantes }] of porCodigo) {
-        await tx.itemAlbum.upsert({
-          where: { usuarioId_figurinhaCodigo: { usuarioId, figurinhaCodigo: codigo } },
-          create: { usuarioId, figurinhaCodigo: codigo, quantidade, brilhantes },
-          update: { quantidade: { increment: quantidade }, brilhantes: { increment: brilhantes } },
-        });
-      }
-
-      await tx.usuario.update({
-        where: { id: usuarioId },
-        data: { ...resultado.estado, ultimoPacoteDiarioEm: agora },
-      });
-      await tx.aberturaPacote.create({
-        data: { usuarioId, origem: 'DIARIO', resultado: resultado.figurinhas as unknown as Prisma.InputJsonValue },
-      });
-
-      const vistas = new Set<string>();
-      return {
-        figurinhas: resultado.figurinhas.map((f) => {
-          const nova = !jaTinha.has(f.codigo) && !vistas.has(f.codigo);
-          vistas.add(f.codigo);
-          return { ...f, nova };
-        }),
-      };
+      await tx.usuario.update({ where: { id: usuarioId }, data: { ultimoPacoteDiarioEm: agora } });
+      return this.abrir(tx, usuario, 'DIARIO');
     });
+  }
+
+  /** Abre um pacote ganho como recompensa (página completa). */
+  async abrirPacoteBonus(usuarioId: string): Promise<ResultadoAbertura> {
+    return this.prisma.$transaction(async (tx) => {
+      const usuario = await this.travarUsuario(tx, usuarioId);
+      if (usuario.pacotesBonus < 1) {
+        throw new ConflictException({ codigo: 'SEM_PACOTE_BONUS', mensagem: 'Você não tem pacotes de recompensa.' });
+      }
+      await tx.usuario.update({ where: { id: usuarioId }, data: { pacotesBonus: { decrement: 1 } } });
+      return this.abrir(tx, usuario, 'RECOMPENSA');
+    });
+  }
+
+  /** Sorteia, cola no álbum, atualiza a garantia, registra a abertura e entrega recompensas. */
+  private async abrir(tx: Tx, usuario: Usuario, origem: OrigemPacote): Promise<ResultadoAbertura> {
+    const usuarioId = usuario.id;
+    const resultado = abrirPacote(
+      this.catalogo,
+      CONFIG_ECONOMIA,
+      { pacotesSemEpica: usuario.pacotesSemEpica, pacotesSemLendaria: usuario.pacotesSemLendaria },
+      this.rng,
+    );
+
+    const jaTinha = new Set(
+      (
+        await tx.itemAlbum.findMany({
+          where: { usuarioId, figurinhaCodigo: { in: resultado.figurinhas.map((f) => f.codigo) } },
+          select: { figurinhaCodigo: true },
+        })
+      ).map((i) => i.figurinhaCodigo),
+    );
+
+    const porCodigo = new Map<string, { quantidade: number; brilhantes: number }>();
+    for (const f of resultado.figurinhas) {
+      const atual = porCodigo.get(f.codigo) ?? { quantidade: 0, brilhantes: 0 };
+      atual.quantidade += 1;
+      if (f.brilhante) atual.brilhantes += 1;
+      porCodigo.set(f.codigo, atual);
+    }
+    for (const [codigo, { quantidade, brilhantes }] of porCodigo) {
+      await tx.itemAlbum.upsert({
+        where: { usuarioId_figurinhaCodigo: { usuarioId, figurinhaCodigo: codigo } },
+        create: { usuarioId, figurinhaCodigo: codigo, quantidade, brilhantes },
+        update: { quantidade: { increment: quantidade }, brilhantes: { increment: brilhantes } },
+      });
+    }
+
+    await tx.usuario.update({ where: { id: usuarioId }, data: resultado.estado });
+    await tx.aberturaPacote.create({
+      data: { usuarioId, origem, resultado: resultado.figurinhas as unknown as Prisma.InputJsonValue },
+    });
+    const recompensas = await entregarRecompensas(tx, usuarioId);
+
+    const vistas = new Set<string>();
+    return {
+      figurinhas: resultado.figurinhas.map((f) => {
+        const nova = !jaTinha.has(f.codigo) && !vistas.has(f.codigo);
+        vistas.add(f.codigo);
+        return { ...f, nova };
+      }),
+      recompensas,
+    };
   }
 
   async trocarNoBalcao(usuarioId: string, codigoDesejado: string) {
@@ -164,7 +188,8 @@ export class PacotesService implements OnModuleInit {
         });
       }
       await tx.itemAlbum.create({ data: { usuarioId, figurinhaCodigo: codigoDesejado, quantidade: 1 } });
-      return { recebida: codigoDesejado, consumidas: troca.consumidas };
+      const recompensas = await entregarRecompensas(tx, usuarioId);
+      return { recebida: codigoDesejado, consumidas: troca.consumidas, recompensas };
     });
   }
 

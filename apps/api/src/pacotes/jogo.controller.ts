@@ -26,6 +26,12 @@ export class JogoController {
     return this.pacotes.abrirPacoteDiario(u.id);
   }
 
+  @Post('pacotes/bonus')
+  @HttpCode(200)
+  abrirBonus(@UsuarioAtual() u: UsuarioAutenticado) {
+    return this.pacotes.abrirPacoteBonus(u.id);
+  }
+
   @Post('balcao')
   @HttpCode(200)
   balcao(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
