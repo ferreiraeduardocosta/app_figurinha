@@ -158,7 +158,7 @@ o álbum acabando rápido demais, dá para dar a recompensa só para páginas de
 | Fase | Entrega | Marco |
 |---|---|---|
 | 0. Fundação ✅ | Universo, fichas, economia, kit visual | Este documento |
-| 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; falta arte final e teste em celular | Beta fechado |
+| 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; **pendente: arte final ([docs/arte](arte/README.md)) e teste em celular** | Beta fechado |
 | 2. Trocas | Amigos, propostas, mercado de repetidas, push | Beta aberto |
 | 3. Monetização | Loja IAP (RevenueCat), tela de probabilidades, garantia mínima | v1.0 nas lojas |
 | 4. Engajamento | Rodadas simuladas, missões, ranking, Bafo | Retenção |
