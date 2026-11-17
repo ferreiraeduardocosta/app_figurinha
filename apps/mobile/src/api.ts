@@ -45,8 +45,36 @@ export interface Perfil {
   garantia: { pacotesParaEpica: number; pacotesParaLendaria: number };
   album: { coladas: number; total: number };
   pacotesBonus: number;
+  pacotesComprados: number;
+  nascimentoInformado: boolean;
   recompensas: { tipo: 'PAGINA' | 'ALBUM'; chave: string; criadaEm: string }[];
   pendencias: { pedidosAmizade: number; trocasRecebidas: number };
+}
+
+export type OrigemPacote = 'diario' | 'bonus' | 'comprado' | 'moedas';
+
+export interface Oferta {
+  id: string;
+  nome: string;
+  pacotes: number;
+  moedasBonus: number;
+  precoReferenciaCentavos: number;
+  destaque: string | null;
+}
+
+export interface Loja {
+  moeda: string;
+  ofertas: Oferta[];
+  pacoteComMoedas: { preco: number };
+  moedas: number;
+  compras: {
+    podeComprar: boolean;
+    motivo: 'INFORME_NASCIMENTO' | 'IDADE_MINIMA' | 'LIMITE_MENSAL' | null;
+    idade: number | null;
+    gastoMesCentavos: number;
+    limiteMesCentavos: number | null;
+  };
+  modoTeste: boolean;
 }
 
 export interface UsuarioResumo {
@@ -181,7 +209,12 @@ export const api = {
   sair: (token: string) => chamar<void>('POST', '/auth/sair', token),
   perfil: (token: string) => chamar<Perfil>('GET', '/eu', token),
   album: (token: string) => chamar<Album>('GET', '/album', token),
-  abrirPacote: (token: string, origem: 'diario' | 'bonus') => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),
+  abrirPacote: (token: string, origem: OrigemPacote) => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),
+  loja: (token: string) => chamar<Loja>('GET', '/loja', token),
+  informarNascimento: (token: string, dataNascimento: string) =>
+    chamar<Loja>('POST', '/loja/nascimento', token, { dataNascimento }),
+  compraTeste: (token: string, produtoId: string) =>
+    chamar<{ compra: { pacotes: number; moedas: number } }>('POST', '/loja/compra-teste', token, { produtoId }),
   amigos: (token: string) => chamar<ListaAmigos>('GET', '/amigos', token),
   pedirAmizade: (token: string, apelido: string) =>
     chamar<{ status: 'PENDENTE' | 'ACEITA'; usuario: UsuarioResumo }>('POST', '/amigos', token, { apelido }),

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import type { OrigemPacote } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Trofeu } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
@@ -18,7 +19,7 @@ export function Inicio({
   aoAbrirPacote,
   aoVerProbabilidades,
 }: {
-  aoAbrirPacote: (origem: 'diario' | 'bonus') => void;
+  aoAbrirPacote: (origem: OrigemPacote) => void;
   aoVerProbabilidades: () => void;
 }) {
   const { perfil, recarregar, sair } = useJogo();
@@ -95,6 +96,16 @@ export function Inicio({
           </View>
         )}
       </View>
+
+      {perfil.pacotesComprados > 0 && (
+        <View style={estilos.cartao}>
+          <Text style={estilos.rotulo}>Pacotes comprados</Text>
+          <Text style={estilos.bonusTexto}>
+            Você tem {perfil.pacotesComprados} {perfil.pacotesComprados === 1 ? 'pacote' : 'pacotes'} para abrir.
+          </Text>
+          <Botao titulo="Abrir pacote comprado" onPress={() => aoAbrirPacote('comprado')} />
+        </View>
+      )}
 
       {perfil.pacotesBonus > 0 && (
         <View style={[estilos.cartao, { borderColor: '#FBBF24', borderWidth: 2 }]}>

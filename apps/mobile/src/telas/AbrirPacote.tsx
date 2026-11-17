@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ErroApi, FigurinhaSorteada, RecompensaNova } from '../api';
+import { ErroApi, FigurinhaSorteada, OrigemPacote, RecompensaNova } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Figurinha } from '../componentes/Figurinha';
 import { AvisoRecompensas } from '../componentes/Recompensas';
@@ -15,7 +15,7 @@ export function AbrirPacote({
   aoFechar,
   aoVerAlbum,
 }: {
-  origem: 'diario' | 'bonus';
+  origem: OrigemPacote;
   aoFechar: () => void;
   aoVerAlbum: (secao?: string) => void;
 }) {
@@ -94,7 +94,7 @@ export function AbrirPacote({
               <Path d="M4 8 L12 12 L20 8 M12 12 V21" fill="none" stroke="#FBBF24" strokeWidth={1.4} strokeLinejoin="round" />
             </Svg>
             <Text style={estilos.pacoteTitulo}>Liga Aurora</Text>
-            <Text style={estilos.pacoteSub}>{origem === 'bonus' ? 'Pacote de recompensa' : 'Temporada 1'} · 5 figurinhas</Text>
+            <Text style={estilos.pacoteSub}>{{ diario: 'Pacote grátis do dia', bonus: 'Pacote de recompensa', comprado: 'Pacote comprado', moedas: 'Pago com moedas' }[origem]} · 5 figurinhas</Text>
           </Animated.View>
           {erro && (
             <Text style={estilos.erro} accessibilityRole="alert">

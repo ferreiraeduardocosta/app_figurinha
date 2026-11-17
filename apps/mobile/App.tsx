@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import type { OrigemPacote } from './src/api';
 import { Botao } from './src/componentes/Botao';
 import { JogoProvider, useJogo } from './src/jogo';
 import { AbrirPacote } from './src/telas/AbrirPacote';
 import { Album } from './src/telas/Album';
 import { Entrar } from './src/telas/Entrar';
 import { Inicio } from './src/telas/Inicio';
+import { Loja } from './src/telas/Loja';
 import { Probabilidades } from './src/telas/Probabilidades';
 import { Trocas } from './src/telas/Trocas';
 import { cores } from './src/tema';
@@ -26,8 +28,8 @@ export default function App() {
   );
 }
 
-type Aba = 'inicio' | 'album' | 'trocas';
-type Sobreposta = null | 'diario' | 'bonus' | 'probabilidades';
+type Aba = 'inicio' | 'album' | 'trocas' | 'loja';
+type Sobreposta = null | OrigemPacote | 'probabilidades';
 
 function Raiz() {
   const { carregando, erroInicial, sessao, perfil, tentarDeNovo, recarregar } = useJogo();
@@ -62,7 +64,7 @@ function Raiz() {
   if (!sessao) return <Entrar />;
   if (!perfil) return <ActivityIndicator color={cores.destaque} style={{ flex: 1 }} />;
 
-  if (sobreposta === 'diario' || sobreposta === 'bonus') {
+  if (sobreposta && sobreposta !== 'probabilidades') {
     return (
       <AbrirPacote
         origem={sobreposta}
@@ -85,6 +87,9 @@ function Raiz() {
         )}
         {aba === 'album' && <Album key={secaoAlbum} secaoInicial={secaoAlbum} />}
         {aba === 'trocas' && <Trocas />}
+        {aba === 'loja' && (
+          <Loja aoAbrirPacote={(origem) => setSobreposta(origem)} aoVerProbabilidades={() => setSobreposta('probabilidades')} />
+        )}
       </View>
       <View style={estilos.abas} accessibilityRole="tablist">
         <BotaoAba rotulo="Início" ativa={aba === 'inicio'} onPress={() => setAba('inicio')} icone="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z" />
@@ -100,6 +105,12 @@ function Raiz() {
           onPress={() => setAba('trocas')}
           icone="M4 8 H18 L14 4 M20 16 H6 L10 20"
           contador={perfil.pendencias.trocasRecebidas + perfil.pendencias.pedidosAmizade}
+        />
+        <BotaoAba
+          rotulo="Loja"
+          ativa={aba === 'loja'}
+          onPress={() => setAba('loja')}
+          icone="M5 8 H19 L18 20 H6 Z M9 8 V6 C9 4 10.5 3 12 3 C13.5 3 15 4 15 6 V8"
         />
       </View>
     </View>

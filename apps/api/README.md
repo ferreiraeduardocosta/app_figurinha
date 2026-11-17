@@ -40,6 +40,11 @@ Com login (`Authorization: Bearer <token>`):
 | POST | `/pacotes/diario` | Abre o pacote grátis do dia (1 por dia, meia-noite de Brasília) |
 | POST | `/pacotes/bonus` | Abre um pacote de recompensa (ganho ao completar uma página) |
 | POST | `/balcao` | `{ codigo }`: troca 4 repetidas da mesma raridade pela figurinha |
+| POST | `/pacotes/comprado` | Abre um pacote comprado na loja |
+| POST | `/pacotes/moedas` | Compra e abre um pacote por 100 moedas |
+| GET | `/loja` | Ofertas, moedas e se o jogador pode comprar (e por quê) |
+| POST | `/loja/nascimento` | `{ dataNascimento: "AAAA-MM-DD" }`, uma única vez |
+| POST | `/loja/compra-teste` | `{ produtoId }`: compra simulada (só com `LOJA_TESTE=1`) |
 | GET | `/amigos` | Amigos, pedidos recebidos e enviados |
 | POST | `/amigos` | `{ apelido }`: pede amizade (aceita na hora se o outro já tinha pedido) |
 | POST | `/amigos/:id/aceitar` | Aceita um pedido recebido |
@@ -54,6 +59,9 @@ Com login (`Authorization: Bearer <token>`):
 Abrir pacote e trocar no balcão também devolvem `recompensas`: páginas
 completadas (`PAGINA`, +1 pacote de recompensa cada) e álbum completo
 (`ALBUM`, Troféu Liga Aurora). Cada recompensa é entregue uma única vez.
+
+Sem login, com segredo próprio: `POST /loja/webhook/revenuecat` (avisos de compra
+e reembolso do RevenueCat; ver [docs/LOJA.md](../../docs/LOJA.md)).
 
 Erros vêm como `{ codigo, mensagem }` (ex.: `PACOTE_DIARIO_JA_ABERTO`,
 `REPETIDAS_INSUFICIENTES`, `SEM_PACOTE_BONUS`, `CREDENCIAIS_INVALIDAS`).

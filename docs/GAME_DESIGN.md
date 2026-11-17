@@ -129,6 +129,9 @@ o álbum acabando rápido demais, dá para dar a recompensa só para páginas de
 | Caixa | 15 (+100 moedas) | R$ 19,90 |
 | Baú do Colecionador | 40 (+400 moedas) | R$ 44,90 |
 
+Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
+[LOJA.md](LOJA.md).
+
 ### Regras obrigatórias
 
 - **Sorteio sempre no servidor.** O app só mostra o resultado.
@@ -166,6 +169,6 @@ o álbum acabando rápido demais, dá para dar a recompensa só para páginas de
 | 0. Fundação ✅ | Universo, fichas, economia, kit visual | Este documento |
 | 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; **pendente: arte final ([docs/arte](arte/README.md)) e teste em celular** | Beta fechado |
 | 2. Trocas 🟡 | Amigos ✅, propostas e contrapropostas ✅, mercado de repetidas ✅, antifraude ✅; falta notificação push | Beta aberto |
-| 3. Monetização | Loja IAP (RevenueCat), tela de probabilidades, garantia mínima | v1.0 nas lojas |
+| 3. Monetização 🟡 | Loja ✅, pacote com moedas ✅, crédito pelo servidor e estorno ✅, limites para menores ✅, probabilidades ✅, garantia mínima ✅; **pendente: ligar o RevenueCat e as lojas ([docs/LOJA.md](LOJA.md))** | v1.0 nas lojas |
 | 4. Engajamento | Rodadas simuladas, missões, ranking, Bafo | Retenção |
 | 5. Escala | Observabilidade, testes de carga, analytics, i18n | Crescimento |

@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Album, api, Clube, ErroApi, Figurinha, Perfil, RecompensaNova, ResultadoPacote, Sessao } from './api';
+import { Album, api, Clube, ErroApi, Figurinha, OrigemPacote, Perfil, RecompensaNova, ResultadoPacote, Sessao } from './api';
 import { apagarSessao, lerSessao, salvarSessao } from './armazenamento';
 
 interface Jogo {
@@ -15,7 +15,7 @@ interface Jogo {
   cadastrar(apelido: string, email: string, senha: string): Promise<void>;
   sair(): Promise<void>;
   recarregar(): Promise<void>;
-  abrirPacote(origem: 'diario' | 'bonus'): Promise<ResultadoPacote>;
+  abrirPacote(origem: OrigemPacote): Promise<ResultadoPacote>;
   trocarNoBalcao(codigo: string): Promise<RecompensaNova[]>;
   tentarDeNovo(): void;
 }

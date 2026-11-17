@@ -27,6 +27,14 @@ Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 |---|---|---|
 | ![Mercado](docs/capturas/trocas-03-ana-mercado.png) | ![Montando](docs/capturas/trocas-04-ana-montando.png) | ![Recebida](docs/capturas/trocas-06-bia-recebida.png) |
 
+### Loja
+
+| Ofertas e probabilidades | Compra concluída | Limite para menores |
+|---|---|---|
+| ![Loja](docs/capturas/loja-02-loja-ofertas.png) | ![Compra](docs/capturas/loja-03-compra-ok.png) | ![Menor](docs/capturas/loja-06-loja-jovem.png) |
+
+Pagamentos reais ainda não estão ligados: veja [docs/LOJA.md](docs/LOJA.md).
+
 ### Painel de administração (`/admin`)
 
 | Resumo e conferência do sorteio | Edição de figurinha |
@@ -37,6 +45,8 @@ Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): universo, álbum, raridades, economia, trocas e fases.
 - [`docs/planilhas/`](docs/planilhas/): fichas das 136 figurinhas e simulação da economia.
+- [`docs/LOJA.md`](docs/LOJA.md): loja, pagamentos e o que falta para cobrar de verdade.
+- [`docs/arte/`](docs/arte/): plano e prompts da arte final (pendente).
 - [`data/temporada1/`](data/temporada1/): os mesmos dados em JSON, usados como seed do banco.
 - [`tools/planilhas/`](tools/planilhas/): scripts que geram as planilhas e o JSON.
 
