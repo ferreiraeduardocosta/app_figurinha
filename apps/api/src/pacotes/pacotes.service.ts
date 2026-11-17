@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, OnModuleInit, UnprocessableEntityException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, OnModuleInit, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   CatalogoPorRaridade,
@@ -11,12 +11,10 @@ import {
   trocarNoBalcao,
 } from '@liga-aurora/regras';
 import { PrismaService } from '../prisma/prisma.service';
+import { diaLocal, proximaMeiaNoite } from './dia';
 import { CONFIG_ECONOMIA } from './economia';
 import { rngSeguro } from './rng-seguro';
 
-/** O "dia" do pacote grátis vira à meia-noite de Brasília. */
-const FUSO = 'America/Sao_Paulo';
-const diaLocal = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSO }).format(d);
 
 export interface ResultadoAbertura {
   figurinhas: (FigurinhaSorteada & { nova: boolean })[];
@@ -35,11 +33,46 @@ export class PacotesService implements OnModuleInit {
   /** Gerador do sorteio. Só os testes trocam por um gerador com semente. */
   rng: Rng = rngSeguro;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
     const lista = await this.prisma.figurinha.findMany({ select: { codigo: true, raridade: true } });
     this.catalogo = indexarCatalogo(lista, CONFIG_ECONOMIA);
+  }
+
+  /** Perfil do jogador: moedas, pacote diário e progresso no álbum. */
+  async perfil(usuarioId: string, agora = new Date()) {
+    const u = await this.prisma.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
+    const coladas = await this.prisma.itemAlbum.count({ where: { usuarioId, quantidade: { gt: 0 } } });
+    const abertoHoje = !!u.ultimoPacoteDiarioEm && diaLocal(u.ultimoPacoteDiarioEm) === diaLocal(agora);
+    return {
+      id: u.id,
+      apelido: u.apelido,
+      email: u.email,
+      moedas: u.moedas,
+      pacoteDiario: { disponivel: !abertoHoje, proximoEm: abertoHoje ? proximaMeiaNoite(agora) : null },
+      garantia: {
+        pacotesParaEpica: CONFIG_ECONOMIA.garantia.epicaACadaPacotes - u.pacotesSemEpica,
+        pacotesParaLendaria: CONFIG_ECONOMIA.garantia.lendariaACadaPacotes - u.pacotesSemLendaria,
+      },
+      album: { coladas, total: await this.prisma.figurinha.count() },
+    };
+  }
+
+  /** Itens do álbum do jogador e repetidas disponíveis por raridade (para o balcão). */
+  async album(usuarioId: string) {
+    const itens = await this.prisma.itemAlbum.findMany({
+      where: { usuarioId, quantidade: { gt: 0 } },
+      select: { figurinhaCodigo: true, quantidade: true, brilhantes: true, figurinha: { select: { raridade: true } } },
+      orderBy: { figurinha: { numero: 'asc' } },
+    });
+    const repetidas = { COMUM: 0, RARA: 0, EPICA: 0, LENDARIA: 0 };
+    for (const i of itens) repetidas[i.figurinha.raridade] += i.quantidade - 1;
+    return {
+      itens: itens.map((i) => ({ codigo: i.figurinhaCodigo, quantidade: i.quantidade, brilhantes: i.brilhantes })),
+      repetidas,
+      balcao: CONFIG_ECONOMIA.balcao,
+    };
   }
 
   async abrirPacoteDiario(usuarioId: string, agora = new Date()): Promise<ResultadoAbertura> {
@@ -49,6 +82,7 @@ export class PacotesService implements OnModuleInit {
         throw new ConflictException({
           codigo: 'PACOTE_DIARIO_JA_ABERTO',
           mensagem: 'O pacote grátis de hoje já foi aberto. Volte amanhã!',
+          proximoEm: proximaMeiaNoite(agora),
         });
       }
 

@@ -1,11 +1,11 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import { Controller, Get, Inject, NotFoundException, Param } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { probabilidadesPublicas } from '../pacotes/economia';
 
 /** Dados públicos do álbum: não exigem login. */
 @Controller()
 export class CatalogoController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   @Get('clubes')
   listarClubes() {

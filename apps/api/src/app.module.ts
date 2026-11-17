@@ -1,4 +1,7 @@
 import { Controller, Get, Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
 import { PacotesModule } from './pacotes/pacotes.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -12,7 +15,14 @@ class SaudeController {
 }
 
 @Module({
-  imports: [PrismaModule, PacotesModule],
+  imports: [
+    // Limite geral por IP: 120 pedidos por minuto (rotas de login têm limite próprio, menor).
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    PrismaModule,
+    AuthModule,
+    PacotesModule,
+  ],
   controllers: [SaudeController, CatalogoController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

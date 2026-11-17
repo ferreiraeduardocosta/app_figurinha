@@ -1,5 +1,7 @@
-import { randomInt } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { Rng } from '@liga-aurora/regras';
 
-/** Gerador criptográfico usado no sorteio de verdade. */
-export const rngSeguro: Rng = () => randomInt(0, 2 ** 48) / 2 ** 48;
+const DOIS_A_48 = 2 ** 48;
+
+/** Gerador criptográfico usado no sorteio de verdade: 48 bits aleatórios em [0, 1). */
+export const rngSeguro: Rng = () => randomBytes(6).readUIntBE(0, 6) / DOIS_A_48;

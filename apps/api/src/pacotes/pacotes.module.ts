@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
+import { JogoController } from './jogo.controller';
 import { PacotesService } from './pacotes.service';
 
-// Os endpoints de pacote e balcão entram junto com a autenticação (próximo passo da Fase 1).
 @Module({
+  controllers: [JogoController],
   providers: [PacotesService],
   exports: [PacotesService],
 })

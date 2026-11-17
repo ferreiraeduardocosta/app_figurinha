@@ -75,6 +75,9 @@ model Figurinha {
 model Usuario {
   id                   String    @id @default(uuid())
   apelido              String    @unique
+  email                String    @unique
+  /// scrypt: "scrypt$N$r$p$sal$hash" (ver src/auth/senha.ts)
+  senhaHash            String
   criadoEm             DateTime  @default(now())
   moedas               Int       @default(0)
   /// Contadores da garantia mínima (ver packages/regras).
@@ -84,6 +87,19 @@ model Usuario {
   ultimoPacoteDiarioEm DateTime?
   album                ItemAlbum[]
   aberturas            AberturaPacote[]
+  sessoes              Sessao[]
+}
+
+/// Sessão de login. Guardamos só o hash SHA-256 do token; o token em si fica no aparelho.
+model Sessao {
+  id        String   @id @default(uuid())
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+  tokenHash String   @unique
+  criadaEm  DateTime @default(now())
+  expiraEm  DateTime
+
+  @@index([usuarioId])
 }
 
 /// Uma figurinha no álbum do jogador. quantidade = primeira cópia + repetidas.

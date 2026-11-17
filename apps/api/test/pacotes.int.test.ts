@@ -28,7 +28,10 @@ describe.skipIf(!temBanco)('PacotesService (integração)', () => {
 
   beforeEach(async () => {
     servico.rng = rngComSemente(123);
-    const u = await prisma.usuario.create({ data: { apelido: `teste-${Date.now()}-${Math.random()}` } });
+    const sufixo = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+    const u = await prisma.usuario.create({
+      data: { apelido: `teste-${sufixo}`, email: `teste-${sufixo}@exemplo.com`, senhaHash: 'x' },
+    });
     usuarioId = u.id;
   });
 
