@@ -12,6 +12,7 @@ import {
 } from '@liga-aurora/regras';
 import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal, proximaMeiaNoite } from './dia';
+import { CONFIG_LOJA } from '../loja/loja.service';
 import { CONFIG_ECONOMIA } from './economia';
 import { RecompensaNova, entregarRecompensas } from './recompensas';
 import { rngSeguro } from './rng-seguro';
@@ -72,6 +73,8 @@ export class PacotesService implements OnModuleInit {
       },
       album: { coladas, total: await this.prisma.figurinha.count() },
       pacotesBonus: u.pacotesBonus,
+      pacotesComprados: u.pacotesComprados,
+      nascimentoInformado: !!u.dataNascimento,
       recompensas: u.recompensas,
       // Para o selo de "novidades" na aba de trocas.
       pendencias: {
@@ -115,14 +118,43 @@ export class PacotesService implements OnModuleInit {
   }
 
   /** Abre um pacote ganho como recompensa (página completa). */
-  async abrirPacoteBonus(usuarioId: string): Promise<ResultadoAbertura> {
+  abrirPacoteBonus(usuarioId: string): Promise<ResultadoAbertura> {
+    return this.abrirDeSaldo(usuarioId, 'pacotesBonus', 'RECOMPENSA', 'SEM_PACOTE_BONUS', 'Você não tem pacotes de recompensa.');
+  }
+
+  /** Abre um pacote comprado na loja. */
+  abrirPacoteComprado(usuarioId: string): Promise<ResultadoAbertura> {
+    return this.abrirDeSaldo(usuarioId, 'pacotesComprados', 'COMPRA', 'SEM_PACOTE_COMPRADO', 'Você não tem pacotes comprados.');
+  }
+
+  /** Compra e abre um pacote pagando com moedas do jogo. */
+  async abrirPacoteComMoedas(usuarioId: string): Promise<ResultadoAbertura> {
+    const preco = CONFIG_LOJA.pacoteComMoedas.preco;
     return this.prisma.$transaction(async (tx) => {
       const usuario = await this.travarUsuario(tx, usuarioId);
-      if (usuario.pacotesBonus < 1) {
-        throw new ConflictException({ codigo: 'SEM_PACOTE_BONUS', mensagem: 'Você não tem pacotes de recompensa.' });
+      if (usuario.moedas < preco) {
+        throw new ConflictException({
+          codigo: 'MOEDAS_INSUFICIENTES',
+          mensagem: `O pacote custa ${preco} moedas e você tem ${usuario.moedas}.`,
+        });
       }
-      await tx.usuario.update({ where: { id: usuarioId }, data: { pacotesBonus: { decrement: 1 } } });
-      return this.abrir(tx, usuario, 'RECOMPENSA');
+      await tx.usuario.update({ where: { id: usuarioId }, data: { moedas: { decrement: preco } } });
+      return this.abrir(tx, usuario, 'MOEDAS');
+    });
+  }
+
+  private async abrirDeSaldo(
+    usuarioId: string,
+    campo: 'pacotesBonus' | 'pacotesComprados',
+    origem: OrigemPacote,
+    codigoErro: string,
+    mensagem: string,
+  ): Promise<ResultadoAbertura> {
+    return this.prisma.$transaction(async (tx) => {
+      const usuario = await this.travarUsuario(tx, usuarioId);
+      if (usuario[campo] < 1) throw new ConflictException({ codigo: codigoErro, mensagem });
+      await tx.usuario.update({ where: { id: usuarioId }, data: { [campo]: { decrement: 1 } } });
+      return this.abrir(tx, usuario, origem);
     });
   }
 

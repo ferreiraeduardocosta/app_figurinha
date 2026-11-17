@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
+import { LojaModule } from './loja/loja.module';
 import { PacotesModule } from './pacotes/pacotes.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SocialModule } from './social/social.module';
@@ -25,6 +26,7 @@ class SaudeController {
     PacotesModule,
     AdminModule,
     SocialModule,
+    LojaModule,
   ],
   controllers: [SaudeController, CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

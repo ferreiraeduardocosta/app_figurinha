@@ -1,0 +1,15 @@
+{
+  "moeda": "BRL",
+  "pacoteComMoedas": { "preco": 100 },
+  "ofertas": [
+    { "id": "pacote_1", "nome": "Avulso", "pacotes": 1, "moedasBonus": 0, "precoReferenciaCentavos": 190, "destaque": null },
+    { "id": "pacote_6", "nome": "Sacola", "pacotes": 6, "moedasBonus": 0, "precoReferenciaCentavos": 990, "destaque": null },
+    { "id": "pacote_15", "nome": "Caixa", "pacotes": 15, "moedasBonus": 100, "precoReferenciaCentavos": 1990, "destaque": "Mais vendida" },
+    { "id": "pacote_40", "nome": "Baú do Colecionador", "pacotes": 40, "moedasBonus": 400, "precoReferenciaCentavos": 4490, "destaque": "Melhor preço por pacote" }
+  ],
+  "limites": {
+    "idadeMinimaParaComprar": 13,
+    "maioridade": 18,
+    "limiteMensalMenorCentavos": 5000
+  }
+}

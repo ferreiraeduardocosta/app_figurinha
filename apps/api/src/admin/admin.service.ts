@@ -24,7 +24,7 @@ export class AdminService {
   /** Números gerais e conferência do sorteio: raridades que saíram x probabilidades configuradas. */
   async resumo(agora = new Date()) {
     const inicioDoDia = new Date(`${diaLocal(agora)}T00:00:00-03:00`);
-    const [usuarios, admins, aberturas, aberturasHoje, figurinhas, paginasCompletas, albunsCompletos, trocasFeitas, sorteio] = await Promise.all([
+    const [usuarios, admins, aberturas, aberturasHoje, figurinhas, paginasCompletas, albunsCompletos, trocasFeitas, vendas, estornos, sorteio] = await Promise.all([
       this.prisma.usuario.count(),
       this.prisma.usuario.count({ where: { papel: 'ADMIN' } }),
       this.prisma.aberturaPacote.count(),
@@ -33,6 +33,12 @@ export class AdminService {
       this.prisma.recompensa.count({ where: { tipo: 'PAGINA' } }),
       this.prisma.recompensa.count({ where: { tipo: 'ALBUM' } }),
       this.prisma.troca.count({ where: { status: 'ACEITA' } }),
+      this.prisma.compra.aggregate({
+        where: { status: 'CREDITADA', loja: { not: 'TESTE' }, moeda: 'BRL' },
+        _sum: { valorCentavos: true },
+        _count: true,
+      }),
+      this.prisma.compra.count({ where: { status: 'ESTORNADA', loja: { not: 'TESTE' } } }),
       this.prisma.$queryRaw<{ raridade: Raridade; garantida: boolean; brilhante: boolean; total: bigint }[]>`
         SELECT f->>'raridade' AS raridade,
                (f->>'garantida')::boolean AS garantida,
@@ -63,6 +69,8 @@ export class AdminService {
       paginasCompletas,
       albunsCompletos,
       trocasFeitas,
+      // Receita bruta registrada (antes da comissão das lojas); compras de teste não entram.
+      loja: { compras: vendas._count, receitaCentavos: vendas._sum.valorCentavos ?? 0, estornos },
       sorteio: {
         figurinhasSorteadas: totalFigurinhas,
         garantidas,

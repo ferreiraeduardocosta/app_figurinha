@@ -55,6 +55,17 @@ enum StatusTroca {
   FALHOU
 }
 
+enum LojaCompra {
+  APP_STORE
+  PLAY_STORE
+  TESTE
+}
+
+enum StatusCompra {
+  CREDITADA
+  ESTORNADA
+}
+
 enum OrigemPacote {
   DIARIO
   MOEDAS
@@ -119,10 +130,15 @@ model Usuario {
   ultimoPacoteDiarioEm DateTime?
   /// Pacotes ganhos como recompensa e ainda não abertos.
   pacotesBonus         Int       @default(0)
+  /// Pacotes comprados na loja e ainda não abertos.
+  pacotesComprados     Int       @default(0)
+  /// Declarada pelo jogador antes da primeira compra (limites para menores).
+  dataNascimento       DateTime? @db.Date
   album                ItemAlbum[]
   recompensas          Recompensa[]
   aberturas            AberturaPacote[]
   sessoes              Sessao[]
+  compras              Compra[]
   amizadesEnviadas     Amizade[] @relation("AmizadeSolicitante")
   amizadesRecebidas    Amizade[] @relation("AmizadeDestinatario")
   trocasPropostas      Troca[]   @relation("TrocaProposta")
@@ -229,4 +245,25 @@ model Troca {
 
   @@index([paraId, status])
   @@index([propostaPorId, status])
+}
+
+/// Compra creditada pelo servidor (vinda do RevenueCat ou do modo de teste).
+/// transacaoId é único: a mesma compra nunca é creditada duas vezes.
+model Compra {
+  id            String       @id @default(uuid())
+  usuario       Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  usuarioId     String
+  produtoId     String
+  loja          LojaCompra
+  ambiente      String
+  transacaoId   String       @unique
+  pacotes       Int
+  moedas        Int
+  valorCentavos Int?
+  moeda         String?
+  status        StatusCompra @default(CREDITADA)
+  criadaEm      DateTime     @default(now())
+  estornadaEm   DateTime?
+
+  @@index([usuarioId, criadaEm])
 }
