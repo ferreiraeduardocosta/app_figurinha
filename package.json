@@ -6,7 +6,7 @@
     "apps/api"
   ],
   "scripts": {
-    "test": "npm run test --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present"
+    "test": "npm run build --workspace packages/regras && npm run test --workspaces --if-present",
+    "build": "npm run build --workspace packages/regras && npm run build --workspace apps/api"
   }
 }
