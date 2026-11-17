@@ -1,0 +1,146 @@
+[
+  {
+    "sigla": "TUB",
+    "nome": "Tubarões do Cais",
+    "cidade": "Porto Alvo",
+    "inspiracao": "Sul-americana",
+    "cores": [
+      "#0B2545",
+      "#FFFFFF"
+    ],
+    "estadio": "Arena do Farol",
+    "capacidade": 42000,
+    "mascote": "Dentão, o tubarão",
+    "rival": "Atlético Serrano",
+    "classico": "Clássico do Litoral",
+    "lema": "Do cais ninguém passa!",
+    "identidade": "Clube operário fundado por estivadores do porto. Torcida fanática que canta os 90 minutos.",
+    "tecnico": "Rui Calado"
+  },
+  {
+    "sigla": "SER",
+    "nome": "Atlético Serrano",
+    "cidade": "Alto da Serra",
+    "inspiracao": "Sul-americana",
+    "cores": [
+      "#1B5E20",
+      "#D4A017"
+    ],
+    "estadio": "Estádio do Pico",
+    "capacidade": 28000,
+    "mascote": "Tufão, o condor",
+    "rival": "Tubarões do Cais",
+    "classico": "Clássico do Litoral",
+    "lema": "Aqui o ar é rarefeito, a garra não.",
+    "identidade": "Time da montanha, joga a 2.800 m de altitude. Visitantes sentem falta de ar no segundo tempo.",
+    "tecnico": "Gregório Benítez"
+  },
+  {
+    "sigla": "UNI",
+    "nome": "Unidos da Várzea",
+    "cidade": "Vila Esperança",
+    "inspiracao": "Sul-americana",
+    "cores": [
+      "#C62828",
+      "#FFFFFF"
+    ],
+    "estadio": "Campo do Povo",
+    "capacidade": 18000,
+    "mascote": "Pipoca, o vira-lata",
+    "rival": "Real Capitólio",
+    "classico": "Clássico do Povo",
+    "lema": "Da terra ao topo!",
+    "identidade": "Nasceu num campo de terra e subiu à elite. O azarão que todo mundo adota como segundo time.",
+    "tecnico": "Geraldo Bastião"
+  },
+  {
+    "sigla": "CAP",
+    "nome": "Real Capitólio",
+    "cidade": "Capitólio",
+    "inspiracao": "Europeia",
+    "cores": [
+      "#4A148C",
+      "#B0BEC5"
+    ],
+    "estadio": "Palácio Imperial",
+    "capacidade": 70000,
+    "mascote": "Majestade, a águia",
+    "rival": "Unidos da Várzea",
+    "classico": "Clássico do Povo",
+    "lema": "Nascidos para vencer.",
+    "identidade": "O clube mais rico da liga, cheio de estrelas contratadas. Amado por uns, odiado por muitos.",
+    "tecnico": "Lorenzo Vane"
+  },
+  {
+    "sigla": "POL",
+    "nome": "Estrela Polar FC",
+    "cidade": "Nordhavn",
+    "inspiracao": "Europeia",
+    "cores": [
+      "#81D4FA",
+      "#FFFFFF"
+    ],
+    "estadio": "Estádio Polar",
+    "capacidade": 35000,
+    "mascote": "Nevasca, o urso-polar",
+    "rival": "Sporting Vento Norte",
+    "classico": "Clássico do Gelo",
+    "lema": "Calma, frio e gol.",
+    "identidade": "Time tático e frio. Joga com teto retrátil fechado nos meses de neve.",
+    "tecnico": "Henrik Aasland"
+  },
+  {
+    "sigla": "VEN",
+    "nome": "Sporting Vento Norte",
+    "cidade": "Ventura",
+    "inspiracao": "Europeia",
+    "cores": [
+      "#EF6C00",
+      "#111111"
+    ],
+    "estadio": "Estádio dos Ventos",
+    "capacidade": 30000,
+    "mascote": "Rajada, o falcão",
+    "rival": "Estrela Polar FC",
+    "classico": "Clássico do Gelo",
+    "lema": "O futuro sopra aqui.",
+    "identidade": "A melhor base da liga. Elenco com média de 21 anos e vários jovens prodígios.",
+    "tecnico": "Ivo Valadares"
+  },
+  {
+    "sigla": "DRA",
+    "nome": "Dragões de Kaiyo",
+    "cidade": "Kaiyo",
+    "inspiracao": "Asiática",
+    "cores": [
+      "#B71C1C",
+      "#111111"
+    ],
+    "estadio": "Templo do Dragão",
+    "capacidade": 50000,
+    "mascote": "Kazan, o dragão",
+    "rival": "Leões da Savana Alta",
+    "classico": "Clássico das Feras",
+    "lema": "Velocidade é disciplina.",
+    "identidade": "Time rápido e disciplinado. Treinos às 6h e respeito absoluto à hierarquia.",
+    "tecnico": "Haruo Midori"
+  },
+  {
+    "sigla": "LEO",
+    "nome": "Leões da Savana Alta",
+    "cidade": "Nkosi",
+    "inspiracao": "Africana",
+    "cores": [
+      "#F9A825",
+      "#1B4332"
+    ],
+    "estadio": "Estádio Juba Dourada",
+    "capacidade": 45000,
+    "mascote": "Zuri, o leão",
+    "rival": "Dragões de Kaiyo",
+    "classico": "Clássico das Feras",
+    "lema": "Ouça o rugido!",
+    "identidade": "Força física e explosão. Maior campeão da copa da liga, com torcida que toca tambores o jogo todo.",
+    "tecnico": "Themba Okoro"
+  }
+]

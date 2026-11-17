@@ -1,0 +1,24 @@
+{
+  "temporada": 1,
+  "figurinhasPorPacote": 5,
+  "probabilidades": {
+    "COMUM": 0.62,
+    "RARA": 0.25,
+    "EPICA": 0.1,
+    "LENDARIA": 0.03
+  },
+  "garantia": {
+    "epicaACadaPacotes": 10,
+    "lendariaACadaPacotes": 30
+  },
+  "balcao": {
+    "repetidasPorNova": 4
+  },
+  "brilhante": {
+    "chancePorFigurinha": 0.05
+  },
+  "moedas": {
+    "precoPacote": 100,
+    "pacotesGratisPorDia": 1
+  }
+}
