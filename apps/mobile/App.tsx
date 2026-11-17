@@ -1,123 +1,106 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
-
-const cores = {
-  fundo: '#F4F1EA',
-  tinta: '#161A26',
-  apagado: '#5B6070',
-  borda: '#E3DED3',
-  destaque: '#0B7A75',
-};
-
-interface Clube {
-  sigla: string;
-  nome: string;
-  cidade: string;
-  corPrimaria: string;
-  corSecundaria: string;
-  mascote: string;
-  lema: string;
-}
-
-type Estado = { tipo: 'carregando' } | { tipo: 'erro'; mensagem: string } | { tipo: 'ok'; clubes: Clube[] };
+import { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+import { Botao } from './src/componentes/Botao';
+import { JogoProvider, useJogo } from './src/jogo';
+import { AbrirPacote } from './src/telas/AbrirPacote';
+import { Album } from './src/telas/Album';
+import { Entrar } from './src/telas/Entrar';
+import { Inicio } from './src/telas/Inicio';
+import { Probabilidades } from './src/telas/Probabilidades';
+import { cores } from './src/tema';
 
 export default function App() {
-  const [estado, setEstado] = useState<Estado>({ tipo: 'carregando' });
+  return (
+    <SafeAreaProvider>
+      <JogoProvider>
+        <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}>
+          <StatusBar style="dark" />
+          <Raiz />
+        </SafeAreaView>
+      </JogoProvider>
+    </SafeAreaProvider>
+  );
+}
 
-  const carregar = useCallback(async () => {
-    setEstado({ tipo: 'carregando' });
-    try {
-      const resposta = await fetch(`${API_URL}/clubes`);
-      if (!resposta.ok) throw new Error(`A API respondeu ${resposta.status}.`);
-      setEstado({ tipo: 'ok', clubes: await resposta.json() });
-    } catch (e) {
-      setEstado({ tipo: 'erro', mensagem: e instanceof Error ? e.message : 'Erro desconhecido.' });
-    }
-  }, []);
+type Aba = 'inicio' | 'album';
+type Sobreposta = null | 'pacote' | 'probabilidades';
 
-  useEffect(() => {
-    carregar();
-  }, [carregar]);
+function Raiz() {
+  const { carregando, erroInicial, sessao, perfil, tentarDeNovo } = useJogo();
+  const [aba, setAba] = useState<Aba>('inicio');
+  const [sobreposta, setSobreposta] = useState<Sobreposta>(null);
+  const [secaoAlbum, setSecaoAlbum] = useState<string | undefined>(undefined);
+
+  if (carregando) {
+    return <ActivityIndicator color={cores.destaque} style={{ flex: 1 }} accessibilityLabel="Carregando" />;
+  }
+  if (erroInicial) {
+    return (
+      <View style={estilos.erro}>
+        <Text style={estilos.erroTitulo}>Sem conexão com o servidor</Text>
+        <Text style={estilos.erroTexto}>{erroInicial}</Text>
+        <Botao titulo="Tentar de novo" onPress={tentarDeNovo} />
+      </View>
+    );
+  }
+  if (!sessao) return <Entrar />;
+  if (!perfil) return <ActivityIndicator color={cores.destaque} style={{ flex: 1 }} />;
+
+  if (sobreposta === 'pacote') {
+    return (
+      <AbrirPacote
+        aoFechar={() => setSobreposta(null)}
+        aoVerAlbum={(secao) => {
+          setSecaoAlbum(secao);
+          setSobreposta(null);
+          setAba('album');
+        }}
+      />
+    );
+  }
+  if (sobreposta === 'probabilidades') return <Probabilidades aoVoltar={() => setSobreposta(null)} />;
 
   return (
-    <SafeAreaView style={estilos.tela}>
-      <StatusBar style="dark" />
-      <Text style={estilos.sobretitulo}>Liga Aurora · Temporada 1</Text>
-      <Text style={estilos.titulo}>Os 8 clubes</Text>
-
-      {estado.tipo === 'carregando' && <ActivityIndicator color={cores.destaque} style={{ marginTop: 32 }} />}
-
-      {estado.tipo === 'erro' && (
-        <View style={estilos.erro}>
-          <Text style={estilos.erroTexto}>Não foi possível falar com a API em {API_URL}.</Text>
-          <Text style={estilos.apagado}>{estado.mensagem}</Text>
-          <Pressable accessibilityRole="button" onPress={carregar} style={estilos.botao}>
-            <Text style={estilos.botaoTexto}>Tentar de novo</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {estado.tipo === 'ok' && (
-        <FlatList
-          data={estado.clubes}
-          keyExtractor={(c) => c.sigla}
-          contentContainerStyle={{ gap: 12, paddingBottom: 24 }}
-          renderItem={({ item }) => (
-            <View style={estilos.cartao}>
-              <View style={[estilos.faixa, { backgroundColor: item.corPrimaria }]}>
-                <View style={[estilos.faixaMetade, { backgroundColor: item.corSecundaria }]} />
-              </View>
-              <View style={{ padding: 14, gap: 4 }}>
-                <Text style={estilos.nomeClube}>{item.nome}</Text>
-                <Text style={estilos.apagado}>
-                  {item.cidade} · {item.sigla} · {item.mascote}
-                </Text>
-                <Text style={estilos.lema}>“{item.lema}”</Text>
-              </View>
-            </View>
-          )}
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        {aba === 'inicio' ? (
+          <Inicio aoAbrirPacote={() => setSobreposta('pacote')} aoVerProbabilidades={() => setSobreposta('probabilidades')} />
+        ) : (
+          <Album key={secaoAlbum} secaoInicial={secaoAlbum} />
+        )}
+      </View>
+      <View style={estilos.abas} accessibilityRole="tablist">
+        <BotaoAba rotulo="Início" ativa={aba === 'inicio'} onPress={() => setAba('inicio')} icone="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z" />
+        <BotaoAba
+          rotulo="Álbum"
+          ativa={aba === 'album'}
+          onPress={() => setAba('album')}
+          icone="M4 5 C7 4 10 4 12 6 C14 4 17 4 20 5 V19 C17 18 14 18 12 20 C10 18 7 18 4 19 Z M12 6 V20"
         />
-      )}
-    </SafeAreaView>
+      </View>
+    </View>
+  );
+}
+
+function BotaoAba({ rotulo, ativa, onPress, icone }: { rotulo: string; ativa: boolean; onPress: () => void; icone: string }) {
+  const cor = ativa ? cores.destaque : cores.apagado;
+  return (
+    <Pressable accessibilityRole="tab" accessibilityState={{ selected: ativa }} onPress={onPress} style={estilos.aba}>
+      <Svg width={24} height={24} viewBox="0 0 24 24">
+        <Path d={icone} fill="none" stroke={cor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+      <Text style={{ color: cor, fontSize: 12, fontWeight: ativa ? '700' : '600' }}>{rotulo}</Text>
+    </Pressable>
   );
 }
 
 const estilos = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: cores.fundo, paddingHorizontal: 16 },
-  sobretitulo: {
-    marginTop: 16,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    color: cores.destaque,
-  },
-  titulo: { fontSize: 34, fontWeight: '800', color: cores.tinta, textTransform: 'uppercase', marginBottom: 16 },
-  cartao: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: cores.borda,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  faixa: { height: 8, flexDirection: 'row', justifyContent: 'flex-end' },
-  faixaMetade: { width: '50%' },
-  nomeClube: { fontSize: 20, fontWeight: '800', color: cores.tinta, textTransform: 'uppercase' },
-  apagado: { fontSize: 13, color: cores.apagado },
-  lema: { fontSize: 14, fontStyle: 'italic', color: cores.tinta, marginTop: 4 },
-  erro: { marginTop: 24, gap: 8 },
-  erroTexto: { fontSize: 15, fontWeight: '600', color: cores.tinta },
-  botao: {
-    marginTop: 8,
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: cores.destaque,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  botaoTexto: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  erro: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
+  erroTitulo: { fontSize: 22, fontWeight: '800', color: cores.tinta },
+  erroTexto: { fontSize: 15, color: cores.apagado, marginBottom: 8 },
+  abas: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: cores.borda, backgroundColor: '#FFFFFF' },
+  aba: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 3 },
 });

@@ -3,6 +3,18 @@
 App mobile (Android e iOS) para abrir pacotes, colecionar e trocar figurinhas
 de jogadores de uma liga de futebol fictícia, a **Liga Aurora**.
 
+## Telas
+
+| Início | Abrindo pacote | Resumo do pacote |
+|---|---|---|
+| ![Início](docs/capturas/02-inicio.png) | ![Figurinha revelada](docs/capturas/04-revelando-1.png) | ![Resumo](docs/capturas/06-resumo.png) |
+
+| Álbum | Detalhe | Probabilidades |
+|---|---|---|
+| ![Álbum](docs/capturas/07-album.png) | ![Detalhe](docs/capturas/08-detalhe.png) | ![Probabilidades](docs/capturas/10-probabilidades.png) |
+
+Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
+
 ## Documentação
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): universo, álbum, raridades, economia, trocas e fases.
