@@ -1,0 +1,12 @@
+{
+  "name": "app-figurinha",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/api"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  }
+}
