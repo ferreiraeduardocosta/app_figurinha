@@ -40,6 +40,21 @@ enum TipoRecompensa {
   ALBUM
 }
 
+enum StatusAmizade {
+  PENDENTE
+  ACEITA
+}
+
+enum StatusTroca {
+  PENDENTE
+  ACEITA
+  RECUSADA
+  CANCELADA
+  EXPIRADA
+  /// Não pôde ser concluída: alguém já não tinha as repetidas na hora de aceitar.
+  FALHOU
+}
+
 enum OrigemPacote {
   DIARIO
   MOEDAS
@@ -108,6 +123,10 @@ model Usuario {
   recompensas          Recompensa[]
   aberturas            AberturaPacote[]
   sessoes              Sessao[]
+  amizadesEnviadas     Amizade[] @relation("AmizadeSolicitante")
+  amizadesRecebidas    Amizade[] @relation("AmizadeDestinatario")
+  trocasPropostas      Troca[]   @relation("TrocaProposta")
+  trocasRecebidas      Troca[]   @relation("TrocaRecebida")
 }
 
 /// Sessão de login. Guardamos só o hash SHA-256 do token; o token em si fica no aparelho.
@@ -173,4 +192,41 @@ model Recompensa {
   criadaEm  DateTime       @default(now())
 
   @@unique([usuarioId, tipo, chave])
+}
+
+/// Pedido de amizade (PENDENTE) ou amizade feita (ACEITA). Só amigos trocam figurinhas.
+model Amizade {
+  id             String        @id @default(uuid())
+  solicitante    Usuario       @relation("AmizadeSolicitante", fields: [solicitanteId], references: [id], onDelete: Cascade)
+  solicitanteId  String
+  destinatario   Usuario       @relation("AmizadeDestinatario", fields: [destinatarioId], references: [id], onDelete: Cascade)
+  destinatarioId String
+  status         StatusAmizade @default(PENDENTE)
+  criadaEm       DateTime      @default(now())
+  aceitaEm       DateTime?
+
+  @@unique([solicitanteId, destinatarioId])
+  @@index([destinatarioId, status])
+}
+
+/// Proposta de troca. oferta = figurinhas de quem propõe; pedido = figurinhas de quem recebe.
+/// Cada lado é uma lista de { codigo, quantidade }.
+model Troca {
+  id            String      @id @default(uuid())
+  propostaPor   Usuario     @relation("TrocaProposta", fields: [propostaPorId], references: [id], onDelete: Cascade)
+  propostaPorId String
+  para          Usuario     @relation("TrocaRecebida", fields: [paraId], references: [id], onDelete: Cascade)
+  paraId        String
+  oferta        Json
+  pedido        Json
+  status        StatusTroca @default(PENDENTE)
+  /// Se esta proposta é uma contraproposta, a proposta original.
+  respostaAId   String?
+  motivo        String?
+  criadaEm      DateTime    @default(now())
+  expiraEm      DateTime
+  respondidaEm  DateTime?
+
+  @@index([paraId, status])
+  @@index([propostaPorId, status])
 }

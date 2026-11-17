@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
 import { PacotesModule } from './pacotes/pacotes.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SocialModule } from './social/social.module';
 
 @Controller()
 class SaudeController {
@@ -23,6 +24,7 @@ class SaudeController {
     AuthModule,
     PacotesModule,
     AdminModule,
+    SocialModule,
   ],
   controllers: [SaudeController, CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

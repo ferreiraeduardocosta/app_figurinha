@@ -41,6 +41,11 @@ export class PacotesService implements OnModuleInit {
     await this.recarregarCatalogo();
   }
 
+  /** Catálogo em memória, agrupado por raridade (usado também pelas trocas). */
+  get catalogoAtual(): CatalogoPorRaridade {
+    return this.catalogo;
+  }
+
   /** Relê o catálogo do banco (o painel de admin chama isto depois de mudar figurinhas). */
   async recarregarCatalogo() {
     const lista = await this.prisma.figurinha.findMany({ select: { codigo: true, raridade: true } });
@@ -68,6 +73,13 @@ export class PacotesService implements OnModuleInit {
       album: { coladas, total: await this.prisma.figurinha.count() },
       pacotesBonus: u.pacotesBonus,
       recompensas: u.recompensas,
+      // Para o selo de "novidades" na aba de trocas.
+      pendencias: {
+        pedidosAmizade: await this.prisma.amizade.count({ where: { destinatarioId: usuarioId, status: 'PENDENTE' } }),
+        trocasRecebidas: await this.prisma.troca.count({
+          where: { paraId: usuarioId, status: 'PENDENTE', expiraEm: { gt: agora } },
+        }),
+      },
     };
   }
 

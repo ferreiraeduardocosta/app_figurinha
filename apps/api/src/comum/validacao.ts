@@ -41,3 +41,33 @@ export function codigoFigurinha(corpo: Record<string, unknown>): string {
   if (!/^[A-Z]{3}-\d{2}$/.test(c)) invalido('codigo', 'Código de figurinha inválido (ex.: UNI-05).');
   return c;
 }
+
+/** Lista de { codigo, quantidade } de um lado da troca. */
+export function itensTroca(corpo: Record<string, unknown>, campo: 'oferta' | 'pedido') {
+  const v = corpo[campo];
+  if (!Array.isArray(v) || v.length < 1 || v.length > 5) invalido(campo, `${campo} deve ter de 1 a 5 figurinhas.`);
+  return v.map((item: unknown) => {
+    if (typeof item !== 'object' || item === null) invalido(campo, 'Item de troca inválido.');
+    const i = item as Record<string, unknown>;
+    const codigo = typeof i.codigo === 'string' ? i.codigo.trim().toUpperCase() : '';
+    if (!/^[A-Z]{3}-\d{2}$/.test(codigo)) invalido(campo, 'Código de figurinha inválido (ex.: UNI-05).');
+    const quantidade = i.quantidade ?? 1;
+    if (typeof quantidade !== 'number' || !Number.isInteger(quantidade) || quantidade < 1 || quantidade > 5) {
+      invalido(campo, 'Quantidade deve ser de 1 a 5.');
+    }
+    return { codigo, quantidade: quantidade as number };
+  });
+}
+
+export function idOpcional(corpo: Record<string, unknown>, campo: string): string | undefined {
+  const v = corpo[campo];
+  if (v === undefined || v === null) return undefined;
+  if (typeof v !== 'string' || !/^[0-9a-f-]{36}$/i.test(v)) invalido(campo, `${campo} inválido.`);
+  return v;
+}
+
+export function idObrigatorio(corpo: Record<string, unknown>, campo: string): string {
+  const v = idOpcional(corpo, campo);
+  if (!v) invalido(campo, `Informe ${campo}.`);
+  return v;
+}
