@@ -24,6 +24,17 @@ enum TipoFigurinha {
   MOMENTO
 }
 
+enum Papel {
+  JOGADOR
+  ADMIN
+}
+
+enum AcaoAdmin {
+  CRIAR
+  EDITAR
+  EXCLUIR
+}
+
 enum OrigemPacote {
   DIARIO
   MOEDAS
@@ -78,6 +89,7 @@ model Usuario {
   email                String    @unique
   /// scrypt: "scrypt$N$r$p$sal$hash" (ver src/auth/senha.ts)
   senhaHash            String
+  papel                Papel     @default(JOGADOR)
   criadoEm             DateTime  @default(now())
   moedas               Int       @default(0)
   /// Contadores da garantia mínima (ver packages/regras).
@@ -126,4 +138,18 @@ model AberturaPacote {
   criadoEm  DateTime     @default(now())
 
   @@index([usuarioId, criadoEm])
+}
+
+/// Histórico de alterações feitas no painel de administração.
+model AlteracaoAdmin {
+  id              String    @id @default(uuid())
+  adminId         String
+  adminApelido    String
+  acao            AcaoAdmin
+  figurinhaCodigo String
+  antes           Json?
+  depois          Json?
+  criadoEm        DateTime  @default(now())
+
+  @@index([criadoEm])
 }

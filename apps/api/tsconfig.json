@@ -10,5 +10,5 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true
   },
-  "include": ["src", "prisma", "test"]
+  "include": ["src", "prisma", "test", "scripts"]
 }

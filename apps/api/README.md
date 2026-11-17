@@ -43,6 +43,29 @@ Com login (`Authorization: Bearer <token>`):
 Erros vêm como `{ codigo, mensagem }` (ex.: `PACOTE_DIARIO_JA_ABERTO`,
 `REPETIDAS_INSUFICIENTES`, `CREDENCIAIS_INVALIDAS`).
 
+## Painel de administração
+
+Abra `http://localhost:3000/admin/` e entre com uma conta de administrador.
+
+- **Resumo:** jogadores, pacotes abertos e a conferência do sorteio (raridades
+  que saíram x probabilidades configuradas, sem contar a garantia mínima).
+- **Figurinhas:** busca, filtros, edição, criação e exclusão. Mudanças de
+  raridade recarregam o sorteio na hora. Não é possível excluir figurinha que
+  algum jogador já tem, nem deixar uma raridade sem figurinhas.
+- **Alterações:** histórico de quem mudou o quê (valor antes → depois).
+- **Usuários:** busca por apelido ou e-mail.
+
+O primeiro administrador é definido pelo terminal do servidor (o app nunca
+promove ninguém):
+
+```bash
+npm run admin:promover -- pessoa@exemplo.com            # dá o papel de admin
+npm run admin:promover -- pessoa@exemplo.com --remover  # tira
+```
+
+Rotas (todas exigem papel ADMIN): `GET /admin/resumo`, `GET|POST /admin/figurinhas`,
+`PATCH|DELETE /admin/figurinhas/:codigo`, `GET /admin/alteracoes`, `GET /admin/usuarios?busca=`.
+
 ## Segurança
 
 - Senhas com scrypt e sal aleatório; o login confere a senha mesmo quando o
@@ -51,6 +74,10 @@ Erros vêm como `{ codigo, mensagem }` (ex.: `PACOTE_DIARIO_JA_ABERTO`,
   Expira em 30 dias e é apagada ao sair.
 - Limite de pedidos por IP: 120/min no geral e 10/min em cadastro e login.
 - CORS desligado por padrão; para o Expo web, defina `CORS_ORIGENS`.
+- Painel: página servida com Content-Security-Policy restrita (só scripts do
+  próprio servidor), sem permitir abrir em iframe; todo dado entra na página
+  como texto, nunca como HTML; o token fica em `sessionStorage` (some ao
+  fechar a aba).
 
 ## Testes
 

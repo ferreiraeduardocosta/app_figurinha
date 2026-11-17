@@ -145,7 +145,7 @@ No cenário recomendado com trocas: ~43 dias sem gastar, ou ~R$ 21 para completa
 | Fase | Entrega | Marco |
 |---|---|---|
 | 0. Fundação ✅ | Universo, fichas, economia, kit visual | Este documento |
-| 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅; falta painel admin e arte final | Beta fechado |
+| 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅; falta arte final e recompensas | Beta fechado |
 | 2. Trocas | Amigos, propostas, mercado de repetidas, push | Beta aberto |
 | 3. Monetização | Loja IAP (RevenueCat), tela de probabilidades, garantia mínima | v1.0 nas lojas |
 | 4. Engajamento | Rodadas simuladas, missões, ranking, Bafo | Retenção |

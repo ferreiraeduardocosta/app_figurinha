@@ -1,16 +1,16 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
+import { configurarApp } from './configurar';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableShutdownHooks();
-  // Origens liberadas para o app rodando no navegador (Expo web) em desenvolvimento.
-  const origens = process.env.CORS_ORIGENS?.split(',').map((o) => o.trim()).filter(Boolean);
-  if (origens?.length) app.enableCors({ origin: origens });
+  configurarApp(app);
   const porta = Number(process.env.PORT ?? 3000);
   await app.listen(porta);
-  console.log(`API da Liga Aurora em http://localhost:${porta}`);
+  console.log(`API da Liga Aurora em http://localhost:${porta} (painel em /admin)`);
 }
 
 bootstrap();

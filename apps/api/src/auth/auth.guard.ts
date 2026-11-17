@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -22,6 +23,20 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException({ codigo: 'NAO_AUTENTICADO', mensagem: 'Entre na sua conta para continuar.' });
     }
     req.usuario = usuario;
+    return true;
+  }
+}
+
+/** Exige login de um usuário com papel ADMIN. */
+@Injectable()
+export class AdminGuard implements CanActivate {
+  constructor(@Inject(AuthGuard) private readonly auth: AuthGuard) {}
+
+  async canActivate(contexto: ExecutionContext): Promise<boolean> {
+    await this.auth.canActivate(contexto);
+    if (contexto.switchToHttp().getRequest().usuario?.papel !== 'ADMIN') {
+      throw new ForbiddenException({ codigo: 'SO_ADMIN', mensagem: 'Área restrita a administradores.' });
+    }
     return true;
   }
 }

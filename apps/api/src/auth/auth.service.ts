@@ -9,6 +9,7 @@ const DURACAO_SESSAO_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
 export interface UsuarioAutenticado {
   id: string;
   apelido: string;
+  papel: 'JOGADOR' | 'ADMIN';
   sessaoId: string;
 }
 
@@ -22,7 +23,7 @@ export class AuthService {
     const senhaHash = await gerarHashSenha(senha);
     try {
       const usuario = await this.prisma.usuario.create({ data: { apelido, email, senhaHash } });
-      return this.criarSessao(usuario.id, usuario.apelido);
+      return this.criarSessao(usuario.id, usuario.apelido, usuario.papel);
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         const campo = String((e.meta?.target as string[] | undefined)?.[0] ?? 'email');
@@ -43,7 +44,7 @@ export class AuthService {
     if (!usuario || !ok) {
       throw new UnauthorizedException({ codigo: 'CREDENCIAIS_INVALIDAS', mensagem: 'E-mail ou senha incorretos.' });
     }
-    return this.criarSessao(usuario.id, usuario.apelido);
+    return this.criarSessao(usuario.id, usuario.apelido, usuario.papel);
   }
 
   async sair(sessaoId: string) {
@@ -54,20 +55,20 @@ export class AuthService {
   async validarToken(token: string): Promise<UsuarioAutenticado | null> {
     const sessao = await this.prisma.sessao.findUnique({
       where: { tokenHash: hashToken(token) },
-      include: { usuario: { select: { id: true, apelido: true } } },
+      include: { usuario: { select: { id: true, apelido: true, papel: true } } },
     });
     if (!sessao) return null;
     if (sessao.expiraEm.getTime() <= Date.now()) {
       await this.prisma.sessao.delete({ where: { id: sessao.id } }).catch(() => undefined);
       return null;
     }
-    return { id: sessao.usuario.id, apelido: sessao.usuario.apelido, sessaoId: sessao.id };
+    return { id: sessao.usuario.id, apelido: sessao.usuario.apelido, papel: sessao.usuario.papel, sessaoId: sessao.id };
   }
 
-  private async criarSessao(usuarioId: string, apelido: string) {
+  private async criarSessao(usuarioId: string, apelido: string, papel: 'JOGADOR' | 'ADMIN') {
     const token = randomBytes(32).toString('base64url');
     const expiraEm = new Date(Date.now() + DURACAO_SESSAO_MS);
     await this.prisma.sessao.create({ data: { usuarioId, tokenHash: hashToken(token), expiraEm } });
-    return { token, expiraEm, usuario: { id: usuarioId, apelido } };
+    return { token, expiraEm, usuario: { id: usuarioId, apelido, papel } };
   }
 }

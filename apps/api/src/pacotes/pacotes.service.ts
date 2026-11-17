@@ -36,6 +36,11 @@ export class PacotesService implements OnModuleInit {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
+    await this.recarregarCatalogo();
+  }
+
+  /** Relê o catálogo do banco (o painel de admin chama isto depois de mudar figurinhas). */
+  async recarregarCatalogo() {
     const lista = await this.prisma.figurinha.findMany({ select: { codigo: true, raridade: true } });
     this.catalogo = indexarCatalogo(lista, CONFIG_ECONOMIA);
   }

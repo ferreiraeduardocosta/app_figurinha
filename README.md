@@ -15,6 +15,12 @@ de jogadores de uma liga de futebol fictícia, a **Liga Aurora**.
 
 Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 
+### Painel de administração (`/admin`)
+
+| Resumo e conferência do sorteio | Edição de figurinha |
+|---|---|
+| ![Resumo](docs/capturas/admin-02-resumo.png) | ![Editor](docs/capturas/admin-04-editor.png) |
+
 ## Documentação
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): universo, álbum, raridades, economia, trocas e fases.
