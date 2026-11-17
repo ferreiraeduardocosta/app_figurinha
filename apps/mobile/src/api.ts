@@ -46,6 +46,50 @@ export interface Perfil {
   album: { coladas: number; total: number };
   pacotesBonus: number;
   recompensas: { tipo: 'PAGINA' | 'ALBUM'; chave: string; criadaEm: string }[];
+  pendencias: { pedidosAmizade: number; trocasRecebidas: number };
+}
+
+export interface UsuarioResumo {
+  id: string;
+  apelido: string;
+}
+
+export interface ListaAmigos {
+  amigos: { id: string; usuario: UsuarioResumo; desde: string }[];
+  recebidos: { id: string; usuario: UsuarioResumo; criadaEm: string }[];
+  enviados: { id: string; usuario: UsuarioResumo; criadaEm: string }[];
+}
+
+export interface ItemTroca {
+  codigo: string;
+  quantidade: number;
+}
+
+export type StatusTroca = 'PENDENTE' | 'ACEITA' | 'RECUSADA' | 'CANCELADA' | 'EXPIRADA' | 'FALHOU';
+
+export interface Troca {
+  id: string;
+  propostaPor: UsuarioResumo;
+  para: UsuarioResumo;
+  oferta: ItemTroca[];
+  pedido: ItemTroca[];
+  status: StatusTroca;
+  motivo: string | null;
+  respostaAId: string | null;
+  criadaEm: string;
+  expiraEm: string;
+}
+
+export interface ListaTrocas {
+  recebidas: Troca[];
+  enviadas: Troca[];
+  historico: Troca[];
+}
+
+export interface Sugestao {
+  amigo: UsuarioResumo;
+  euRecebo: string[];
+  euDou: string[];
 }
 
 export interface RecompensaNova {
@@ -138,6 +182,19 @@ export const api = {
   perfil: (token: string) => chamar<Perfil>('GET', '/eu', token),
   album: (token: string) => chamar<Album>('GET', '/album', token),
   abrirPacote: (token: string, origem: 'diario' | 'bonus') => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),
+  amigos: (token: string) => chamar<ListaAmigos>('GET', '/amigos', token),
+  pedirAmizade: (token: string, apelido: string) =>
+    chamar<{ status: 'PENDENTE' | 'ACEITA'; usuario: UsuarioResumo }>('POST', '/amigos', token, { apelido }),
+  aceitarAmizade: (token: string, id: string) => chamar<void>('POST', `/amigos/${id}/aceitar`, token),
+  removerAmizade: (token: string, id: string) => chamar<void>('DELETE', `/amigos/${id}`, token),
+  trocas: (token: string) => chamar<ListaTrocas>('GET', '/trocas', token),
+  sugestoes: (token: string) => chamar<Sugestao[]>('GET', '/trocas/sugestoes', token),
+  proporTroca: (token: string, paraId: string, oferta: ItemTroca[], pedido: ItemTroca[], respostaA?: string) =>
+    chamar<Troca>('POST', '/trocas', token, { paraId, oferta, pedido, respostaA }),
+  aceitarTroca: (token: string, id: string) =>
+    chamar<{ novas: string[]; recompensas: RecompensaNova[] }>('POST', `/trocas/${id}/aceitar`, token),
+  recusarTroca: (token: string, id: string) => chamar<Troca>('POST', `/trocas/${id}/recusar`, token),
+  cancelarTroca: (token: string, id: string) => chamar<Troca>('POST', `/trocas/${id}/cancelar`, token),
   balcao: (token: string, codigo: string) =>
     chamar<{ recebida: string; consumidas: Record<string, number>; recompensas: RecompensaNova[] }>('POST', '/balcao', token, {
       codigo,

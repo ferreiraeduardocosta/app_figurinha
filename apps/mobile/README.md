@@ -4,7 +4,8 @@ Expo (React Native) + TypeScript.
 
 Telas: entrar/criar conta, início (pacote grátis do dia, progresso e garantia
 mínima), abertura de pacote animada, álbum por clube (com detalhe da figurinha
-e balcão de repetidas) e probabilidades do pacote.
+e balcão de repetidas), probabilidades do pacote e trocas (amigos, mercado de
+repetidas, propostas e contrapropostas).
 
 A sessão fica no armazenamento seguro do aparelho (`expo-secure-store`). No
 navegador ela não é guardada: é preciso entrar de novo a cada recarga.
@@ -38,3 +39,8 @@ npx expo export --platform android   # gera o bundle, confirma que compila
 
 Para adicionar bibliotecas, use `npx expo install <pacote>` (escolhe a versão
 compatível com o SDK). Veja também `AGENTS.md`.
+
+## Dica para desenvolvimento
+
+Se o `expo start` não perceber arquivos alterados (aconteceu em ambientes sem
+watcher de arquivos), reinicie com `npx expo start --clear`.

@@ -141,7 +141,13 @@ o álbum acabando rápido demais, dá para dar a recompensa só para páginas de
 - Proposta 1:1 ou N:M entre amigos: oferecer, pedir, aceitar, recusar, contrapropor.
 - Execução atômica no banco (transação), sem duplicar figurinhas.
 - "Mercado de repetidas": cruza o que falta para mim com o que sobra para os outros.
-- Antifraude: limite diário de trocas e bloqueio de Lendárias para contas novas.
+- Antifraude: até 20 propostas pendentes, até 10 trocas por dia e contas com
+  menos de 3 dias não trocam Lendárias.
+- Só repetidas entram em troca (nunca a última cópia), até 5 de cada lado,
+  propostas valem 7 dias. Receber figurinha por troca também conta para as
+  recompensas de página e álbum.
+- Enquanto não há notificação push, o app atualiza perfil e álbum ao trocar de
+  aba e a cada minuto.
 
 ## 6. Engajamento
 
@@ -159,7 +165,7 @@ o álbum acabando rápido demais, dá para dar a recompensa só para páginas de
 |---|---|---|
 | 0. Fundação ✅ | Universo, fichas, economia, kit visual | Este documento |
 | 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; **pendente: arte final ([docs/arte](arte/README.md)) e teste em celular** | Beta fechado |
-| 2. Trocas | Amigos, propostas, mercado de repetidas, push | Beta aberto |
+| 2. Trocas 🟡 | Amigos ✅, propostas e contrapropostas ✅, mercado de repetidas ✅, antifraude ✅; falta notificação push | Beta aberto |
 | 3. Monetização | Loja IAP (RevenueCat), tela de probabilidades, garantia mínima | v1.0 nas lojas |
 | 4. Engajamento | Rodadas simuladas, missões, ranking, Bafo | Retenção |
 | 5. Escala | Observabilidade, testes de carga, analytics, i18n | Crescimento |

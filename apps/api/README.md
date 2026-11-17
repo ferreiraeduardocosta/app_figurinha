@@ -40,6 +40,16 @@ Com login (`Authorization: Bearer <token>`):
 | POST | `/pacotes/diario` | Abre o pacote grátis do dia (1 por dia, meia-noite de Brasília) |
 | POST | `/pacotes/bonus` | Abre um pacote de recompensa (ganho ao completar uma página) |
 | POST | `/balcao` | `{ codigo }`: troca 4 repetidas da mesma raridade pela figurinha |
+| GET | `/amigos` | Amigos, pedidos recebidos e enviados |
+| POST | `/amigos` | `{ apelido }`: pede amizade (aceita na hora se o outro já tinha pedido) |
+| POST | `/amigos/:id/aceitar` | Aceita um pedido recebido |
+| DELETE | `/amigos/:id` | Recusa/cancela pedido ou desfaz amizade (cancela propostas pendentes entre os dois) |
+| GET | `/trocas` | Propostas recebidas, enviadas e histórico |
+| GET | `/trocas/sugestoes` | Mercado de repetidas: por amigo, o que eu recebo e o que eu dou |
+| POST | `/trocas` | `{ paraId, oferta, pedido, respostaA? }`: propõe (ou contrapropõe) uma troca |
+| POST | `/trocas/:id/aceitar` | Aceita; move as figurinhas e entrega recompensas |
+| POST | `/trocas/:id/recusar` | Recusa (quem recebeu) |
+| POST | `/trocas/:id/cancelar` | Cancela (quem propôs) |
 
 Abrir pacote e trocar no balcão também devolvem `recompensas`: páginas
 completadas (`PAGINA`, +1 pacote de recompensa cada) e álbum completo
@@ -47,6 +57,17 @@ completadas (`PAGINA`, +1 pacote de recompensa cada) e álbum completo
 
 Erros vêm como `{ codigo, mensagem }` (ex.: `PACOTE_DIARIO_JA_ABERTO`,
 `REPETIDAS_INSUFICIENTES`, `SEM_PACOTE_BONUS`, `CREDENCIAIS_INVALIDAS`).
+
+## Regras de troca
+
+- Só entre amigos, e só repetidas: ninguém perde a última cópia de nada.
+- Até 5 figurinhas de cada lado; a proposta vence em 7 dias.
+- Ao aceitar, os dois jogadores são travados no banco (sempre na mesma ordem) e
+  as repetidas são conferidas de novo; se alguém já gastou, a proposta vira
+  `FALHOU`.
+- Contra abuso: até 20 propostas pendentes por jogador, até 10 trocas por dia,
+  e contas com menos de 3 dias não trocam Lendárias (`LIMITES_TROCA` em
+  `src/social/trocas.service.ts`).
 
 ## Painel de administração
 

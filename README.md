@@ -21,6 +21,12 @@ Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 |---|---|---|
 | ![Recompensa](docs/capturas/recompensa-02-balcao-recompensa.png) | ![Bônus](docs/capturas/recompensa-04-inicio-bonus.png) | ![Troféu](docs/capturas/recompensa-06-campeao.png) |
 
+### Trocas entre amigos
+
+| Mercado de repetidas | Montando a proposta | Proposta recebida |
+|---|---|---|
+| ![Mercado](docs/capturas/trocas-03-ana-mercado.png) | ![Montando](docs/capturas/trocas-04-ana-montando.png) | ![Recebida](docs/capturas/trocas-06-bia-recebida.png) |
+
 ### Painel de administração (`/admin`)
 
 | Resumo e conferência do sorteio | Edição de figurinha |

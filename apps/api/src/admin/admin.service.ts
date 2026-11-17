@@ -24,7 +24,7 @@ export class AdminService {
   /** Números gerais e conferência do sorteio: raridades que saíram x probabilidades configuradas. */
   async resumo(agora = new Date()) {
     const inicioDoDia = new Date(`${diaLocal(agora)}T00:00:00-03:00`);
-    const [usuarios, admins, aberturas, aberturasHoje, figurinhas, paginasCompletas, albunsCompletos, sorteio] = await Promise.all([
+    const [usuarios, admins, aberturas, aberturasHoje, figurinhas, paginasCompletas, albunsCompletos, trocasFeitas, sorteio] = await Promise.all([
       this.prisma.usuario.count(),
       this.prisma.usuario.count({ where: { papel: 'ADMIN' } }),
       this.prisma.aberturaPacote.count(),
@@ -32,6 +32,7 @@ export class AdminService {
       this.prisma.figurinha.count(),
       this.prisma.recompensa.count({ where: { tipo: 'PAGINA' } }),
       this.prisma.recompensa.count({ where: { tipo: 'ALBUM' } }),
+      this.prisma.troca.count({ where: { status: 'ACEITA' } }),
       this.prisma.$queryRaw<{ raridade: Raridade; garantida: boolean; brilhante: boolean; total: bigint }[]>`
         SELECT f->>'raridade' AS raridade,
                (f->>'garantida')::boolean AS garantida,
@@ -61,6 +62,7 @@ export class AdminService {
       figurinhasNoCatalogo: figurinhas,
       paginasCompletas,
       albunsCompletos,
+      trocasFeitas,
       sorteio: {
         figurinhasSorteadas: totalFigurinhas,
         garantidas,
