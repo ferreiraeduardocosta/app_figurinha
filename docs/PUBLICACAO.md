@@ -147,11 +147,9 @@ Passos (no seu computador, com Node 22):
 
    O `init` cria o projeto na sua conta Expo e grava o id dele no `app.json`
    (faça commit dessa mudança).
-3. Dizer ao app onde está o servidor (troque pelo seu endereço HTTPS):
-
-   ```bash
-   npx eas-cli@latest env:create --environment preview --name EXPO_PUBLIC_API_URL --value https://seu-servidor.exemplo.com --visibility plaintext
-   ```
+3. O endereço do servidor (`https://craques-da-varzea-api.onrender.com`) já está
+   em `env` nos perfis do [`eas.json`](../apps/mobile/eas.json). Se o servidor
+   mudar de endereço, troque lá.
 
 4. Gerar o APK (o build roda na nuvem do Expo, leva de 10 a 20 minutos):
 
@@ -172,10 +170,6 @@ O que ainda não funciona nesse APK: pagamentos reais (ver [LOJA.md](LOJA.md)) e
 notificações push.
 
 ## 4. Produção (lojas)
-
-```bash
-npx eas-cli@latest env:create --environment production --name EXPO_PUBLIC_API_URL --value https://seu-servidor.exemplo.com --visibility plaintext
-```
 
 ```bash
 npx eas-cli@latest build --platform all --profile production
