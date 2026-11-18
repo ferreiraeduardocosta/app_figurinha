@@ -10,7 +10,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "test": "vitest run",
-    "admin:promover": "tsx scripts/promover-admin.ts"
+    "admin:promover": "tsx scripts/promover-admin.ts",
+    "db:seed:se-vazio": "tsx prisma/seed.ts --se-vazio"
   },
   "dependencies": {
     "@liga-aurora/regras": "*",

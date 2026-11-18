@@ -10,6 +10,12 @@ const PASTA_ADMIN = resolve(__dirname, '../admin');
  * CORS opcional e a página do painel em /admin com cabeçalhos de segurança.
  */
 export function configurarApp(app: NestExpressApplication) {
+  // Atrás do proxy da hospedagem, o IP do jogador vem no cabeçalho X-Forwarded-For.
+  // Sem isto, o limite de pedidos trataria todos os jogadores como um só.
+  // TRUST_PROXY = número de proxies na frente da API (normalmente 1).
+  const proxies = Number(process.env.TRUST_PROXY ?? 0);
+  if (proxies > 0) app.set('trust proxy', proxies);
+
   const origens = process.env.CORS_ORIGENS?.split(',').map((o) => o.trim()).filter(Boolean);
   if (origens?.length) app.enableCors({ origin: origens });
 

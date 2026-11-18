@@ -9,6 +9,12 @@ import figurinhas from '../../../data/temporada1/figurinhas.json';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Com --se-vazio (usado ao subir o container), não mexe num banco que já tem
+  // figurinhas: assim edições feitas pelo painel nunca são sobrescritas.
+  if (process.argv.includes('--se-vazio') && (await prisma.figurinha.count()) > 0) {
+    console.log('Seed: banco já tem figurinhas, nada a fazer.');
+    return;
+  }
   for (const c of clubes) {
     const dados = {
       nome: c.nome,

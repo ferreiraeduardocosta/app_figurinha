@@ -63,6 +63,7 @@ Pagamentos reais ainda não estão ligados: veja [docs/LOJA.md](docs/LOJA.md).
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): universo, álbum, raridades, economia, trocas e fases.
 - [`docs/planilhas/`](docs/planilhas/): fichas das 136 figurinhas e simulação da economia.
+- [`docs/PUBLICACAO.md`](docs/PUBLICACAO.md): publicar o servidor, gerar o APK e testar no Android.
 - [`docs/LOJA.md`](docs/LOJA.md): loja, pagamentos e o que falta para cobrar de verdade.
 - [`docs/arte/`](docs/arte/): plano e prompts da arte final (pendente).
 - [`data/temporada1/`](data/temporada1/): os mesmos dados em JSON, usados como seed do banco.

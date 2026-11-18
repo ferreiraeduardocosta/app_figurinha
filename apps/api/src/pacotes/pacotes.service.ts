@@ -1,4 +1,12 @@
-import { ConflictException, Inject, Injectable, OnModuleInit, UnprocessableEntityException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+  ServiceUnavailableException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { OrigemPacote, Prisma, Usuario } from '@prisma/client';
 import {
   CatalogoPorRaridade,
@@ -33,7 +41,8 @@ type Tx = Prisma.TransactionClient;
  */
 @Injectable()
 export class PacotesService implements OnModuleInit {
-  private catalogo!: CatalogoPorRaridade;
+  private catalogoCarregado: CatalogoPorRaridade | null = null;
+  private readonly log = new Logger('Pacotes');
   /** Gerador do sorteio. Só os testes trocam por um gerador com semente. */
   rng: Rng = rngSeguro;
 
@@ -48,10 +57,28 @@ export class PacotesService implements OnModuleInit {
     return this.catalogo;
   }
 
+  /** Catálogo pronto para sorteio; sem figurinhas cadastradas, responde 503 em vez de derrubar a API. */
+  private get catalogo(): CatalogoPorRaridade {
+    if (!this.catalogoCarregado) {
+      throw new ServiceUnavailableException({
+        codigo: 'CATALOGO_VAZIO',
+        mensagem: 'O álbum ainda não foi carregado no servidor. Tente de novo em instantes.',
+      });
+    }
+    return this.catalogoCarregado;
+  }
+
   /** Relê o catálogo do banco (o painel de admin chama isto depois de mudar figurinhas). */
   async recarregarCatalogo() {
     const lista = await this.prisma.figurinha.findMany({ select: { codigo: true, raridade: true } });
-    this.catalogo = indexarCatalogo(lista, CONFIG_ECONOMIA);
+    try {
+      this.catalogoCarregado = indexarCatalogo(lista, CONFIG_ECONOMIA);
+    } catch (e) {
+      // Banco novo (antes do seed) ou catálogo incompleto: a API sobe mesmo assim.
+      if (!(e instanceof ErroRegra)) throw e;
+      this.catalogoCarregado = null;
+      this.log.warn(`Catálogo indisponível para sorteio: ${e.message} Rode o seed (npm run db:seed).`);
+    }
   }
 
   /** Perfil do jogador: moedas, pacote diário e progresso no álbum. */

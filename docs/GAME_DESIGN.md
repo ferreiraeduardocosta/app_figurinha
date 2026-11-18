@@ -211,3 +211,5 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
 | 3. Monetização 🟡 | Loja ✅, pacote com moedas ✅, crédito pelo servidor e estorno ✅, limites para menores ✅, probabilidades ✅, garantia mínima ✅; **pendente: ligar o RevenueCat e as lojas ([docs/LOJA.md](LOJA.md))** | v1.0 nas lojas |
 | 4. Engajamento 🟡 | Missões diárias ✅, rodadas simuladas da liga ✅, figurinha "Em alta" ✅, ranking ✅, exclusão de conta ✅; falta o Bafo | Retenção |
 | 5. Escala | Observabilidade, testes de carga, analytics, i18n | Crescimento |
+
+Publicação (servidor em Docker, APK de teste, lojas): [PUBLICACAO.md](PUBLICACAO.md).
