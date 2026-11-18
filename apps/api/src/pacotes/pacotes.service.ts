@@ -14,6 +14,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal, proximaMeiaNoite } from './dia';
 import { CONFIG_LOJA } from '../loja/loja.service';
 import { CONFIG_ECONOMIA } from './economia';
+import { registrarProgresso } from '../missoes/missoes';
 import { RecompensaNova, entregarRecompensas } from './recompensas';
 import { rngSeguro } from './rng-seguro';
 
@@ -78,6 +79,13 @@ export class PacotesService implements OnModuleInit {
       recompensas: u.recompensas,
       // Para o selo de "novidades" na aba de trocas.
       pendencias: {
+        missoesParaResgatar: Number(
+          (
+            await this.prisma.$queryRaw<{ n: bigint }[]>`
+              SELECT COUNT(*) AS n FROM "MissaoDia"
+              WHERE "usuarioId" = ${usuarioId} AND "dia" = ${diaLocal(agora)} AND "progresso" >= "meta" AND "resgatadaEm" IS NULL`
+          )[0]?.n ?? 0,
+        ),
         pedidosAmizade: await this.prisma.amizade.count({ where: { destinatarioId: usuarioId, status: 'PENDENTE' } }),
         trocasRecebidas: await this.prisma.troca.count({
           where: { paraId: usuarioId, status: 'PENDENTE', expiraEm: { gt: agora } },
@@ -113,7 +121,7 @@ export class PacotesService implements OnModuleInit {
         });
       }
       await tx.usuario.update({ where: { id: usuarioId }, data: { ultimoPacoteDiarioEm: agora } });
-      return this.abrir(tx, usuario, 'DIARIO');
+      return this.abrir(tx, usuario, 'DIARIO', agora);
     });
   }
 
@@ -159,7 +167,7 @@ export class PacotesService implements OnModuleInit {
   }
 
   /** Sorteia, cola no álbum, atualiza a garantia, registra a abertura e entrega recompensas. */
-  private async abrir(tx: Tx, usuario: Usuario, origem: OrigemPacote): Promise<ResultadoAbertura> {
+  private async abrir(tx: Tx, usuario: Usuario, origem: OrigemPacote, agora = new Date()): Promise<ResultadoAbertura> {
     const usuarioId = usuario.id;
     const resultado = abrirPacote(
       this.catalogo,
@@ -198,6 +206,14 @@ export class PacotesService implements OnModuleInit {
     });
     const recompensas = await entregarRecompensas(tx, usuarioId);
 
+    // Missões do dia.
+    const novas = new Set(resultado.figurinhas.map((f) => f.codigo).filter((c) => !jaTinha.has(c))).size;
+    await registrarProgresso(tx, usuarioId, 'ABRIR_PACOTES', 1, agora);
+    await registrarProgresso(tx, usuarioId, 'COLAR_NOVAS', novas, agora);
+    if (resultado.figurinhas.some((f) => f.raridade !== 'COMUM')) {
+      await registrarProgresso(tx, usuarioId, 'TIRAR_RARA', 1, agora);
+    }
+
     const vistas = new Set<string>();
     return {
       figurinhas: resultado.figurinhas.map((f) => {
@@ -233,6 +249,8 @@ export class PacotesService implements OnModuleInit {
       }
       await tx.itemAlbum.create({ data: { usuarioId, figurinhaCodigo: codigoDesejado, quantidade: 1 } });
       const recompensas = await entregarRecompensas(tx, usuarioId);
+      await registrarProgresso(tx, usuarioId, 'USAR_BALCAO', 1);
+      await registrarProgresso(tx, usuarioId, 'COLAR_NOVAS', 1);
       return { recebida: codigoDesejado, consumidas: troca.consumidas, recompensas };
     });
   }

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, Troca } from '@prisma/client';
 import { ErroRegra, ItemTroca, aplicarTroca, sugerirTrocas, validarTroca } from '@liga-aurora/regras';
+import { registrarProgresso } from '../missoes/missoes';
 import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal } from '../pacotes/dia';
 import { PacotesService } from '../pacotes/pacotes.service';
@@ -87,6 +88,7 @@ export class TrocasService {
         });
       }
 
+      await registrarProgresso(tx, eu, 'PROPOR_TROCA', 1, agora);
       return tx.troca.create({
         data: {
           propostaPorId: eu,
@@ -138,6 +140,13 @@ export class TrocasService {
       await tx.troca.update({ where: { id: t.id }, data: { status: 'ACEITA', respondidaEm: agora } });
       const recompensasEu: RecompensaNova[] = await entregarRecompensas(tx, t.paraId);
       await entregarRecompensas(tx, t.propostaPorId);
+      for (const [id, novas] of [
+        [t.propostaPorId, r.novasA.length],
+        [t.paraId, r.novasB.length],
+      ] as const) {
+        await registrarProgresso(tx, id, 'CONCLUIR_TROCA', 1, agora);
+        await registrarProgresso(tx, id, 'COLAR_NOVAS', novas, agora);
+      }
       return { troca: { ...atual, status: 'ACEITA' as const }, recebidas: pedido, novas: r.novasB, recompensas: recompensasEu };
     });
 

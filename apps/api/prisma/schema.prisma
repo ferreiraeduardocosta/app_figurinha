@@ -139,6 +139,7 @@ model Usuario {
   aberturas            AberturaPacote[]
   sessoes              Sessao[]
   compras              Compra[]
+  missoes              MissaoDia[]
   amizadesEnviadas     Amizade[] @relation("AmizadeSolicitante")
   amizadesRecebidas    Amizade[] @relation("AmizadeDestinatario")
   trocasPropostas      Troca[]   @relation("TrocaProposta")
@@ -266,4 +267,22 @@ model Compra {
   estornadaEm   DateTime?
 
   @@index([usuarioId, criadaEm])
+}
+
+/// Missão do dia de um jogador. Meta e recompensa ficam copiadas aqui, para
+/// mudanças no missoes.json não afetarem missões já entregues.
+model MissaoDia {
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId   String
+  /// Dia em Brasília, "AAAA-MM-DD".
+  dia         String
+  missaoId    String
+  tipo        String
+  ordem       Int
+  meta        Int
+  recompensa  Int
+  progresso   Int       @default(0)
+  resgatadaEm DateTime?
+
+  @@id([usuarioId, dia, missaoId])
 }

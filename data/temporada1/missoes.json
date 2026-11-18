@@ -1,0 +1,12 @@
+{
+  "missoesPorDia": 3,
+  "fixas": ["abrir_1"],
+  "pool": [
+    { "id": "abrir_1", "tipo": "ABRIR_PACOTES", "meta": 1, "recompensa": 15, "titulo": "Abra 1 pacote", "exige": null },
+    { "id": "novas_2", "tipo": "COLAR_NOVAS", "meta": 2, "recompensa": 20, "titulo": "Cole 2 figurinhas novas", "exige": null },
+    { "id": "rara_1", "tipo": "TIRAR_RARA", "meta": 1, "recompensa": 20, "titulo": "Tire uma Rara ou melhor num pacote", "exige": null },
+    { "id": "balcao_1", "tipo": "USAR_BALCAO", "meta": 1, "recompensa": 25, "titulo": "Troque repetidas no balcão", "exige": "REPETIDAS_PARA_BALCAO" },
+    { "id": "propor_1", "tipo": "PROPOR_TROCA", "meta": 1, "recompensa": 15, "titulo": "Proponha uma troca a um amigo", "exige": "AMIGOS" },
+    { "id": "troca_1", "tipo": "CONCLUIR_TROCA", "meta": 1, "recompensa": 25, "titulo": "Conclua uma troca com um amigo", "exige": "AMIGOS" }
+  ]
+}

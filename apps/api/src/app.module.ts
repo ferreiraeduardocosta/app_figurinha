@@ -5,6 +5,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
 import { LojaModule } from './loja/loja.module';
+import { MissoesModule } from './missoes/missoes.module';
 import { PacotesModule } from './pacotes/pacotes.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SocialModule } from './social/social.module';
@@ -27,6 +28,7 @@ class SaudeController {
     AdminModule,
     SocialModule,
     LojaModule,
+    MissoesModule,
   ],
   controllers: [SaudeController, CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
