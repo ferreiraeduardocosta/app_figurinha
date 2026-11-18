@@ -51,7 +51,7 @@ describe('trocas', () => {
 
   it('sugere o que cada um pode receber e dar, mais raras primeiro', () => {
     const s = sugerirTrocas(ana, bia, catalogo);
-    expect(s.aRecebe).toEqual(['POL-04', 'SER-05']); // POL-04 (Ivar Solberg) é Épica, SER-05 (Muralha) é Rara
+    expect(s.aRecebe).toEqual(['POL-04', 'SER-05']); // POL-04 (Ivo 'Cadeado' Sobral) é Épica, SER-05 (Muralha) é Rara
     expect(s.aDa).toEqual(['LEN-01']); // UNI-05: Bia já tem
   });
 });

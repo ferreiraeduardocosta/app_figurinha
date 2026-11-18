@@ -1,6 +1,6 @@
 import random, sys
 sys.path.insert(0, sys.argv[1])
-from dados import CLUBES, LENDAS, MOMENTOS, SUBS_JOG, SUBS_TEC, SUBS_MOM, MASCOTES
+from dados import CLUBES, LENDAS, MOMENTOS, SUBS_JOG, SUBS_TEC, SUBS_MOM, MASCOTES, NOMES_BR, TEXTOS_BR
 
 # Liga masculina: troca as personagens femininas e guarda as originais para a futura liga feminina
 RESERVA = []
@@ -80,6 +80,17 @@ for i, (s, tit, ano, prot, desc, vis) in enumerate(MOMENTOS):
     rows.append(dict(cod=f"MOM-{i+1:02d}", sec="Grandes Momentos", clube=clube_nome[s], tipo="Momento",
         nome=tit, rar="Épica", traco=f"{ano} · {prot}", hist=desc, vis=vis))
 assert len(rows) == 136, len(rows)
+
+# Nomes brasileiros (por último, para os atributos acima não mudarem).
+for r in rows:
+    if r["tipo"] in ("Técnico", "Jogador", "Lenda"):
+        r["nome"], r["ap"] = NOMES_BR[r["nome"]]
+    for campo in ("traco", "hist", "vis"):
+        for antigo, novo in TEXTOS_BR:
+            if r.get(campo):
+                r[campo] = r[campo].replace(antigo, novo)
+for c in CLUBES:
+    c["tecnico"] = (NOMES_BR[c["tecnico"][0]][0], *c["tecnico"][1:])
 
 # ---------- estilos ----------
 F = "Arial"
