@@ -99,6 +99,22 @@ export interface PainelLiga {
   emAlta: { codigo: string; gols: number; nome: string; rodada: number } | null;
 }
 
+export interface LinhaRanking {
+  posicao: number;
+  apelido: string;
+  coladas: number;
+  lendarias: number;
+  campeao: boolean;
+  souEu: boolean;
+}
+
+export interface Ranking {
+  escopo: 'geral' | 'amigos';
+  participantes: number;
+  lista: LinhaRanking[];
+  eu: LinhaRanking | null;
+}
+
 export type OrigemPacote = 'diario' | 'bonus' | 'comprado' | 'moedas';
 
 export interface Oferta {
@@ -252,6 +268,7 @@ export const api = {
   figurinhas: () => chamar<Figurinha[]>('GET', '/figurinhas'),
   probabilidades: () => chamar<Probabilidades>('GET', '/probabilidades'),
   liga: () => chamar<PainelLiga>('GET', '/liga'),
+  ranking: (token: string, escopo: 'geral' | 'amigos') => chamar<Ranking>('GET', `/ranking?escopo=${escopo}`, token),
   cadastrar: (apelido: string, email: string, senha: string) =>
     chamar<Sessao>('POST', '/auth/cadastro', null, { apelido, email, senha }),
   entrar: (email: string, senha: string) => chamar<Sessao>('POST', '/auth/entrar', null, { email, senha }),

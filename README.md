@@ -33,6 +33,12 @@ Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 |---|---|---|
 | ![Liga](docs/capturas/liga-01-liga-topo.png) | ![Tabela](docs/capturas/liga-02-liga-tabela.png) | ![Em alta](docs/capturas/liga-03-album-em-alta.png) |
 
+### Ranking
+
+| No início | Geral | Entre amigos |
+|---|---|---|
+| ![Início](docs/capturas/ranking-01-inicio-ranking.png) | ![Geral](docs/capturas/ranking-02-ranking-geral.png) | ![Amigos](docs/capturas/ranking-03-ranking-amigos.png) |
+
 ### Missões diárias
 
 | Missões do dia | Cumpridas | Resgatada |

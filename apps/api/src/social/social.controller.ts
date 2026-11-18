@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard, UsuarioAtual } from '../auth/auth.guard';
 import { UsuarioAutenticado } from '../auth/auth.service';
 import * as v from '../comum/validacao';
 import { AmigosService } from './amigos.service';
+import { RankingService } from './ranking.service';
 import { TrocasService } from './trocas.service';
 
 const uuid = new ParseUUIDPipe({ version: '4' });
@@ -14,7 +15,14 @@ export class SocialController {
   constructor(
     @Inject(AmigosService) private readonly amigos: AmigosService,
     @Inject(TrocasService) private readonly trocas: TrocasService,
+    @Inject(RankingService) private readonly rankingService: RankingService,
   ) {}
+
+  /** Ranking de colecionadores: ?escopo=geral (padrão) ou amigos. */
+  @Get('ranking')
+  ranking(@UsuarioAtual() u: UsuarioAutenticado, @Query('escopo') escopo?: string) {
+    return this.rankingService.ranking(u.id, escopo === 'amigos' ? 'amigos' : 'geral');
+  }
 
   @Get('amigos')
   listarAmigos(@UsuarioAtual() u: UsuarioAutenticado) {

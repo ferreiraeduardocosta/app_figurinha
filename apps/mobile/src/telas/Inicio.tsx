@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import type { OrigemPacote } from '../api';
+import { api, OrigemPacote, Ranking } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Missoes } from '../componentes/Missoes';
 import { Trofeu } from '../componentes/Recompensas';
@@ -20,12 +20,20 @@ export function Inicio({
   aoAbrirPacote,
   aoVerProbabilidades,
   aoExcluirConta,
+  aoVerRanking,
 }: {
   aoAbrirPacote: (origem: OrigemPacote) => void;
   aoVerProbabilidades: () => void;
   aoExcluirConta: () => void;
+  aoVerRanking: () => void;
 }) {
-  const { perfil, recarregar, sair } = useJogo();
+  const { perfil, recarregar, sair, sessao } = useJogo();
+  const [ranking, setRanking] = useState<Ranking | null>(null);
+  const carregarRanking = useCallback(() => {
+    if (sessao) api.ranking(sessao.token, 'geral').then(setRanking, () => undefined);
+  }, [sessao]);
+  // Atualiza a posição quando o perfil muda (colou figurinhas novas).
+  useEffect(carregarRanking, [carregarRanking, perfil?.album.coladas]);
   const [atualizando, setAtualizando] = useState(false);
   const [, setRelogio] = useState(0);
 
@@ -101,6 +109,23 @@ export function Inicio({
       </View>
 
       <Missoes />
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={ranking?.eu ? `Ranking: você é o ${ranking.eu.posicao}º de ${ranking.participantes}` : 'Ver ranking de colecionadores'}
+        onPress={aoVerRanking}
+        style={[estilos.cartao, estilos.ranking]}
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={estilos.rotulo}>Ranking de colecionadores</Text>
+          <Text style={estilos.rankingTexto}>
+            {ranking?.eu
+              ? `Você é o ${ranking.eu.posicao}º de ${ranking.participantes}`
+              : 'Cole figurinhas para entrar no ranking'}
+          </Text>
+        </View>
+        <Text style={estilos.linkTexto}>Ver</Text>
+      </Pressable>
 
       {perfil.pacotesComprados > 0 && (
         <View style={estilos.cartao}>
@@ -193,6 +218,8 @@ const estilos = StyleSheet.create({
   bonusTexto: { fontSize: 15, color: cores.tinta, marginBottom: 10 },
   trofeu: { backgroundColor: '#17122E', borderColor: '#FBBF24', flexDirection: 'row', alignItems: 'center', gap: 14 },
   trofeuTitulo: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', textTransform: 'uppercase' },
+  ranking: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rankingTexto: { fontSize: 18, fontWeight: '800', color: cores.tinta },
   link: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   linkTexto: { fontSize: 15, fontWeight: '700', color: cores.destaque },
 });

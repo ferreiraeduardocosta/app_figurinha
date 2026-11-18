@@ -14,6 +14,7 @@ import { Inicio } from './src/telas/Inicio';
 import { Liga } from './src/telas/Liga';
 import { Loja } from './src/telas/Loja';
 import { Probabilidades } from './src/telas/Probabilidades';
+import { RankingTela } from './src/telas/RankingTela';
 import { Trocas } from './src/telas/Trocas';
 import { cores } from './src/tema';
 
@@ -31,7 +32,7 @@ export default function App() {
 }
 
 type Aba = 'inicio' | 'album' | 'liga' | 'trocas' | 'loja';
-type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir';
+type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir' | 'ranking';
 
 function Raiz() {
   const { carregando, erroInicial, sessao, perfil, tentarDeNovo, recarregar } = useJogo();
@@ -74,6 +75,7 @@ function Raiz() {
   if (!perfil) return <ActivityIndicator color={cores.destaque} style={{ flex: 1 }} />;
 
   if (sobreposta === 'excluir') return <ExcluirConta aoVoltar={() => setSobreposta(null)} />;
+  if (sobreposta === 'ranking') return <RankingTela aoVoltar={() => setSobreposta(null)} />;
   if (sobreposta && sobreposta !== 'probabilidades') {
     return (
       <AbrirPacote
@@ -97,6 +99,7 @@ function Raiz() {
             aoAbrirPacote={(origem) => setSobreposta(origem)}
             aoVerProbabilidades={() => setSobreposta('probabilidades')}
             aoExcluirConta={() => setSobreposta('excluir')}
+            aoVerRanking={() => setSobreposta('ranking')}
           />
         )}
         {aba === 'album' && <Album key={secaoAlbum} secaoInicial={secaoAlbum} />}

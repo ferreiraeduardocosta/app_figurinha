@@ -182,6 +182,15 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
   **"Em alta"** até a rodada seguinte, com selo no álbum e nos pacotes.
 - Mudar atributos no painel muda a força do time nas rodadas seguintes.
 
+### Ranking de colecionadores (implementado)
+
+- Geral (50 primeiros + a posição do jogador) e entre amigos.
+- Mais figurinhas coladas na frente; desempate pelas Lendárias e depois por quem
+  chegou antes àquele total. Mostra só o apelido; contas excluídas e quem ainda
+  não colou nada ficam de fora.
+- Hoje é calculado a cada consulta. Com muitos jogadores, guardar o ranking
+  pronto e atualizar a cada poucos minutos.
+
 ### Outras ideias
 
 1. Rodadas simuladas semanais com placares e artilheiros.
@@ -200,5 +209,5 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
 | 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; **pendente: arte final ([docs/arte](arte/README.md)) e teste em celular** | Beta fechado |
 | 2. Trocas 🟡 | Amigos ✅, propostas e contrapropostas ✅, mercado de repetidas ✅, antifraude ✅; falta notificação push | Beta aberto |
 | 3. Monetização 🟡 | Loja ✅, pacote com moedas ✅, crédito pelo servidor e estorno ✅, limites para menores ✅, probabilidades ✅, garantia mínima ✅; **pendente: ligar o RevenueCat e as lojas ([docs/LOJA.md](LOJA.md))** | v1.0 nas lojas |
-| 4. Engajamento 🟡 | Missões diárias ✅, rodadas simuladas da liga ✅, figurinha "Em alta" ✅, exclusão de conta ✅; faltam ranking e Bafo | Retenção |
+| 4. Engajamento 🟡 | Missões diárias ✅, rodadas simuladas da liga ✅, figurinha "Em alta" ✅, ranking ✅, exclusão de conta ✅; falta o Bafo | Retenção |
 | 5. Escala | Observabilidade, testes de carga, analytics, i18n | Crescimento |
