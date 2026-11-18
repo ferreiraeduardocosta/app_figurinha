@@ -74,17 +74,17 @@ enum OrigemPacote {
 }
 
 model Clube {
-  sigla       String       @id
-  nome        String       @unique
-  cidade      String
-  corPrimaria String
+  sigla         String      @id
+  nome          String      @unique
+  cidade        String
+  corPrimaria   String
   corSecundaria String
-  estadio     String
-  capacidade  Int
-  mascote     String
-  lema        String
-  identidade  String
-  figurinhas  Figurinha[]
+  estadio       String
+  capacidade    Int
+  mascote       String
+  lema          String
+  identidade    String
+  figurinhas    Figurinha[]
 }
 
 model Figurinha {
@@ -115,37 +115,39 @@ model Figurinha {
 }
 
 model Usuario {
-  id                   String    @id @default(uuid())
-  apelido              String    @unique
-  email                String    @unique
+  id                   String              @id @default(uuid())
+  apelido              String              @unique
+  email                String              @unique
   /// scrypt: "scrypt$N$r$p$sal$hash" (ver src/auth/senha.ts)
   senhaHash            String
-  papel                Papel     @default(JOGADOR)
+  papel                Papel               @default(JOGADOR)
   /// Conta excluída pelo jogador e anonimizada (só sobra quando há compras a guardar).
   excluidoEm           DateTime?
-  criadoEm             DateTime  @default(now())
-  moedas               Int       @default(0)
+  criadoEm             DateTime            @default(now())
+  moedas               Int                 @default(0)
   /// Contadores da garantia mínima (ver packages/regras).
-  pacotesSemEpica      Int       @default(0)
-  pacotesSemLendaria   Int       @default(0)
+  pacotesSemEpica      Int                 @default(0)
+  pacotesSemLendaria   Int                 @default(0)
   /// Último pacote diário grátis aberto (controle de 1 por dia).
   ultimoPacoteDiarioEm DateTime?
   /// Pacotes ganhos como recompensa e ainda não abertos.
-  pacotesBonus         Int       @default(0)
+  pacotesBonus         Int                 @default(0)
   /// Pacotes comprados na loja e ainda não abertos.
-  pacotesComprados     Int       @default(0)
+  pacotesComprados     Int                 @default(0)
   /// Declarada pelo jogador antes da primeira compra (limites para menores).
-  dataNascimento       DateTime? @db.Date
+  dataNascimento       DateTime?           @db.Date
   album                ItemAlbum[]
   recompensas          Recompensa[]
   aberturas            AberturaPacote[]
   sessoes              Sessao[]
   compras              Compra[]
   missoes              MissaoDia[]
-  amizadesEnviadas     Amizade[] @relation("AmizadeSolicitante")
-  amizadesRecebidas    Amizade[] @relation("AmizadeDestinatario")
-  trocasPropostas      Troca[]   @relation("TrocaProposta")
-  trocasRecebidas      Troca[]   @relation("TrocaRecebida")
+  cuponsResgatados     CupomResgate[]
+  cuponsRecebidos      CupomDestinatario[]
+  amizadesEnviadas     Amizade[]           @relation("AmizadeSolicitante")
+  amizadesRecebidas    Amizade[]           @relation("AmizadeDestinatario")
+  trocasPropostas      Troca[]             @relation("TrocaProposta")
+  trocasRecebidas      Troca[]             @relation("TrocaRecebida")
 }
 
 /// Sessão de login. Guardamos só o hash SHA-256 do token; o token em si fica no aparelho.
@@ -305,4 +307,49 @@ model Partida {
 
   @@unique([temporada, rodada, mandante])
   @@index([temporada, rodada])
+}
+
+/// Cupom criado no painel: dá pacotes bônus a quem resgatar o código.
+/// Com destinatários, só essas contas podem resgatar (e o cupom aparece no app delas);
+/// sem destinatários, vale para qualquer conta, até o limite de usos.
+model Cupom {
+  id               String              @id @default(uuid())
+  /// Sempre em maiúsculas.
+  codigo           String              @unique
+  pacotes          Int
+  /// Texto mostrado ao jogador (ex.: "Presente de boas-vindas").
+  descricao        String?
+  /// Só para cupons abertos (sem destinatários). Nulo = sem limite.
+  maxUsos          Int?
+  validoAte        DateTime?
+  ativo            Boolean             @default(true)
+  criadoPorId      String
+  criadoPorApelido String
+  criadoEm         DateTime            @default(now())
+  destinatarios    CupomDestinatario[]
+  resgates         CupomResgate[]
+
+  @@index([criadoEm])
+}
+
+model CupomDestinatario {
+  cupom     Cupom   @relation(fields: [cupomId], references: [id], onDelete: Cascade)
+  cupomId   String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+
+  @@id([cupomId, usuarioId])
+  @@index([usuarioId])
+}
+
+/// Cada conta resgata o mesmo cupom no máximo uma vez.
+model CupomResgate {
+  cupom     Cupom    @relation(fields: [cupomId], references: [id], onDelete: Cascade)
+  cupomId   String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+  criadoEm  DateTime @default(now())
+
+  @@id([cupomId, usuarioId])
+  @@index([usuarioId])
 }

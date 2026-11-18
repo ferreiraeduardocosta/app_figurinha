@@ -141,6 +141,20 @@ export interface Loja {
   modoTeste: boolean;
 }
 
+export interface CupomMeu {
+  codigo: string;
+  pacotes: number;
+  descricao: string | null;
+  validoAte: string | null;
+}
+
+export interface CupomResgatado {
+  codigo: string;
+  pacotes: number;
+  descricao: string | null;
+  pacotesBonus: number;
+}
+
 export interface UsuarioResumo {
   id: string;
   apelido: string;
@@ -286,6 +300,8 @@ export const api = {
     chamar<Loja>('POST', '/loja/nascimento', token, { dataNascimento }),
   compraTeste: (token: string, produtoId: string) =>
     chamar<{ compra: { pacotes: number; moedas: number } }>('POST', '/loja/compra-teste', token, { produtoId }),
+  cupons: (token: string) => chamar<CupomMeu[]>('GET', '/cupons', token),
+  resgatarCupom: (token: string, codigo: string) => chamar<CupomResgatado>('POST', '/cupons/resgatar', token, { codigo }),
   amigos: (token: string) => chamar<ListaAmigos>('GET', '/amigos', token),
   pedirAmizade: (token: string, apelido: string) =>
     chamar<{ status: 'PENDENTE' | 'ACEITA'; usuario: UsuarioResumo }>('POST', '/amigos', token, { apelido }),

@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
+import { CuponsModule } from './cupons/cupons.module';
 import { LigaModule } from './liga/liga.module';
 import { LojaModule } from './loja/loja.module';
 import { MissoesModule } from './missoes/missoes.module';
@@ -31,6 +32,7 @@ class SaudeController {
     LojaModule,
     MissoesModule,
     LigaModule,
+    CuponsModule,
   ],
   controllers: [SaudeController, CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

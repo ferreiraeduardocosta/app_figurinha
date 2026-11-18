@@ -193,6 +193,20 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
 - Hoje é calculado a cada consulta. Com muitos jogadores, guardar o ranking
   pronto e atualizar a cada poucos minutos.
 
+### Cupons de pacotes bônus (implementados)
+
+- Criados no painel (aba **Cupons**): quantidade de pacotes (1 a 50), validade
+  opcional (até o fim do dia escolhido, horário de Brasília), descrição opcional e
+  código próprio ou gerado (8 caracteres, sem letras e números que se confundem).
+- **Contas escolhidas** (por apelido ou e-mail, até 500): o cupom aparece pronto
+  para resgatar na tela Início dessas contas. Para as demais o código "não existe".
+- **Qualquer conta**: vale para quem digitar o código, com limite de usos opcional
+  (garantido mesmo com resgates simultâneos).
+- Cada conta resgata o mesmo cupom uma vez. Os pacotes entram como pacotes bônus,
+  junto com os de páginas completas. O painel mostra usos, quem já resgatou e
+  permite desativar ou reativar.
+- O resgate aceita 10 tentativas por minuto, para dificultar adivinhar códigos.
+
 ### Outras ideias
 
 1. Rodadas simuladas semanais com placares e artilheiros.

@@ -120,6 +120,7 @@ const ABAS = [
   ['figurinhas', 'Figurinhas'],
   ['alteracoes', 'Alterações'],
   ['usuarios', 'Usuários'],
+  ['cupons', 'Cupons'],
 ];
 
 function estrutura() {
@@ -160,7 +161,7 @@ async function trocarAba(id) {
   const alvo = document.getElementById('conteudo');
   alvo.replaceChildren(h('p', { class: 'carregando' }, 'Carregando…'));
   try {
-    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios };
+    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons };
     await telas[id](alvo);
   } catch (err) {
     if (err.status !== 401) alvo.replaceChildren(h('p', { class: 'erro', role: 'alert' }, err.message));
@@ -500,6 +501,143 @@ async function telaUsuarios(alvo) {
         corpo)),
   );
   await carregar('');
+}
+
+/* ---------- cupons ---------- */
+
+const STATUS_CUPOM = { ATIVO: 'Ativo', EXPIRADO: 'Expirado', ESGOTADO: 'Esgotado', DESATIVADO: 'Desativado' };
+
+async function telaCupons(alvo) {
+  const erro = h('p', { class: 'erro', role: 'alert', hidden: true });
+  const sucesso = h('p', { class: 'sucesso', role: 'status', hidden: true });
+  const pacotes = h('input', { type: 'number', name: 'pacotes', min: 1, max: 50, value: 1, required: true });
+  const paraEscolhidos = h('input', { type: 'radio', name: 'para', value: 'escolhidos', checked: true });
+  const paraTodos = h('input', { type: 'radio', name: 'para', value: 'todos' });
+  const destinatarios = h('textarea', { name: 'destinatarios', placeholder: 'Um apelido ou e-mail por linha (ou separados por vírgula)' });
+  const maxUsos = h('input', { type: 'number', name: 'maxUsos', min: 1, max: 100000, placeholder: 'Sem limite' });
+  const codigo = h('input', { name: 'codigo', maxlength: 20, placeholder: 'Em branco: gerado sozinho', autocomplete: 'off' });
+  const validoAte = h('input', { type: 'date', name: 'validoAte' });
+  const descricao = h('input', { name: 'descricao', maxlength: 80, placeholder: 'Ex.: Presente de boas-vindas' });
+  const campoDestinatarios = h('label', {}, 'Destinatários', destinatarios);
+  const campoUsos = h('label', { hidden: true }, 'Limite de usos', maxUsos);
+  const botao = h('button', { class: 'botao', type: 'submit' }, 'Criar cupom');
+
+  const alternar = () => {
+    const todos = paraTodos.checked;
+    campoDestinatarios.hidden = todos;
+    destinatarios.required = !todos;
+    campoUsos.hidden = !todos;
+  };
+  paraEscolhidos.addEventListener('change', alternar);
+  paraTodos.addEventListener('change', alternar);
+  alternar();
+
+  const corpo = h('tbody');
+  const contagem = h('p', { class: 'contagem', role: 'status' });
+
+  const carregar = async () => {
+    const lista = await api('GET', '/admin/cupons');
+    contagem.textContent = lista.length === 0 ? 'Nenhum cupom ainda.' : lista.length === 100 ? 'Mostrando os 100 mais recentes' : `${lista.length} cupom(ns)`;
+    corpo.replaceChildren(...lista.map((c) => {
+      const para = c.destinatarios.length === 0
+        ? h('span', {}, 'Qualquer conta', h('span', { class: 'sub' }, c.maxUsos ? `limite de ${c.maxUsos} uso(s)` : 'sem limite de usos'))
+        : h('span', {},
+            `${c.destinatarios.length} conta(s)`,
+            h('span', { class: 'sub' }, c.destinatarios.slice(0, 8).map((d) => (d.resgatou ? '✓ ' : '') + d.apelido).join(', ') +
+              (c.destinatarios.length > 8 ? ` e mais ${c.destinatarios.length - 8}` : '')));
+      const acao = h('button', {
+        class: c.ativo ? 'botao perigo pequeno' : 'botao secundario pequeno',
+        type: 'button',
+        onclick: async (e) => {
+          e.target.disabled = true;
+          try {
+            await api('PATCH', '/admin/cupons/' + c.id, { ativo: !c.ativo });
+            await carregar();
+          } catch (err) {
+            if (err.status !== 401) { erro.textContent = err.message; erro.hidden = false; }
+            e.target.disabled = false;
+          }
+        },
+      }, c.ativo ? 'Desativar' : 'Reativar');
+      return h('tr', {},
+        h('td', { class: 'codigo' }, c.codigo, c.descricao ? h('span', { class: 'sub' }, c.descricao) : null),
+        h('td', { class: 'num' }, c.pacotes),
+        h('td', {}, para),
+        h('td', { class: 'num' }, c.usos),
+        h('td', {}, c.validoAte ? new Date(c.validoAte).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : 'Sem validade'),
+        h('td', {}, h('span', { class: 'chip ' + c.status }, STATUS_CUPOM[c.status])),
+        h('td', {}, c.criadoPorApelido, h('span', { class: 'sub' }, data(c.criadoEm))),
+        h('td', {}, acao),
+      );
+    }));
+  };
+
+  const form = h('form', {
+    class: 'cartao form-cupom',
+    onsubmit: async (e) => {
+      e.preventDefault();
+      erro.hidden = true;
+      sucesso.hidden = true;
+      botao.disabled = true;
+      const todos = paraTodos.checked;
+      const lista = todos ? [] : destinatarios.value.split(/[\n,;]+/).map((x) => x.trim()).filter(Boolean);
+      try {
+        if (!todos && lista.length === 0) throw new Error('Informe pelo menos um apelido ou e-mail.');
+        const r = await api('POST', '/admin/cupons', {
+          pacotes: Number(pacotes.value),
+          destinatarios: lista,
+          maxUsos: todos && maxUsos.value ? Number(maxUsos.value) : undefined,
+          codigo: codigo.value.trim() || undefined,
+          validoAte: validoAte.value || undefined,
+          descricao: descricao.value.trim() || undefined,
+        });
+        sucesso.replaceChildren('Cupom ', h('strong', { class: 'codigo' }, r.codigo), ' criado',
+          r.destinatarios > 0 ? ` para ${r.destinatarios} conta(s). Ele já aparece no app dessas contas.` : ' para qualquer conta. Divulgue o código.');
+        sucesso.hidden = false;
+        destinatarios.value = '';
+        codigo.value = '';
+        descricao.value = '';
+        await carregar();
+      } catch (err) {
+        if (err.status !== 401) { erro.textContent = err.message; erro.hidden = false; }
+      } finally {
+        botao.disabled = false;
+      }
+    },
+  },
+    h('h3', {}, 'Novo cupom'),
+    h('p', { class: 'aviso' }, 'Cada cupom dá pacotes bônus. Cada conta resgata o mesmo cupom uma vez só.'),
+    h('div', { class: 'grade-campos' },
+      h('label', {}, 'Pacotes por conta', pacotes),
+      h('label', {}, 'Validade (opcional)', validoAte),
+      h('label', {}, 'Código (opcional)', codigo),
+    ),
+    h('fieldset', {},
+      h('legend', {}, 'Para quem'),
+      h('div', { class: 'opcoes' },
+        h('label', { class: 'opcao' }, paraEscolhidos, 'Contas escolhidas (o cupom aparece no app delas)'),
+        h('label', { class: 'opcao' }, paraTodos, 'Qualquer conta que digitar o código'),
+      ),
+    ),
+    campoDestinatarios,
+    campoUsos,
+    h('label', {}, 'Descrição para o jogador (opcional)', descricao),
+    erro,
+    sucesso,
+    h('div', { class: 'acoes' }, botao),
+  );
+
+  alvo.replaceChildren(
+    h('h2', {}, 'Cupons'),
+    form,
+    contagem,
+    h('div', { class: 'caixa-tabela' },
+      h('table', {},
+        h('thead', {}, h('tr', {}, h('th', {}, 'Código'), h('th', { class: 'num' }, 'Pacotes'), h('th', {}, 'Para quem'),
+          h('th', { class: 'num' }, 'Usos'), h('th', {}, 'Validade'), h('th', {}, 'Status'), h('th', {}, 'Criado por'), h('th', {}, ''))),
+        corpo)),
+  );
+  await carregar();
 }
 
 /* ---------- início ---------- */

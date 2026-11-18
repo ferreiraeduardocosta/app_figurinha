@@ -94,7 +94,7 @@ export function AbrirPacote({
               <Path d="M4 8 L12 12 L20 8 M12 12 V21" fill="none" stroke="#FBBF24" strokeWidth={1.4} strokeLinejoin="round" />
             </Svg>
             <Text style={estilos.pacoteTitulo}>Craques da Várzea</Text>
-            <Text style={estilos.pacoteSub}>{{ diario: 'Pacote grátis do dia', bonus: 'Pacote de recompensa', comprado: 'Pacote comprado', moedas: 'Pago com moedas' }[origem]} · 5 figurinhas</Text>
+            <Text style={estilos.pacoteSub}>{{ diario: 'Pacote grátis do dia', bonus: 'Pacote bônus', comprado: 'Pacote comprado', moedas: 'Pago com moedas' }[origem]} · 5 figurinhas</Text>
           </Animated.View>
           {erro && (
             <Text style={estilos.erro} accessibilityRole="alert">

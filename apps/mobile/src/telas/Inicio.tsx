@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Svg, { Path } from 'react-native-svg';
 import { api, OrigemPacote, Ranking } from '../api';
 import { Botao } from '../componentes/Botao';
+import { Cupons } from '../componentes/Cupons';
 import { Missoes } from '../componentes/Missoes';
 import { Trofeu } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
@@ -108,6 +109,19 @@ export function Inicio({
         )}
       </View>
 
+      <Cupons />
+
+      {perfil.pacotesBonus > 0 && (
+        <View style={[estilos.cartao, { borderColor: '#FBBF24', borderWidth: 2 }]}>
+          <Text style={estilos.rotulo}>Pacotes bônus</Text>
+          <Text style={estilos.bonusTexto}>
+            Você tem {perfil.pacotesBonus} {perfil.pacotesBonus === 1 ? 'pacote bônus' : 'pacotes bônus'} para abrir, de páginas
+            completas e cupons.
+          </Text>
+          <Botao titulo="Abrir pacote bônus" onPress={() => aoAbrirPacote('bonus')} />
+        </View>
+      )}
+
       <Missoes />
 
       <Pressable
@@ -134,16 +148,6 @@ export function Inicio({
             Você tem {perfil.pacotesComprados} {perfil.pacotesComprados === 1 ? 'pacote' : 'pacotes'} para abrir.
           </Text>
           <Botao titulo="Abrir pacote comprado" onPress={() => aoAbrirPacote('comprado')} />
-        </View>
-      )}
-
-      {perfil.pacotesBonus > 0 && (
-        <View style={[estilos.cartao, { borderColor: '#FBBF24', borderWidth: 2 }]}>
-          <Text style={estilos.rotulo}>Pacotes de recompensa</Text>
-          <Text style={estilos.bonusTexto}>
-            Você tem {perfil.pacotesBonus} {perfil.pacotesBonus === 1 ? 'pacote' : 'pacotes'} por completar páginas do álbum.
-          </Text>
-          <Botao titulo="Abrir pacote de recompensa" onPress={() => aoAbrirPacote('bonus')} />
         </View>
       )}
 
