@@ -19,7 +19,7 @@ export function AbrirPacote({
   aoFechar: () => void;
   aoVerAlbum: (secao?: string) => void;
 }) {
-  const { abrirPacote, porCodigo, clubes } = useJogo();
+  const { abrirPacote, porCodigo, clubes, emAlta } = useJogo();
   const { width } = useWindowDimensions();
   const [etapa, setEtapa] = useState<Etapa>('fechado');
   const [sorteadas, setSorteadas] = useState<FigurinhaSorteada[]>([]);
@@ -134,7 +134,7 @@ export function AbrirPacote({
               ],
             }}
           >
-            <Figurinha figurinha={f} clube={clube} largura={larguraCarta} brilhante={s.brilhante} />
+            <Figurinha figurinha={f} clube={clube} largura={larguraCarta} brilhante={s.brilhante} emAlta={s.codigo === emAlta} />
           </Animated.View>
           <Text style={estilos.raridade}>{estiloRaridade[s.raridade].nome}</Text>
         </View>

@@ -27,6 +27,7 @@ Públicos:
 | GET | `/figurinhas` | As 136 figurinhas |
 | GET | `/figurinhas/:codigo` | Uma figurinha (ex.: `UNI-11`) |
 | GET | `/probabilidades` | Probabilidades, garantia mínima, Brilhante e balcão |
+| GET | `/liga` | Classificação, última e próxima rodada, artilharia e figurinha "Em alta" (simula rodadas vencidas) |
 | POST | `/auth/cadastro` | `{ apelido, email, senha }` → `{ token, expiraEm, usuario }` |
 | POST | `/auth/entrar` | `{ email, senha }` → `{ token, expiraEm, usuario }` |
 

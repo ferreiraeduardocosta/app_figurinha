@@ -168,6 +168,20 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
   vez. Se o beta mostrar pouco engajamento, trocar por missões que peçam outras
   ações (ex.: tirar uma Épica, completar 3 figurinhas de um clube).
 
+### Rodadas simuladas (implementadas)
+
+- Turno e returno: 14 rodadas, uma por semana, aos domingos às 18h de Brasília
+  (início e semente em [`liga.json`](../data/temporada1/liga.json)).
+- A força de cada time vem dos atributos dos jogadores (ataque contra defesa,
+  vantagem de 10% para o mandante). Placar por distribuição de Poisson, cerca de
+  2,5 gols por jogo; os artilheiros saem por posição e ataque.
+- Não há agendador: a primeira consulta depois do horário simula a rodada, uma
+  única vez. A mesma semente sempre dá o mesmo resultado (auditável); em
+  produção, use `LIGA_SEMENTE` secreta para ninguém prever os placares.
+- O craque da rodada (mais gols; empate pelo ataque) vira a figurinha
+  **"Em alta"** até a rodada seguinte, com selo no álbum e nos pacotes.
+- Mudar atributos no painel muda a força do time nas rodadas seguintes.
+
 ### Outras ideias
 
 1. Rodadas simuladas semanais com placares e artilheiros.
@@ -186,5 +200,5 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
 | 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; **pendente: arte final ([docs/arte](arte/README.md)) e teste em celular** | Beta fechado |
 | 2. Trocas 🟡 | Amigos ✅, propostas e contrapropostas ✅, mercado de repetidas ✅, antifraude ✅; falta notificação push | Beta aberto |
 | 3. Monetização 🟡 | Loja ✅, pacote com moedas ✅, crédito pelo servidor e estorno ✅, limites para menores ✅, probabilidades ✅, garantia mínima ✅; **pendente: ligar o RevenueCat e as lojas ([docs/LOJA.md](LOJA.md))** | v1.0 nas lojas |
-| 4. Engajamento 🟡 | Missões diárias ✅; faltam rodadas simuladas, ranking e Bafo | Retenção |
+| 4. Engajamento 🟡 | Missões diárias ✅, rodadas simuladas da liga ✅, figurinha "Em alta" ✅, exclusão de conta ✅; faltam ranking e Bafo | Retenção |
 | 5. Escala | Observabilidade, testes de carga, analytics, i18n | Crescimento |

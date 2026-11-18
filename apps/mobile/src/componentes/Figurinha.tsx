@@ -22,11 +22,14 @@ export function Figurinha({
   clube,
   largura = BASE_L,
   brilhante = false,
+  emAlta = false,
 }: {
   figurinha: DadosFigurinha;
   clube: Clube;
   largura?: number;
   brilhante?: boolean;
+  /** Craque da última rodada da liga. */
+  emAlta?: boolean;
 }) {
   const k = largura / BASE_L;
   const r = estiloRaridade[f.raridade];
@@ -48,7 +51,7 @@ export function Figurinha({
     <View
       style={{ width: largura, height: BASE_A * k, borderRadius: 18 * k, overflow: 'hidden' }}
       accessible
-      accessibilityLabel={`${nomeGrande}, ${r.nome}, ${f.codigo}`}
+      accessibilityLabel={`${nomeGrande}, ${r.nome}, ${f.codigo}${emAlta ? ', em alta' : ''}`}
     >
       <Svg style={StyleSheet.absoluteFill} viewBox="0 0 100 140" preserveAspectRatio="none">
         <Defs>
@@ -78,6 +81,7 @@ export function Figurinha({
             </View>
           </View>
           {f.tipo === 'LENDA' && <Etiqueta texto="LENDA" k={k} lado="esquerda" />}
+          {emAlta && <Etiqueta texto="EM ALTA" k={k} lado="esquerda" cor="#EA580C" />}
           {brilhante && <Etiqueta texto="BRILHANTE" k={k} lado="direita" claro />}
         </View>
 
@@ -198,14 +202,26 @@ function Retrato({ f, clube, largura, altura, k }: { f: DadosFigurinha; clube: C
   );
 }
 
-function Etiqueta({ texto, k, lado, claro = false }: { texto: string; k: number; lado: 'esquerda' | 'direita'; claro?: boolean }) {
+function Etiqueta({
+  texto,
+  k,
+  lado,
+  claro = false,
+  cor,
+}: {
+  texto: string;
+  k: number;
+  lado: 'esquerda' | 'direita';
+  claro?: boolean;
+  cor?: string;
+}) {
   return (
     <View
       style={{
         position: 'absolute',
         bottom: 10 * k,
         [lado === 'esquerda' ? 'left' : 'right']: 10 * k,
-        backgroundColor: claro ? '#FFFFFF' : cores.tinta,
+        backgroundColor: cor ?? (claro ? '#FFFFFF' : cores.tinta),
         borderRadius: 6 * k,
         paddingHorizontal: 8 * k,
         paddingVertical: 4 * k,

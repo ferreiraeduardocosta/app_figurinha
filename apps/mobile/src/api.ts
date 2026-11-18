@@ -67,6 +67,38 @@ export interface MissoesDoDia {
   missoes: Missao[];
 }
 
+export interface PartidaLiga {
+  rodada: number;
+  mandante: string;
+  visitante: string;
+  data: string;
+  golsMandante: number | null;
+  golsVisitante: number | null;
+  gols: { sigla: string; codigo: string; minuto: number; nome: string }[];
+}
+
+export interface PainelLiga {
+  temporada: number;
+  totalRodadas: number;
+  ultimaRodada: number;
+  proximaRodada: { numero: number; data: string } | null;
+  classificacao: {
+    sigla: string;
+    pontos: number;
+    jogos: number;
+    vitorias: number;
+    empates: number;
+    derrotas: number;
+    golsPro: number;
+    golsContra: number;
+    saldo: number;
+  }[];
+  jogosDaUltima: PartidaLiga[];
+  jogosDaProxima: PartidaLiga[];
+  artilharia: { codigo: string; nome: string; clube: string; gols: number }[];
+  emAlta: { codigo: string; gols: number; nome: string; rodada: number } | null;
+}
+
 export type OrigemPacote = 'diario' | 'bonus' | 'comprado' | 'moedas';
 
 export interface Oferta {
@@ -219,6 +251,7 @@ export const api = {
   clubes: () => chamar<Clube[]>('GET', '/clubes'),
   figurinhas: () => chamar<Figurinha[]>('GET', '/figurinhas'),
   probabilidades: () => chamar<Probabilidades>('GET', '/probabilidades'),
+  liga: () => chamar<PainelLiga>('GET', '/liga'),
   cadastrar: (apelido: string, email: string, senha: string) =>
     chamar<Sessao>('POST', '/auth/cadastro', null, { apelido, email, senha }),
   entrar: (email: string, senha: string) => chamar<Sessao>('POST', '/auth/entrar', null, { email, senha }),

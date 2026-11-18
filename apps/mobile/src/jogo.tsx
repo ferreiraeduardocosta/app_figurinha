@@ -11,6 +11,8 @@ interface Jogo {
   porCodigo: Record<string, Figurinha>;
   perfil: Perfil | null;
   album: Album | null;
+  /** Código da figurinha "Em alta" (craque da última rodada da liga). */
+  emAlta: string | null;
   entrar(email: string, senha: string): Promise<void>;
   cadastrar(apelido: string, email: string, senha: string): Promise<void>;
   sair(): Promise<void>;
@@ -38,6 +40,7 @@ export function JogoProvider({ children }: { children: ReactNode }) {
   const [figurinhas, setFigurinhas] = useState<Figurinha[]>([]);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [album, setAlbum] = useState<Album | null>(null);
+  const [emAlta, setEmAlta] = useState<string | null>(null);
 
   const limparSessao = useCallback(async () => {
     await apagarSessao();
@@ -52,6 +55,11 @@ export function JogoProvider({ children }: { children: ReactNode }) {
         const [p, a] = await Promise.all([api.perfil(s.token), api.album(s.token)]);
         setPerfil(p);
         setAlbum(a);
+        // A liga é extra: se falhar, o resto do app segue normal.
+        api
+          .liga()
+          .then((l) => setEmAlta(l.emAlta?.codigo ?? null))
+          .catch(() => undefined);
       } catch (e) {
         // Sessão expirada ou revogada: volta para a tela de entrar.
         if (e instanceof ErroApi && e.status === 401) await limparSessao();
@@ -104,6 +112,7 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       clubes,
       figurinhas,
       porCodigo: Object.fromEntries(figurinhas.map((f) => [f.codigo, f])),
+      emAlta,
       perfil,
       album,
       entrar: async (email, senha) => iniciarSessao(await api.entrar(email, senha)),
@@ -134,7 +143,7 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       },
       tentarDeNovo: () => setTentativa((t) => t + 1),
     }),
-    [carregando, erroInicial, sessao, clubes, figurinhas, perfil, album, iniciarSessao, limparSessao, carregarJogador],
+    [carregando, erroInicial, sessao, clubes, figurinhas, perfil, album, emAlta, iniciarSessao, limparSessao, carregarJogador],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

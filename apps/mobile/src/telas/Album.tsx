@@ -18,7 +18,7 @@ const ROTULO_TIPO: Record<string, string> = {
 };
 
 export function Album({ secaoInicial }: { secaoInicial?: string }) {
-  const { figurinhas, clubes, album, perfil } = useJogo();
+  const { figurinhas, clubes, album, perfil, emAlta } = useJogo();
   const paginasCompletas = useMemo(
     () => new Set((perfil?.recompensas ?? []).filter((r) => r.tipo === 'PAGINA').map((r) => r.chave)),
     [perfil],
@@ -85,7 +85,7 @@ export function Album({ secaoInicial }: { secaoInicial?: string }) {
               <Pressable key={f.codigo} onPress={() => setAberta(f)} accessibilityRole="button" accessibilityHint="Abre os detalhes">
                 {item ? (
                   <View>
-                    <Figurinha figurinha={f} clube={clubes[f.clubeSigla]} largura={largura} brilhante={item.brilhantes > 0} />
+                    <Figurinha figurinha={f} clube={clubes[f.clubeSigla]} largura={largura} brilhante={item.brilhantes > 0} emAlta={f.codigo === emAlta} />
                     {item.quantidade > 1 && (
                       <View style={estilos.repetidas} accessible accessibilityLabel={`${item.quantidade - 1} repetidas`}>
                         <Text style={estilos.repetidasTexto}>+{item.quantidade - 1}</Text>
@@ -107,7 +107,7 @@ export function Album({ secaoInicial }: { secaoInicial?: string }) {
 }
 
 function Detalhe({ figurinha: f, aoFechar }: { figurinha: DadosFigurinha; aoFechar: () => void }) {
-  const { clubes, album, trocarNoBalcao } = useJogo();
+  const { clubes, album, trocarNoBalcao, emAlta } = useJogo();
   const { width } = useWindowDimensions();
   const [trocando, setTrocando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -133,7 +133,13 @@ function Detalhe({ figurinha: f, aoFechar }: { figurinha: DadosFigurinha; aoFech
     <Modal animationType="slide" onRequestClose={aoFechar} presentationStyle="pageSheet">
       <ScrollView style={{ backgroundColor: cores.fundo }} contentContainerStyle={{ padding: 20, gap: 16, alignItems: 'center' }}>
         {item ? (
-          <Figurinha figurinha={f} clube={clubes[f.clubeSigla]} largura={Math.min(300, width - 80)} brilhante={item.brilhantes > 0} />
+          <Figurinha
+            figurinha={f}
+            clube={clubes[f.clubeSigla]}
+            largura={Math.min(300, width - 80)}
+            brilhante={item.brilhantes > 0}
+            emAlta={f.codigo === emAlta}
+          />
         ) : (
           <EspacoVazio codigo={f.codigo} rotulo={r.nome} largura={Math.min(220, width - 120)} />
         )}

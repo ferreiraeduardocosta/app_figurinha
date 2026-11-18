@@ -11,6 +11,7 @@ import { Album } from './src/telas/Album';
 import { Entrar } from './src/telas/Entrar';
 import { ExcluirConta } from './src/telas/ExcluirConta';
 import { Inicio } from './src/telas/Inicio';
+import { Liga } from './src/telas/Liga';
 import { Loja } from './src/telas/Loja';
 import { Probabilidades } from './src/telas/Probabilidades';
 import { Trocas } from './src/telas/Trocas';
@@ -29,7 +30,7 @@ export default function App() {
   );
 }
 
-type Aba = 'inicio' | 'album' | 'trocas' | 'loja';
+type Aba = 'inicio' | 'album' | 'liga' | 'trocas' | 'loja';
 type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir';
 
 function Raiz() {
@@ -99,6 +100,7 @@ function Raiz() {
           />
         )}
         {aba === 'album' && <Album key={secaoAlbum} secaoInicial={secaoAlbum} />}
+        {aba === 'liga' && <Liga />}
         {aba === 'trocas' && <Trocas />}
         {aba === 'loja' && (
           <Loja aoAbrirPacote={(origem) => setSobreposta(origem)} aoVerProbabilidades={() => setSobreposta('probabilidades')} />
@@ -117,6 +119,12 @@ function Raiz() {
           ativa={aba === 'album'}
           onPress={() => setAba('album')}
           icone="M4 5 C7 4 10 4 12 6 C14 4 17 4 20 5 V19 C17 18 14 18 12 20 C10 18 7 18 4 19 Z M12 6 V20"
+        />
+        <BotaoAba
+          rotulo="Liga"
+          ativa={aba === 'liga'}
+          onPress={() => setAba('liga')}
+          icone="M7 4 H17 V8 C17 11 15 13 12 13 C9 13 7 11 7 8 Z M7 6 H4 C4 9 5 10 7 10 M17 6 H20 C20 9 19 10 17 10 M12 13 V17 M8 20 H16 M9 17 H15 V20 H9 Z"
         />
         <BotaoAba
           rotulo="Trocas"
