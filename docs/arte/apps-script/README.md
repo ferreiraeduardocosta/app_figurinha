@@ -33,3 +33,29 @@ com o nome do código (`TUB-04.png`) e compartilhadas como "qualquer pessoa com 
 pode ver", para poderem ser baixadas e colocadas no app.
 
 Se o Google lançar um modelo de imagem melhor, troque a lista `MODELOS` no topo do script.
+
+---
+
+# Alternativa: Cloudflare Workers AI (grátis até ~150 imagens/dia)
+
+[`GerarImagensCloudflare.gs`](GerarImagensCloudflare.gs) funciona igual, mas usa o
+FLUX.1 schnell da Cloudflare. Cada texto é traduzido para inglês antes (o FLUX entende
+melhor) pelo modelo de tradução da própria Cloudflare.
+
+**Use um script ou o outro**, não os dois no mesmo projeto (têm as mesmas funções).
+
+1. Crie uma conta grátis em <https://dash.cloudflare.com>.
+2. No painel: **AI → Workers AI → Use REST API**. Copie o **Account ID** e clique em
+   **Create a Workers AI API Token** (copie o token; ele só aparece uma vez).
+3. Importe a planilha e cole o script como nos passos 2–4 acima.
+4. **🎨 Artes → 1. Configurar conta da Cloudflare**: cole o Account ID e depois o token.
+
+Diferenças em relação ao Gemini:
+
+- **Custo:** o plano grátis dá 10.000 "neurons" por dia; cada imagem gasta algo
+  perto de 60, então dá para fazer as 136 figurinhas em um ou dois dias sem pagar.
+- **Formato:** sai sempre quadrada (1024×1024, JPG). Estádios e momentos ficam
+  quadrados; o app corta as bordas na hora de mostrar.
+- **Qualidade:** o FLUX schnell é rápido, mas costuma seguir menos os detalhes do
+  texto que o Gemini. Gere algumas linhas de teste e compare.
+- Pasta no Drive: **Craques da Várzea - Artes (Cloudflare)**.
