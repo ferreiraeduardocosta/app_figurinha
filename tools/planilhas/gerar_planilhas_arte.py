@@ -94,10 +94,7 @@ PLANILHAS = [
 ]
 
 
-def salvar(nome, linhas):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = nome.split("_", 1)[1][:31]
+def preencher(ws, linhas):
     cab = ["Código", "Nome", "Clube", "O que o desenho deve trazer", "Evitar", "Formato", "Link da Imagem"]
     ws.append(cab)
     for c in ws[1]:
@@ -113,18 +110,26 @@ def salvar(nome, linhas):
         ws.column_dimensions[col].width = w
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = f"A1:G{ws.max_row}"
-    wb.save(DESTINO / f"{nome}.xlsx")
 
 
 def main():
     DESTINO.mkdir(parents=True, exist_ok=True)
+    tudo = Workbook()
+    tudo.remove(tudo.active)
     for nome, tipos, montar, formato, evitar in PLANILHAS:
         linhas = []
         for f in sorted((f for f in figurinhas if f["tipo"] in tipos), key=lambda f: f["numero"]):
             titulo = f["nome"] + (f" ({f['apelido']})" if f.get("apelido") else "")
             linhas.append([f["codigo"], titulo, clubes[f["clube"]]["nome"], montar(f), evitar, formato, ""])
-        salvar(nome, linhas)
+        titulo_aba = nome.split("_", 1)[1][:31]
+        wb = Workbook()
+        wb.active.title = titulo_aba
+        preencher(wb.active, linhas)
+        wb.save(DESTINO / f"{nome}.xlsx")
+        preencher(tudo.create_sheet(titulo_aba), linhas)
         print(f"{nome}: {len(linhas)}")
+    # Tudo num arquivo só, para importar no Google Sheets e usar o Apps Script.
+    tudo.save(DESTINO.parent / "Briefing_Arte_T1.xlsx")
 
 
 if __name__ == "__main__":
