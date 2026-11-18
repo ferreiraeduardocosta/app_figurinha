@@ -1,6 +1,6 @@
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { HASH_FALSO, conferirSenha, gerarHashSenha } from './senha';
 
@@ -45,6 +45,53 @@ export class AuthService {
       throw new UnauthorizedException({ codigo: 'CREDENCIAIS_INVALIDAS', mensagem: 'E-mail ou senha incorretos.' });
     }
     return this.criarSessao(usuario.id, usuario.apelido, usuario.papel);
+  }
+
+  /**
+   * Exclui a conta (LGPD e exigência das lojas). Sem compras: apaga tudo.
+   * Com compras: os registros financeiros precisam ser guardados, então a conta
+   * é anonimizada (sem nome, e-mail, nascimento, álbum, amizades, trocas ou sessões).
+   */
+  async excluirConta(usuarioId: string, senha: string) {
+    const u = await this.prisma.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
+    if (!(await conferirSenha(senha, u.senhaHash))) {
+      throw new ForbiddenException({ codigo: 'SENHA_INCORRETA', mensagem: 'Senha incorreta.' });
+    }
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Usuario" WHERE id = ${usuarioId} FOR UPDATE`;
+      const compras = await tx.compra.count({ where: { usuarioId } });
+      if (compras === 0) {
+        await tx.usuario.delete({ where: { id: usuarioId } });
+        return { resultado: 'APAGADA' as const };
+      }
+      const outro = { OR: [{ solicitanteId: usuarioId }, { destinatarioId: usuarioId }] };
+      await tx.sessao.deleteMany({ where: { usuarioId } });
+      await tx.itemAlbum.deleteMany({ where: { usuarioId } });
+      await tx.recompensa.deleteMany({ where: { usuarioId } });
+      await tx.missaoDia.deleteMany({ where: { usuarioId } });
+      await tx.aberturaPacote.deleteMany({ where: { usuarioId } });
+      await tx.amizade.deleteMany({ where: outro });
+      await tx.troca.deleteMany({ where: { OR: [{ propostaPorId: usuarioId }, { paraId: usuarioId }] } });
+      const marca = randomUUID();
+      await tx.usuario.update({
+        where: { id: usuarioId },
+        data: {
+          apelido: `excluido_${marca.slice(0, 8)}`,
+          email: `excluido-${marca}@excluido.invalid`,
+          senhaHash: 'excluida',
+          papel: 'JOGADOR',
+          dataNascimento: null,
+          moedas: 0,
+          pacotesBonus: 0,
+          pacotesComprados: 0,
+          pacotesSemEpica: 0,
+          pacotesSemLendaria: 0,
+          ultimoPacoteDiarioEm: null,
+          excluidoEm: new Date(),
+        },
+      });
+      return { resultado: 'ANONIMIZADA' as const };
+    });
   }
 
   async sair(sessaoId: string) {

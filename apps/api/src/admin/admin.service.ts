@@ -201,6 +201,7 @@ export class AdminService {
         email: true,
         papel: true,
         criadoEm: true,
+        excluidoEm: true,
         moedas: true,
         _count: { select: { album: { where: { quantidade: { gt: 0 } } }, aberturas: true } },
       },

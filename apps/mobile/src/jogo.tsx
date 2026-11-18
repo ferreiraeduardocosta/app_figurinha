@@ -14,6 +14,7 @@ interface Jogo {
   entrar(email: string, senha: string): Promise<void>;
   cadastrar(apelido: string, email: string, senha: string): Promise<void>;
   sair(): Promise<void>;
+  excluirConta(senha: string): Promise<void>;
   recarregar(): Promise<void>;
   abrirPacote(origem: OrigemPacote): Promise<ResultadoPacote>;
   trocarNoBalcao(codigo: string): Promise<RecompensaNova[]>;
@@ -109,6 +110,11 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       cadastrar: async (apelido, email, senha) => iniciarSessao(await api.cadastrar(apelido, email, senha)),
       sair: async () => {
         if (sessao) await api.sair(sessao.token).catch(() => undefined);
+        await limparSessao();
+      },
+      excluirConta: async (senha) => {
+        if (!sessao) return;
+        await api.excluirConta(sessao.token, senha);
         await limparSessao();
       },
       recarregar: async () => {

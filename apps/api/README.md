@@ -35,6 +35,7 @@ Com login (`Authorization: Bearer <token>`):
 | Método | Rota | O que faz |
 |---|---|---|
 | POST | `/auth/sair` | Encerra a sessão |
+| POST | `/auth/excluir-conta` | `{ senha }`: exclui a conta (apaga; ou anonimiza se houver compras a guardar) |
 | GET | `/eu` | Perfil: moedas, pacote diário, garantia e progresso |
 | GET | `/album` | Figurinhas do jogador e repetidas por raridade |
 | POST | `/pacotes/diario` | Abre o pacote grátis do dia (1 por dia, meia-noite de Brasília) |

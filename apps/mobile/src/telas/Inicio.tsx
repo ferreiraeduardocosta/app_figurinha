@@ -19,9 +19,11 @@ function contagem(ate: string | null): string {
 export function Inicio({
   aoAbrirPacote,
   aoVerProbabilidades,
+  aoExcluirConta,
 }: {
   aoAbrirPacote: (origem: OrigemPacote) => void;
   aoVerProbabilidades: () => void;
+  aoExcluirConta: () => void;
 }) {
   const { perfil, recarregar, sair } = useJogo();
   const [atualizando, setAtualizando] = useState(false);
@@ -142,6 +144,9 @@ export function Inicio({
 
       <Pressable accessibilityRole="button" onPress={sair} style={estilos.link}>
         <Text style={[estilos.linkTexto, { color: cores.apagado }]}>Sair da conta</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" onPress={aoExcluirConta} style={estilos.link}>
+        <Text style={[estilos.linkTexto, { color: cores.erro, fontWeight: '600', fontSize: 14 }]}>Excluir minha conta</Text>
       </Pressable>
     </ScrollView>
   );

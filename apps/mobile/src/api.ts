@@ -223,6 +223,8 @@ export const api = {
     chamar<Sessao>('POST', '/auth/cadastro', null, { apelido, email, senha }),
   entrar: (email: string, senha: string) => chamar<Sessao>('POST', '/auth/entrar', null, { email, senha }),
   sair: (token: string) => chamar<void>('POST', '/auth/sair', token),
+  excluirConta: (token: string, senha: string) =>
+    chamar<{ resultado: 'APAGADA' | 'ANONIMIZADA' }>('POST', '/auth/excluir-conta', token, { senha }),
   perfil: (token: string) => chamar<Perfil>('GET', '/eu', token),
   album: (token: string) => chamar<Album>('GET', '/album', token),
   abrirPacote: (token: string, origem: OrigemPacote) => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),

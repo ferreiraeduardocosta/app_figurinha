@@ -24,6 +24,15 @@ export class AuthController {
     return this.auth.entrar(v.email(c), v.senha(c));
   }
 
+  /** Exclui a conta do jogador logado. Exige a senha. */
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('excluir-conta')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  excluirConta(@UsuarioAtual() usuario: UsuarioAutenticado, @Body() corpo: unknown) {
+    return this.auth.excluirConta(usuario.id, v.senha(v.objeto(corpo)));
+  }
+
   @Post('sair')
   @HttpCode(204)
   @UseGuards(AuthGuard)

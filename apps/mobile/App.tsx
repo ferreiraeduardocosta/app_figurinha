@@ -9,6 +9,7 @@ import { JogoProvider, useJogo } from './src/jogo';
 import { AbrirPacote } from './src/telas/AbrirPacote';
 import { Album } from './src/telas/Album';
 import { Entrar } from './src/telas/Entrar';
+import { ExcluirConta } from './src/telas/ExcluirConta';
 import { Inicio } from './src/telas/Inicio';
 import { Loja } from './src/telas/Loja';
 import { Probabilidades } from './src/telas/Probabilidades';
@@ -29,11 +30,12 @@ export default function App() {
 }
 
 type Aba = 'inicio' | 'album' | 'trocas' | 'loja';
-type Sobreposta = null | OrigemPacote | 'probabilidades';
+type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir';
 
 function Raiz() {
   const { carregando, erroInicial, sessao, perfil, tentarDeNovo, recarregar } = useJogo();
   const [aba, setAba] = useState<Aba>('inicio');
+  const [sobreposta, setSobreposta] = useState<Sobreposta>(null);
 
   // Sem notificações push ainda: atualiza perfil e álbum ao trocar de aba e a cada minuto,
   // para trocas aceitas pelo outro lado e novos pedidos aparecerem.
@@ -41,12 +43,18 @@ function Raiz() {
     if (sessao) recarregar().catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aba]);
+  // Ao sair (ou excluir a conta), volta ao estado inicial para o próximo login.
+  useEffect(() => {
+    if (!sessao) {
+      setSobreposta(null);
+      setAba('inicio');
+    }
+  }, [sessao]);
   useEffect(() => {
     if (!sessao) return;
     const id = setInterval(() => recarregar().catch(() => undefined), 60_000);
     return () => clearInterval(id);
   }, [sessao, recarregar]);
-  const [sobreposta, setSobreposta] = useState<Sobreposta>(null);
   const [secaoAlbum, setSecaoAlbum] = useState<string | undefined>(undefined);
 
   if (carregando) {
@@ -64,6 +72,7 @@ function Raiz() {
   if (!sessao) return <Entrar />;
   if (!perfil) return <ActivityIndicator color={cores.destaque} style={{ flex: 1 }} />;
 
+  if (sobreposta === 'excluir') return <ExcluirConta aoVoltar={() => setSobreposta(null)} />;
   if (sobreposta && sobreposta !== 'probabilidades') {
     return (
       <AbrirPacote
@@ -83,7 +92,11 @@ function Raiz() {
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
         {aba === 'inicio' && (
-          <Inicio aoAbrirPacote={(origem) => setSobreposta(origem)} aoVerProbabilidades={() => setSobreposta('probabilidades')} />
+          <Inicio
+            aoAbrirPacote={(origem) => setSobreposta(origem)}
+            aoVerProbabilidades={() => setSobreposta('probabilidades')}
+            aoExcluirConta={() => setSobreposta('excluir')}
+          />
         )}
         {aba === 'album' && <Album key={secaoAlbum} secaoInicial={secaoAlbum} />}
         {aba === 'trocas' && <Trocas />}

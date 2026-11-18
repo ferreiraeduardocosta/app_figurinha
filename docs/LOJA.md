@@ -56,6 +56,6 @@ Com `LOJA_TESTE=1` na API (e `NODE_ENV` diferente de `production`), o botão
 - **Revisão jurídica**: pacotes pagos com conteúdo aleatório, ECA Digital (Lei
   15.211/2025) e LGPD. Os limites para menores aqui são um ponto de partida, não
   um parecer.
-- Contas com compras não são apagadas automaticamente (os registros financeiros
-  ficam guardados); um fluxo de exclusão de conta com anonimização ainda precisa
-  ser feito.
+- Exclusão de conta (exigida pelas lojas e pela LGPD) já existe no app: conta
+  sem compras é apagada por inteiro; conta com compras é anonimizada e só o
+  registro da compra, sem dados pessoais, é guardado.

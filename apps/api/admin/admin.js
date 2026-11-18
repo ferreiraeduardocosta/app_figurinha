@@ -476,7 +476,8 @@ async function telaUsuarios(alvo) {
     const lista = await api('GET', '/admin/usuarios' + (busca ? '?busca=' + encodeURIComponent(busca) : ''));
     contagem.textContent = lista.length === 50 ? 'Mostrando os 50 mais recentes' : `${lista.length} jogador(es)`;
     corpo.replaceChildren(...lista.map((u) => h('tr', {},
-      h('td', {}, u.apelido, u.papel === 'ADMIN' ? [' ', h('span', { class: 'chip ADMIN' }, 'Admin')] : null),
+      h('td', {}, u.apelido, u.papel === 'ADMIN' ? [' ', h('span', { class: 'chip ADMIN' }, 'Admin')] : null,
+        u.excluidoEm ? [' ', h('span', { class: 'chip COMUM' }, 'Conta excluída')] : null),
       h('td', {}, u.email),
       h('td', { class: 'num' }, u.coladas),
       h('td', { class: 'num' }, u.pacotesAbertos),

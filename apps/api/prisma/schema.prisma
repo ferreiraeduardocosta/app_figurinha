@@ -121,6 +121,8 @@ model Usuario {
   /// scrypt: "scrypt$N$r$p$sal$hash" (ver src/auth/senha.ts)
   senhaHash            String
   papel                Papel     @default(JOGADOR)
+  /// Conta excluída pelo jogador e anonimizada (só sobra quando há compras a guardar).
+  excluidoEm           DateTime?
   criadoEm             DateTime  @default(now())
   moedas               Int       @default(0)
   /// Contadores da garantia mínima (ver packages/regras).
