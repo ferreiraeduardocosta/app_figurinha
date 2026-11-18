@@ -1,5 +1,5 @@
-# API da Liga Aurora (NestJS + Prisma). Construir a partir da raiz do repositório:
-#   docker build -t liga-aurora-api .
+# API do Craques da Várzea (NestJS + Prisma). Construir a partir da raiz do repositório:
+#   docker build -t craques-da-varzea-api .
 # Imagem completa do Node: já traz o OpenSSL que o Prisma usa (a "slim" não traz).
 # Base trocável, por exemplo para um espelho se o Docker Hub limitar downloads:
 #   docker build --build-arg NODE_IMAGE=mirror.gcr.io/library/node:22-bookworm .

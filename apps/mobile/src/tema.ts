@@ -1,4 +1,4 @@
-/** Cores e estilos do kit visual da Liga Aurora. */
+/** Cores e estilos do kit visual do Craques da Várzea. */
 export const cores = {
   fundo: '#F4F1EA',
   papel: '#FFFFFF',

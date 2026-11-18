@@ -17,7 +17,7 @@ import {
   abrirPacote,
   indexarCatalogo,
   trocarNoBalcao,
-} from '@liga-aurora/regras';
+} from '@craques-da-varzea/regras';
 import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal, proximaMeiaNoite } from './dia';
 import { CONFIG_LOJA } from '../loja/loja.service';

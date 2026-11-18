@@ -54,7 +54,7 @@ git clone https://github.com/ferreiraeduardocosta/app_figurinha && cd app_figuri
 cat > .env.producao <<'FIM'
 POSTGRES_USER=liga
 POSTGRES_PASSWORD=troque-por-uma-senha-forte
-POSTGRES_DB=liga_aurora
+POSTGRES_DB=craques_varzea
 TRUST_PROXY=1
 LIGA_SEMENTE=troque-por-um-texto-secreto
 FIM
@@ -84,7 +84,7 @@ docker compose -f docker-compose.prod.yml exec api npm run admin:promover -- seu
 A imagem base vem do Docker Hub. Se o build falhar com erro 429, use um espelho:
 
 ```bash
-docker build --build-arg NODE_IMAGE=mirror.gcr.io/library/node:22-bookworm -t liga-aurora-api .
+docker build --build-arg NODE_IMAGE=mirror.gcr.io/library/node:22-bookworm -t craques-da-varzea-api .
 ```
 
 ---
@@ -92,11 +92,11 @@ docker build --build-arg NODE_IMAGE=mirror.gcr.io/library/node:22-bookworm -t li
 ## 2. APK de teste (Android)
 
 Configuração pronta em `apps/mobile`: ícone e tela de abertura próprios,
-identificador `com.ligaaurora.app` e o perfil `preview` do
+identificador `com.craquesdavarzea.app` e o perfil `preview` do
 [`eas.json`](../apps/mobile/eas.json), que gera um **APK** instalável direto no
 celular.
 
-> O identificador `com.ligaaurora.app` não pode mudar depois do primeiro envio
+> O identificador `com.craquesdavarzea.app` não pode mudar depois do primeiro envio
 > à Google Play/App Store. Se quiser outro (por exemplo, com um domínio seu),
 > troque em `apps/mobile/app.json` antes.
 
@@ -137,7 +137,7 @@ Passos (no seu computador, com Node 22):
 
 1. Abra o link (ou leia o QR code) no celular e baixe o APK.
 2. Permita "instalar apps de fontes desconhecidas" quando o Android pedir.
-3. Abra o **Liga Aurora**, crie uma conta e teste: pacote do dia, álbum,
+3. Abra o **Craques da Várzea**, crie uma conta e teste: pacote do dia, álbum,
    trocas (com uma segunda conta), loja (sem pagamento real), liga e ranking.
 
 O que ainda não funciona nesse APK: pagamentos reais (ver [LOJA.md](LOJA.md)) e

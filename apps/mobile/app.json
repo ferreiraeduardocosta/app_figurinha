@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Liga Aurora",
-    "slug": "liga-aurora",
+    "name": "Craques da Várzea",
+    "slug": "craques-da-varzea",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ligaaurora.app",
+      "bundleIdentifier": "com.craquesdavarzea.app",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -21,7 +21,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ligaaurora.app"
+      "package": "com.craquesdavarzea.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,6 +37,6 @@
         }
       ]
     ],
-    "scheme": "ligaaurora"
+    "scheme": "craquesdavarzea"
   }
 }

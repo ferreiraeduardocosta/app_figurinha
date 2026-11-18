@@ -1,8 +1,8 @@
 {
-  "name": "@liga-aurora/regras",
+  "name": "@craques-da-varzea/regras",
   "version": "0.1.0",
   "private": true,
-  "description": "Regras do jogo da Liga Aurora: sorteio de pacotes, garantia mínima e balcão de repetidas.",
+  "description": "Regras do jogo do Craques da Várzea: sorteio de pacotes, garantia mínima e balcão de repetidas.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

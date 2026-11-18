@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ConfigEconomia, validarConfig } from '@liga-aurora/regras';
+import { ConfigEconomia, validarConfig } from '@craques-da-varzea/regras';
 
 /** Pasta com os dados da temporada (padrão: data/temporada1 na raiz do repositório). */
 const DADOS_DIR = process.env.DADOS_DIR ?? resolve(__dirname, '../../../../data/temporada1');

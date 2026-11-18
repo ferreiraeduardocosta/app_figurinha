@@ -108,7 +108,7 @@ wb = Workbook()
 ws0 = wb.active; ws0.title = "Leia-me"
 ws0.column_dimensions["A"].width = 26; ws0.column_dimensions["B"].width = 95
 linhas = [
- ("Liga Aurora — Fichas da Temporada 1", None, "titulo"),
+ ("Craques da Várzea — Fichas da Temporada 1", None, "titulo"),
  ("Álbum com 8 clubes e 136 figurinhas: 8 páginas de clube (escudo, estádio, técnico, 11 jogadores e mascote), 8 Lendas da Liga e 8 Grandes Momentos. Liga masculina; a liga feminina virá depois.", None, "texto"),
  ("", None, None),
  ("Abas", None, "sub"),

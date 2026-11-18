@@ -3,9 +3,9 @@
 Geram as planilhas de `docs/planilhas/`. Rodar a partir desta pasta:
 
 ```bash
-python3 -I gerar.py . ../../docs/planilhas/Liga_Aurora_Fichas_T1.xlsx
+python3 -I gerar.py . ../../docs/planilhas/Craques_da_Varzea_Fichas_T1.xlsx
 python3 -I sim_eco.py sim_eco.json
-python3 -I gerar_eco.py sim_eco.json ../../docs/planilhas/Liga_Aurora_Economia_T1.xlsx
+python3 -I gerar_eco.py sim_eco.json ../../docs/planilhas/Craques_da_Varzea_Economia_T1.xlsx
 ```
 
 - `dados.py`: clubes, jogadores, lendas, momentos, mascotes e as substituições da liga masculina.

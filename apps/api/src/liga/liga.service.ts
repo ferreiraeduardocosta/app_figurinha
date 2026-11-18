@@ -8,7 +8,7 @@ import {
   craqueDaRodada,
   gerarCalendario,
   simularRodada,
-} from '@liga-aurora/regras';
+} from '@craques-da-varzea/regras';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
@@ -28,7 +28,7 @@ const DIA_MS = 24 * 60 * 60 * 1000;
 const LOCK_LIGA = 7_331_001;
 
 /**
- * Liga Aurora: calendário de turno e returno e simulação das rodadas.
+ * Craques da Várzea: calendário de turno e returno e simulação das rodadas.
  * Não há agendador: cada consulta simula as rodadas cuja data já passou
  * (uma única vez, sob lock). A semente pode ser trocada por LIGA_SEMENTE
  * para os resultados não serem previsíveis por quem lê o repositório.

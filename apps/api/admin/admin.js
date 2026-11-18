@@ -1,12 +1,12 @@
 'use strict';
 /*
- * Painel de administração da Liga Aurora.
+ * Painel de administração do Craques da Várzea.
  * JavaScript puro, sem build. Todo dado vindo da API entra na página como texto
  * (textContent), nunca como HTML, para evitar injeção de código.
  * O token fica em sessionStorage: some ao fechar a aba.
  */
 
-const CHAVE_TOKEN = 'liga-aurora.admin.token';
+const CHAVE_TOKEN = 'craques-da-varzea.admin.token';
 const RARIDADES = { COMUM: 'Comum', RARA: 'Rara', EPICA: 'Épica', LENDARIA: 'Lendária' };
 const TIPOS = { ESCUDO: 'Escudo', ESTADIO: 'Estádio', TECNICO: 'Técnico', JOGADOR: 'Jogador', MASCOTE: 'Mascote', LENDA: 'Lenda', MOMENTO: 'Momento' };
 const POSICOES = ['', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'PON', 'ATA', 'TEC'];
@@ -101,7 +101,7 @@ function telaLogin(mensagem) {
         }
       },
     },
-    h('p', { class: 'sobretitulo' }, 'Liga Aurora'),
+    h('p', { class: 'sobretitulo' }, 'Craques da Várzea'),
     h('h1', {}, 'Painel'),
     h('p', { class: 'aviso' }, 'Acesso restrito a administradores.'),
     h('label', {}, 'E-mail', email),
@@ -146,7 +146,7 @@ function estrutura() {
   );
   app().replaceChildren(
     h('header', { class: 'topo' },
-      h('span', { class: 'marca' }, 'Liga Aurora · Painel'),
+      h('span', { class: 'marca' }, 'Craques da Várzea · Painel'),
       h('span', { class: 'quem' }, estado.usuario ? estado.usuario.apelido : '', sair),
     ),
     nav,

@@ -1,4 +1,4 @@
-# App mobile — Liga Aurora
+# App mobile — Craques da Várzea
 
 Expo (React Native) + TypeScript.
 
@@ -47,6 +47,6 @@ watcher de arquivos), reinicie com `npx expo start --clear`.
 
 ## Gerar o app instalável
 
-Ícone, tela de abertura, identificador (`com.ligaaurora.app`) e perfis de build
+Ícone, tela de abertura, identificador (`com.craquesdavarzea.app`) e perfis de build
 (`eas.json`: `preview` gera APK de teste, `production` gera o pacote das lojas)
 já estão configurados. Passo a passo em [docs/PUBLICACAO.md](../../docs/PUBLICACAO.md).

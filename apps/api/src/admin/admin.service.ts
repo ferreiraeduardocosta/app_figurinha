@@ -6,7 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Figurinha, Prisma } from '@prisma/client';
-import { ErroRegra, Raridade, indexarCatalogo } from '@liga-aurora/regras';
+import { ErroRegra, Raridade, indexarCatalogo } from '@craques-da-varzea/regras';
 import { UsuarioAutenticado } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal } from '../pacotes/dia';

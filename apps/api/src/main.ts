@@ -10,7 +10,7 @@ async function bootstrap() {
   configurarApp(app);
   const porta = Number(process.env.PORT ?? 3000);
   await app.listen(porta);
-  console.log(`API da Liga Aurora em http://localhost:${porta} (painel em /admin)`);
+  console.log(`API do Craques da Várzea em http://localhost:${porta} (painel em /admin)`);
 }
 
 bootstrap();

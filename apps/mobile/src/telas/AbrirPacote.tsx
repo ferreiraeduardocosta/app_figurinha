@@ -87,13 +87,13 @@ export function AbrirPacote({
               },
             ]}
             accessible
-            accessibilityLabel="Pacote Liga Aurora fechado, 5 figurinhas"
+            accessibilityLabel="Pacote Craques da Várzea fechado, 5 figurinhas"
           >
             <Svg width={96} height={96} viewBox="0 0 24 24">
               <Path d="M4 8 L12 4 L20 8 V17 L12 21 L4 17 Z" fill="none" stroke="#FBBF24" strokeWidth={1.4} strokeLinejoin="round" />
               <Path d="M4 8 L12 12 L20 8 M12 12 V21" fill="none" stroke="#FBBF24" strokeWidth={1.4} strokeLinejoin="round" />
             </Svg>
-            <Text style={estilos.pacoteTitulo}>Liga Aurora</Text>
+            <Text style={estilos.pacoteTitulo}>Craques da Várzea</Text>
             <Text style={estilos.pacoteSub}>{{ diario: 'Pacote grátis do dia', bonus: 'Pacote de recompensa', comprado: 'Pacote comprado', moedas: 'Pago com moedas' }[origem]} · 5 figurinhas</Text>
           </Animated.View>
           {erro && (
@@ -205,8 +205,16 @@ const estilos = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#FBBF24',
   },
-  pacoteTitulo: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', textTransform: 'uppercase' },
-  pacoteSub: { color: '#D1D5DB', fontSize: 13 },
+  pacoteTitulo: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    paddingHorizontal: 18,
+  },
+  pacoteSub: { color: '#D1D5DB', fontSize: 13, textAlign: 'center', paddingHorizontal: 12 },
   rodape: { padding: 16, paddingBottom: 24 },
   erro: { color: cores.erro, fontSize: 15, fontWeight: '600', textAlign: 'center' },
   contador: { textAlign: 'center', marginTop: 16, fontSize: 14, fontWeight: '700', color: cores.apagado },

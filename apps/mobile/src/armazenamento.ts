@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import type { Sessao } from './api';
 
-const CHAVE = 'liga-aurora.sessao';
+const CHAVE = 'craques-da-varzea.sessao';
 
 /**
  * Guarda a sessão no armazenamento seguro do aparelho (Keychain no iOS,

@@ -289,7 +289,7 @@ model MissaoDia {
   @@id([usuarioId, dia, missaoId])
 }
 
-/// Partida da Liga Aurora. Placar e gols ficam vazios até a rodada ser simulada.
+/// Partida da liga Craques da Várzea. Placar e gols ficam vazios até a rodada ser simulada.
 model Partida {
   id            String    @id @default(uuid())
   temporada     Int

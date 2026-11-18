@@ -7,7 +7,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Prisma, Troca } from '@prisma/client';
-import { ErroRegra, ItemTroca, aplicarTroca, sugerirTrocas, validarTroca } from '@liga-aurora/regras';
+import { ErroRegra, ItemTroca, aplicarTroca, sugerirTrocas, validarTroca } from '@craques-da-varzea/regras';
 import { registrarProgresso } from '../missoes/missoes';
 import { PrismaService } from '../prisma/prisma.service';
 import { diaLocal } from '../pacotes/dia';

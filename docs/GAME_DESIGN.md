@@ -1,18 +1,20 @@
-# Liga Aurora — Documento de Game Design (Temporada 1)
+# Craques da Várzea — Documento de Game Design (Temporada 1)
 
 App mobile (Android e iOS) para abrir pacotes, colecionar e trocar figurinhas de
 jogadores de futebol de uma liga **fictícia**.
 
 > Fontes de verdade:
-> - Fichas das figurinhas: [`planilhas/Liga_Aurora_Fichas_T1.xlsx`](planilhas/Liga_Aurora_Fichas_T1.xlsx)
+> - Fichas das figurinhas: [`planilhas/Craques_da_Varzea_Fichas_T1.xlsx`](planilhas/Craques_da_Varzea_Fichas_T1.xlsx)
 >   e [`../data/temporada1/figurinhas.json`](../data/temporada1/figurinhas.json)
-> - Economia: [`planilhas/Liga_Aurora_Economia_T1.xlsx`](planilhas/Liga_Aurora_Economia_T1.xlsx)
+> - Economia: [`planilhas/Craques_da_Varzea_Economia_T1.xlsx`](planilhas/Craques_da_Varzea_Economia_T1.xlsx)
 >   e [`../data/temporada1/economia.json`](../data/temporada1/economia.json)
-> - Kit visual (escudos, molduras, mascotes e telas): quadro de design "Liga Aurora — Kit Visual" no claude.ai
+> - Kit visual (escudos, molduras, mascotes e telas): quadro de design "Craques da Várzea — Kit Visual" no claude.ai
 
 ---
 
 ## 1. Por que uma liga fictícia
+
+> O projeto começou com o nome "Liga Aurora" e foi renomeado para **Craques da Várzea** (o clube Unidos da Várzea continua igual).
 
 Usar nome, rosto ou caricatura reconhecível de jogadores reais exige licença de
 direito de imagem (CF art. 5º, X; Código Civil art. 20; Súmula 403 do STJ;
@@ -20,7 +22,7 @@ Lei Pelé art. 87-A). Caricatura ou imagem transformada por IA **não** resolve:
 o que a lei protege é a identidade da pessoa, e o uso é comercial. Escudos e
 uniformes de clubes são marcas registradas.
 
-Decisão: lançar com um universo próprio, a **Liga Aurora**. Licenças reais podem
+Decisão: lançar com um universo próprio, a liga **Craques da Várzea**. Licenças reais podem
 entrar depois como coleções especiais.
 
 Antes de lançar:
@@ -31,7 +33,7 @@ Antes de lançar:
 
 ## 2. O universo
 
-- **Liga Aurora**, masculina. Uma liga feminina virá depois; as personagens
+- Liga **Craques da Várzea**, masculina. Uma liga feminina virá depois; as personagens
   já criadas estão guardadas na aba "Reserva Liga Feminina" da planilha de fichas.
 - **8 clubes**, campeonato único em turno e returno (14 rodadas, 4 jogos cada).
 - Rodadas simuladas pelo servidor toda semana: uma temporada dura ~3,5 meses.
@@ -63,7 +65,7 @@ e das Feras (DRA × LEO).
 
 Recompensas (entregues pelo servidor, uma única vez cada):
 - **Página completa** (cada clube, Lendas e Momentos: 10 páginas) = 1 pacote de recompensa.
-- **Álbum completo** = Troféu Liga Aurora — Temporada 1, peça exclusiva que não sai em pacote.
+- **Álbum completo** = Troféu Craques da Várzea — Temporada 1, peça exclusiva que não sai em pacote.
 
 ### Raridades
 
@@ -72,7 +74,7 @@ Recompensas (entregues pelo servidor, uma única vez cada):
 | Comum | Elenco base, escudos, estádios, técnicos, mascotes | 88 | 62% | Cinza, 1 losango |
 | Rara | 3 titulares de destaque por clube | 24 | 25% | Prata, 2 losangos |
 | Épica | Craque de cada clube + Grandes Momentos | 16 | 10% | Dourada, 3 losangos |
-| Lendária | Lendas da Liga | 8 | 3% | Aurora animada, 4 losangos |
+| Lendária | Lendas da Liga | 8 | 3% | Animada (cores de aurora boreal), 4 losangos |
 
 **Brilhante:** variante holográfica de qualquer figurinha, 5% de chance, cosmética
 (não conta para completar o álbum).

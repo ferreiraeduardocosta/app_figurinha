@@ -1,4 +1,4 @@
-# Dados da Temporada 1 da Liga Aurora (8 clubes)
+# Dados da Temporada 1 da liga Craques da Várzea (8 clubes)
 # Jogador: (pos, camisa, nome, apelido, idade, raridade, traço, história, visual)
 
 CLUBES = [

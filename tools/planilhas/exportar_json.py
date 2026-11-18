@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 RAIZ = Path(__file__).resolve().parents[2]
-PLANILHA = RAIZ / "docs/planilhas/Liga_Aurora_Fichas_T1.xlsx"
+PLANILHA = RAIZ / "docs/planilhas/Craques_da_Varzea_Fichas_T1.xlsx"
 DESTINO = RAIZ / "data/temporada1"
 
 RARIDADE = {"Comum": "COMUM", "Rara": "RARA", "Épica": "EPICA", "Lendária": "LENDARIA"}

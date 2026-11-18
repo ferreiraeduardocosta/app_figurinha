@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: liga
       POSTGRES_PASSWORD: liga
-      POSTGRES_DB: liga_aurora
+      POSTGRES_DB: craques_varzea
     ports:
       - "5432:5432"
     volumes:

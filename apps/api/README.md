@@ -1,4 +1,4 @@
-# API — Liga Aurora
+# API — Craques da Várzea
 
 NestJS + Prisma + PostgreSQL. Todo sorteio de pacote acontece aqui, dentro de uma
 transação com a linha do jogador travada; o app só mostra o resultado.
@@ -63,7 +63,7 @@ Com login (`Authorization: Bearer <token>`):
 
 Abrir pacote e trocar no balcão também devolvem `recompensas`: páginas
 completadas (`PAGINA`, +1 pacote de recompensa cada) e álbum completo
-(`ALBUM`, Troféu Liga Aurora). Cada recompensa é entregue uma única vez.
+(`ALBUM`, Troféu Craques da Várzea). Cada recompensa é entregue uma única vez.
 
 Sem login, com segredo próprio: `POST /loja/webhook/revenuecat` (avisos de compra
 e reembolso do RevenueCat; ver [docs/LOJA.md](../../docs/LOJA.md)).

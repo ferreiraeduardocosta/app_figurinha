@@ -150,7 +150,7 @@ describe.skipIf(!temBanco)('Painel de administração', () => {
   it('serve a página do painel com cabeçalhos de segurança', async () => {
     const r = await fetch(base + '/admin/');
     expect(r.status).toBe(200);
-    expect(await r.text()).toContain('<title>Painel Liga Aurora</title>');
+    expect(await r.text()).toContain('<title>Painel Craques da Várzea</title>');
     expect(r.headers.get('content-security-policy')).toContain("script-src 'self'");
     expect(r.headers.get('x-frame-options')).toBe('DENY');
   });

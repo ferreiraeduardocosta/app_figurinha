@@ -1,7 +1,7 @@
-# App Figurinha — Liga Aurora
+# App Figurinha — Craques da Várzea
 
 App mobile (Android e iOS) para abrir pacotes, colecionar e trocar figurinhas
-de jogadores de uma liga de futebol fictícia, a **Liga Aurora**.
+de jogadores de uma liga de futebol fictícia, a liga **Craques da Várzea**.
 
 ## Telas
 
@@ -27,7 +27,7 @@ Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 |---|---|---|
 | ![Mercado](docs/capturas/trocas-03-ana-mercado.png) | ![Montando](docs/capturas/trocas-04-ana-montando.png) | ![Recebida](docs/capturas/trocas-06-bia-recebida.png) |
 
-### Liga Aurora
+### A liga
 
 | Craque da rodada e resultados | Classificação | Figurinha "Em alta" no álbum |
 |---|---|---|

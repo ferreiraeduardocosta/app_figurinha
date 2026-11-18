@@ -97,7 +97,7 @@ export function Inicio({
 
       <View style={[estilos.cartao, { backgroundColor: cores.tinta, borderColor: cores.tinta }]}>
         <Text style={[estilos.rotulo, { color: '#D1D5DB' }]}>Pacote grátis do dia</Text>
-        <Text style={[estilos.pacoteTitulo]}>Pacote Liga Aurora</Text>
+        <Text style={[estilos.pacoteTitulo]}>Craques da Várzea</Text>
         <Text style={{ color: '#D1D5DB', fontSize: 14, marginBottom: 14 }}>5 figurinhas</Text>
         {perfil.pacoteDiario.disponivel ? (
           <Botao titulo="Abrir pacote" onPress={() => aoAbrirPacote('diario')} />
@@ -152,7 +152,7 @@ export function Inicio({
           <Trofeu tamanho={88} />
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[estilos.rotulo, { color: '#FBBF24' }]}>Exclusivo</Text>
-            <Text style={estilos.trofeuTitulo}>Troféu Liga Aurora</Text>
+            <Text style={estilos.trofeuTitulo}>Troféu Craques da Várzea</Text>
             <Text style={{ color: '#D1D5DB', fontSize: 14 }}>Álbum da Temporada 1 completo.</Text>
           </View>
         </View>

@@ -1,8 +1,8 @@
 {
-  "name": "@liga-aurora/api",
+  "name": "@craques-da-varzea/api",
   "version": "0.1.0",
   "private": true,
-  "description": "API da Liga Aurora: catálogo, álbum e abertura de pacotes (sorteio no servidor).",
+  "description": "API do Craques da Várzea: catálogo, álbum e abertura de pacotes (sorteio no servidor).",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
@@ -14,7 +14,7 @@
     "db:seed:se-vazio": "tsx prisma/seed.ts --se-vazio"
   },
   "dependencies": {
-    "@liga-aurora/regras": "*",
+    "@craques-da-varzea/regras": "*",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",

@@ -15,7 +15,7 @@ clubes = {c["sigla"]: c for c in json.loads((RAIZ / "data/temporada1/clubes.json
 # Nomes das cores ("Azul-marinho e branco"): geradores de imagem entendem melhor que códigos hex.
 nomes_cores = {
     r["Sigla"]: str(r["Cores"]).lower()
-    for _, r in pd.read_excel(RAIZ / "docs/planilhas/Liga_Aurora_Fichas_T1.xlsx", sheet_name="Clubes").iterrows()
+    for _, r in pd.read_excel(RAIZ / "docs/planilhas/Craques_da_Varzea_Fichas_T1.xlsx", sheet_name="Clubes").iterrows()
 }
 
 ESTILO = (

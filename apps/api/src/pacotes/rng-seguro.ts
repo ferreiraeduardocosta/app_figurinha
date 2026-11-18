@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { Rng } from '@liga-aurora/regras';
+import { Rng } from '@craques-da-varzea/regras';
 
 const DOIS_A_48 = 2 ** 48;
 

@@ -9,7 +9,7 @@ import { cores } from '../tema';
 const dataHora = (iso: string) =>
   new Date(iso).toLocaleString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-/** Liga Aurora: craque da rodada, resultados, próxima rodada, tabela e artilharia. */
+/** Craques da Várzea: craque da rodada, resultados, próxima rodada, tabela e artilharia. */
 export function Liga() {
   const { porCodigo, clubes, album } = useJogo();
   const [liga, setLiga] = useState<PainelLiga | null>(null);
@@ -52,7 +52,7 @@ export function Liga() {
     >
       <View style={{ gap: 2, marginTop: 8 }}>
         <Text style={estilos.sobretitulo}>Temporada {liga.temporada}</Text>
-        <Text style={estilos.titulo}>Liga Aurora</Text>
+        <Text style={estilos.titulo}>Craques da Várzea</Text>
         <Text style={estilos.legenda}>
           {liga.ultimaRodada === 0 ? 'A liga ainda não começou.' : `Rodada ${liga.ultimaRodada} de ${liga.totalRodadas} disputada.`}
           {liga.proximaRodada ? ` Próxima: ${dataHora(liga.proximaRodada.data)}.` : ' Temporada encerrada.'}

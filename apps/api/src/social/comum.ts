@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { Inventario } from '@liga-aurora/regras';
+import { Inventario } from '@craques-da-varzea/regras';
 
 export type Tx = Prisma.TransactionClient;
 

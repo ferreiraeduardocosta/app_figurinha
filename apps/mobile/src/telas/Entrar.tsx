@@ -37,7 +37,7 @@ export function Entrar() {
           ))}
         </View>
         <Text style={estilos.sobretitulo}>Temporada 1</Text>
-        <Text style={estilos.titulo}>Liga Aurora</Text>
+        <Text style={estilos.titulo}>Craques da Várzea</Text>
         <Text style={estilos.subtitulo}>Abra pacotes, complete o álbum e troque com os amigos.</Text>
 
         <View style={estilos.abas} accessibilityRole="tablist">

@@ -42,7 +42,7 @@ wb = Workbook()
 ws = wb.active; ws.title = "Leia-me"
 ws.column_dimensions["A"].width = 24; ws.column_dimensions["B"].width = 100
 rows = [
- ("Liga Aurora — Economia do álbum (Temporada 1)", None, TITLE),
+ ("Craques da Várzea — Economia do álbum (Temporada 1)", None, TITLE),
  ("Quantos pacotes um jogador precisa para completar o álbum de 136 figurinhas, e como calibrar probabilidades, garantias, balcão de repetidas, trocas e loja para chegar à meta.", None, "texto"),
  ("", None, None),
  ("Abas", None, SEC),
@@ -100,7 +100,7 @@ for i, (n, q, p, p0, obs) in enumerate(rar, 6):
     put(P, f"D{i}", p0, BLUE, PCT, CEN)
     put(P, f"E{i}", "=$B$17", BLACK, INT, CEN)
     put(P, f"F{i}", obs, BLACK, al=WRAP)
-P["B6"].comment = Comment("Contagens da planilha de fichas (Liga_Aurora_Fichas_T1.xlsx, aba Resumo).", "Planilha")
+P["B6"].comment = Comment("Contagens da planilha de fichas (Craques_da_Varzea_Fichas_T1.xlsx, aba Resumo).", "Planilha")
 put(P, "A10", "Total", BOLD)
 put(P, "B10", "=SUM(B6:B9)", BOLD, INT, CEN)
 put(P, "C10", "=SUM(C6:C9)", BOLD, PCT, CEN)

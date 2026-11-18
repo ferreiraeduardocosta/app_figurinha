@@ -1,5 +1,5 @@
 /**
- * Liga Aurora no servidor, com PostgreSQL de verdade.
+ * Craques da Várzea no servidor, com PostgreSQL de verdade.
  * Precisa de DATABASE_URL (banco migrado e com seed); sem ela, é pulado.
  */
 import 'reflect-metadata';

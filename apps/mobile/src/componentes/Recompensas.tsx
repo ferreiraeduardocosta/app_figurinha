@@ -3,10 +3,10 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import type { RecompensaNova } from '../api';
 import { cores } from '../tema';
 
-/** Troféu Liga Aurora — Temporada 1: a peça exclusiva de quem completa o álbum. */
+/** Troféu Craques da Várzea — Temporada 1: a peça exclusiva de quem completa o álbum. */
 export function Trofeu({ tamanho = 96 }: { tamanho?: number }) {
   return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 100 100" accessibilityLabel="Troféu Liga Aurora">
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 100 100" accessibilityLabel="Troféu Craques da Várzea">
       <Circle cx="50" cy="50" r="48" fill="#17122E" />
       <Path d="M30 22 H70 V40 C70 54 61 63 50 63 C39 63 30 54 30 40 Z" fill="#FBBF24" />
       <Path d="M30 27 H20 C20 40 26 46 32 47 M70 27 H80 C80 40 74 46 68 47" fill="none" stroke="#FBBF24" strokeWidth={4} strokeLinecap="round" />
@@ -20,7 +20,7 @@ export function Trofeu({ tamanho = 96 }: { tamanho?: number }) {
 
 /** Texto curto de uma recompensa recém-ganha. */
 export function descreverRecompensa(r: RecompensaNova): string {
-  if (r.tipo === 'ALBUM') return 'Álbum completo! Você ganhou o Troféu Liga Aurora.';
+  if (r.tipo === 'ALBUM') return 'Álbum completo! Você ganhou o Troféu Craques da Várzea.';
   return `Página completa: ${r.chave}! +${r.pacotes} ${r.pacotes === 1 ? 'pacote' : 'pacotes'} de recompensa.`;
 }
 

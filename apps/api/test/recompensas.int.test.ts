@@ -4,7 +4,7 @@
  */
 import 'reflect-metadata';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { rngComSemente } from '@liga-aurora/regras';
+import { rngComSemente } from '@craques-da-varzea/regras';
 import { PacotesService } from '../src/pacotes/pacotes.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 
