@@ -1,0 +1,174 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import {
+  GolMarcado,
+  ResultadoPartida,
+  TimeLiga,
+  classificar,
+  craqueDaRodada,
+  gerarCalendario,
+  simularRodada,
+} from '@liga-aurora/regras';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { PrismaService } from '../prisma/prisma.service';
+
+const DADOS_DIR = process.env.DADOS_DIR ?? resolve(__dirname, '../../../../data/temporada1');
+
+interface ConfigLiga {
+  temporada: number;
+  primeiraRodada: string;
+  intervaloDias: number;
+  semente: string;
+}
+
+export const CONFIG_LIGA: ConfigLiga = JSON.parse(readFileSync(resolve(DADOS_DIR, 'liga.json'), 'utf8'));
+const DIA_MS = 24 * 60 * 60 * 1000;
+/** Chave do lock do Postgres que impede duas simulações da mesma rodada ao mesmo tempo. */
+const LOCK_LIGA = 7_331_001;
+
+/**
+ * Liga Aurora: calendário de turno e returno e simulação das rodadas.
+ * Não há agendador: cada consulta simula as rodadas cuja data já passou
+ * (uma única vez, sob lock). A semente pode ser trocada por LIGA_SEMENTE
+ * para os resultados não serem previsíveis por quem lê o repositório.
+ */
+@Injectable()
+export class LigaService {
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+
+  private get semente() {
+    return process.env.LIGA_SEMENTE || CONFIG_LIGA.semente;
+  }
+
+  dataDaRodada(rodada: number) {
+    return new Date(new Date(CONFIG_LIGA.primeiraRodada).getTime() + (rodada - 1) * CONFIG_LIGA.intervaloDias * DIA_MS);
+  }
+
+  /** Cria o calendário (se faltar) e simula as rodadas vencidas. */
+  async atualizar(agora = new Date()) {
+    const temporada = CONFIG_LIGA.temporada;
+    const pendentes = await this.prisma.partida.count({ where: { temporada, simuladaEm: null, dataPrevista: { lte: agora } } });
+    const existe = await this.prisma.partida.count({ where: { temporada } });
+    if (existe > 0 && pendentes === 0) return;
+
+    await this.prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_LIGA})`;
+        if ((await tx.partida.count({ where: { temporada } })) === 0) {
+          const siglas = (await tx.clube.findMany({ select: { sigla: true }, orderBy: { sigla: 'asc' } })).map((c) => c.sigla);
+          await tx.partida.createMany({
+            data: gerarCalendario(siglas).map((p) => ({ temporada, ...p, dataPrevista: this.dataDaRodada(p.rodada) })),
+          });
+        }
+        const vencidas = await tx.partida.findMany({
+          where: { temporada, simuladaEm: null, dataPrevista: { lte: agora } },
+          orderBy: [{ rodada: 'asc' }, { mandante: 'asc' }],
+        });
+        if (vencidas.length === 0) return;
+        const times = await this.times(tx);
+        for (const rodada of [...new Set(vencidas.map((p) => p.rodada))]) {
+          const jogos = vencidas.filter((p) => p.rodada === rodada);
+          const resultados = simularRodada(times, jogos, `${this.semente}:${temporada}`);
+          for (const [i, r] of resultados.entries()) {
+            await tx.partida.update({
+              where: { id: jogos[i].id },
+              data: {
+                golsMandante: r.golsMandante,
+                golsVisitante: r.golsVisitante,
+                gols: r.gols as unknown as Prisma.InputJsonValue,
+                simuladaEm: agora,
+              },
+            });
+          }
+        }
+      },
+      { timeout: 20_000 },
+    );
+  }
+
+  /** Tudo que a tela da liga precisa. */
+  async painel(agora = new Date()) {
+    await this.atualizar(agora);
+    const temporada = CONFIG_LIGA.temporada;
+    const [partidas, clubes, jogadores] = await Promise.all([
+      this.prisma.partida.findMany({ where: { temporada }, orderBy: [{ rodada: 'asc' }, { mandante: 'asc' }] }),
+      this.prisma.clube.findMany({ select: { sigla: true, nome: true }, orderBy: { sigla: 'asc' } }),
+      this.prisma.figurinha.findMany({
+        where: { tipo: 'JOGADOR' },
+        select: { codigo: true, nome: true, apelido: true, clubeSigla: true, ataque: true },
+      }),
+    ]);
+    const jogadas = partidas.filter((p) => p.simuladaEm);
+    const resultados: ResultadoPartida[] = jogadas.map((p) => ({
+      mandante: p.mandante,
+      visitante: p.visitante,
+      golsMandante: p.golsMandante!,
+      golsVisitante: p.golsVisitante!,
+      gols: (p.gols as unknown as GolMarcado[]) ?? [],
+    }));
+    const ultimaRodada = jogadas.length ? Math.max(...jogadas.map((p) => p.rodada)) : 0;
+    const totalRodadas = partidas.length ? Math.max(...partidas.map((p) => p.rodada)) : 0;
+    const proxima = partidas.find((p) => !p.simuladaEm)?.rodada ?? null;
+    const porCodigo = Object.fromEntries(jogadores.map((j) => [j.codigo, j]));
+    const nome = (codigo: string) => porCodigo[codigo]?.apelido ?? porCodigo[codigo]?.nome ?? codigo;
+
+    const gols: Record<string, number> = {};
+    for (const r of resultados) for (const g of r.gols) gols[g.codigo] = (gols[g.codigo] ?? 0) + 1;
+    const artilharia = Object.entries(gols)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 10)
+      .map(([codigo, n]) => ({ codigo, nome: nome(codigo), clube: porCodigo[codigo]?.clubeSigla, gols: n }));
+
+    const ataques = Object.fromEntries(jogadores.map((j) => [j.codigo, j.ataque ?? 0]));
+    const craque = ultimaRodada
+      ? craqueDaRodada(resultados.filter((_, i) => jogadas[i].rodada === ultimaRodada), ataques)
+      : null;
+
+    const partidaPublica = (p: (typeof partidas)[number]) => ({
+      rodada: p.rodada,
+      mandante: p.mandante,
+      visitante: p.visitante,
+      data: p.dataPrevista,
+      golsMandante: p.golsMandante,
+      golsVisitante: p.golsVisitante,
+      gols: ((p.gols as unknown as GolMarcado[]) ?? []).map((g) => ({ ...g, nome: nome(g.codigo) })),
+    });
+
+    return {
+      temporada,
+      totalRodadas,
+      ultimaRodada,
+      proximaRodada: proxima ? { numero: proxima, data: this.dataDaRodada(proxima) } : null,
+      classificacao: classificar(
+        clubes.map((c) => c.sigla),
+        resultados,
+      ),
+      jogosDaUltima: partidas.filter((p) => p.rodada === ultimaRodada).map(partidaPublica),
+      jogosDaProxima: proxima ? partidas.filter((p) => p.rodada === proxima).map(partidaPublica) : [],
+      artilharia,
+      // Figurinha "Em alta" da semana: o craque da última rodada.
+      emAlta: craque ? { ...craque, nome: nome(craque.codigo), rodada: ultimaRodada } : null,
+    };
+  }
+
+  private async times(tx: Prisma.TransactionClient): Promise<Record<string, TimeLiga>> {
+    const lista = await tx.figurinha.findMany({
+      where: { tipo: 'JOGADOR', ataque: { not: null } },
+      select: { codigo: true, clubeSigla: true, posicao: true, ataque: true, defesa: true, tecnica: true, velocidade: true, fisico: true },
+    });
+    const times: Record<string, TimeLiga> = {};
+    for (const f of lista) {
+      (times[f.clubeSigla] ??= { sigla: f.clubeSigla, jogadores: [] }).jogadores.push({
+        codigo: f.codigo,
+        posicao: f.posicao ?? 'MEI',
+        ataque: f.ataque!,
+        defesa: f.defesa!,
+        tecnica: f.tecnica!,
+        velocidade: f.velocidade!,
+        fisico: f.fisico!,
+      });
+    }
+    return times;
+  }
+}

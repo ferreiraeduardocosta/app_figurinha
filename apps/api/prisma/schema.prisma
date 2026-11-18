@@ -288,3 +288,21 @@ model MissaoDia {
 
   @@id([usuarioId, dia, missaoId])
 }
+
+/// Partida da Liga Aurora. Placar e gols ficam vazios até a rodada ser simulada.
+model Partida {
+  id            String    @id @default(uuid())
+  temporada     Int
+  rodada        Int
+  mandante      String
+  visitante     String
+  dataPrevista  DateTime
+  golsMandante  Int?
+  golsVisitante Int?
+  /// Lista de { sigla, codigo, minuto }.
+  gols          Json?
+  simuladaEm    DateTime?
+
+  @@unique([temporada, rodada, mandante])
+  @@index([temporada, rodada])
+}
