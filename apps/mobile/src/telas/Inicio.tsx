@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Svg, { Path } from 'react-native-svg';
 import type { OrigemPacote } from '../api';
 import { Botao } from '../componentes/Botao';
+import { Missoes } from '../componentes/Missoes';
 import { Trofeu } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
 import { cores } from '../tema';
@@ -96,6 +97,8 @@ export function Inicio({
           </View>
         )}
       </View>
+
+      <Missoes />
 
       {perfil.pacotesComprados > 0 && (
         <View style={estilos.cartao}>

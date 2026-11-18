@@ -48,7 +48,23 @@ export interface Perfil {
   pacotesComprados: number;
   nascimentoInformado: boolean;
   recompensas: { tipo: 'PAGINA' | 'ALBUM'; chave: string; criadaEm: string }[];
-  pendencias: { pedidosAmizade: number; trocasRecebidas: number };
+  pendencias: { pedidosAmizade: number; trocasRecebidas: number; missoesParaResgatar: number };
+}
+
+export interface Missao {
+  id: string;
+  titulo: string;
+  meta: number;
+  progresso: number;
+  recompensa: number;
+  concluida: boolean;
+  resgatada: boolean;
+}
+
+export interface MissoesDoDia {
+  dia: string;
+  renovaEm: string;
+  missoes: Missao[];
 }
 
 export type OrigemPacote = 'diario' | 'bonus' | 'comprado' | 'moedas';
@@ -211,6 +227,9 @@ export const api = {
   album: (token: string) => chamar<Album>('GET', '/album', token),
   abrirPacote: (token: string, origem: OrigemPacote) => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),
   loja: (token: string) => chamar<Loja>('GET', '/loja', token),
+  missoes: (token: string) => chamar<MissoesDoDia>('GET', '/missoes', token),
+  resgatarMissao: (token: string, id: string) =>
+    chamar<{ moedas: number; ganhou: number; missao: Missao }>('POST', `/missoes/${id}/resgatar`, token),
   informarNascimento: (token: string, dataNascimento: string) =>
     chamar<Loja>('POST', '/loja/nascimento', token, { dataNascimento }),
   compraTeste: (token: string, produtoId: string) =>

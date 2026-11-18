@@ -130,7 +130,7 @@ export function Loja({
       <View style={estilos.cartao}>
         <Text style={estilos.rotulo}>Com moedas</Text>
         <Text style={estilos.ofertaNome}>1 pacote · {precoMoedas} moedas</Text>
-        <Text style={estilos.texto}>Moedas vêm de bônus de compras e, em breve, de missões diárias.</Text>
+        <Text style={estilos.texto}>Ganhe moedas nas missões diárias (cerca de 60 por dia) e no bônus das compras.</Text>
         <Botao
           titulo={loja.moedas >= precoMoedas ? `Abrir por ${precoMoedas} moedas` : `Faltam ${precoMoedas - loja.moedas} moedas`}
           onPress={() => aoAbrirPacote('moedas')}

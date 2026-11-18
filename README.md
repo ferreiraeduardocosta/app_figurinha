@@ -27,6 +27,12 @@ Avatares provisórios: a arte final dos jogadores ainda vai ser feita.
 |---|---|---|
 | ![Mercado](docs/capturas/trocas-03-ana-mercado.png) | ![Montando](docs/capturas/trocas-04-ana-montando.png) | ![Recebida](docs/capturas/trocas-06-bia-recebida.png) |
 
+### Missões diárias
+
+| Missões do dia | Cumpridas | Resgatada |
+|---|---|---|
+| ![Missões](docs/capturas/missoes-01-missoes-inicio.png) | ![Cumpridas](docs/capturas/missoes-02-missao-cumprida.png) | ![Resgatada](docs/capturas/missoes-03-resgatada.png) |
+
 ### Loja
 
 | Ofertas e probabilidades | Compra concluída | Limite para menores |

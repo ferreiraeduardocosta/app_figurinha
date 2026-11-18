@@ -154,6 +154,22 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
 
 ## 6. Engajamento
 
+### Missões diárias (implementadas)
+
+- 3 por dia, renovadas à meia-noite de Brasília ([`missoes.json`](../data/temporada1/missoes.json)).
+- "Abra 1 pacote" é fixa; as outras duas são sorteadas por jogador e dia, sem
+  repetir tipo: colar 2 novas, tirar uma Rara ou melhor, usar o balcão (só para
+  quem tem repetidas suficientes), propor ou concluir uma troca (só para quem
+  tem amigos). Todas podem ser cumpridas sem gastar.
+- Recompensa de 15 a 25 moedas cada, cerca de 55 a 60 por dia: 1 pacote com
+  moedas a cada 2 dias, como na simulação da economia.
+- O progresso é contado no servidor; o jogador toca em "Resgatar".
+- Ponto de ajuste: hoje o pacote grátis do dia costuma cumprir as três de uma
+  vez. Se o beta mostrar pouco engajamento, trocar por missões que peçam outras
+  ações (ex.: tirar uma Épica, completar 3 figurinhas de um clube).
+
+### Outras ideias
+
 1. Rodadas simuladas semanais com placares e artilheiros.
 2. Figurinha *Em alta* para o craque da rodada (edição limitada).
 3. Transferências entre temporadas geram figurinhas novas.
@@ -170,5 +186,5 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
 | 1. MVP colecionar 🟡 | Login ✅, álbum ✅, pacote grátis diário ✅, balcão ✅, probabilidades ✅, painel admin ✅, recompensas ✅; **pendente: arte final ([docs/arte](arte/README.md)) e teste em celular** | Beta fechado |
 | 2. Trocas 🟡 | Amigos ✅, propostas e contrapropostas ✅, mercado de repetidas ✅, antifraude ✅; falta notificação push | Beta aberto |
 | 3. Monetização 🟡 | Loja ✅, pacote com moedas ✅, crédito pelo servidor e estorno ✅, limites para menores ✅, probabilidades ✅, garantia mínima ✅; **pendente: ligar o RevenueCat e as lojas ([docs/LOJA.md](LOJA.md))** | v1.0 nas lojas |
-| 4. Engajamento | Rodadas simuladas, missões, ranking, Bafo | Retenção |
+| 4. Engajamento 🟡 | Missões diárias ✅; faltam rodadas simuladas, ranking e Bafo | Retenção |
 | 5. Escala | Observabilidade, testes de carga, analytics, i18n | Crescimento |

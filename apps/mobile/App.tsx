@@ -92,7 +92,13 @@ function Raiz() {
         )}
       </View>
       <View style={estilos.abas} accessibilityRole="tablist">
-        <BotaoAba rotulo="Início" ativa={aba === 'inicio'} onPress={() => setAba('inicio')} icone="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z" />
+        <BotaoAba
+          rotulo="Início"
+          ativa={aba === 'inicio'}
+          onPress={() => setAba('inicio')}
+          icone="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z"
+          contador={perfil.pendencias.missoesParaResgatar}
+        />
         <BotaoAba
           rotulo="Álbum"
           ativa={aba === 'album'}

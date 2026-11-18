@@ -45,6 +45,8 @@ Com login (`Authorization: Bearer <token>`):
 | GET | `/loja` | Ofertas, moedas e se o jogador pode comprar (e por quê) |
 | POST | `/loja/nascimento` | `{ dataNascimento: "AAAA-MM-DD" }`, uma única vez |
 | POST | `/loja/compra-teste` | `{ produtoId }`: compra simulada (só com `LOJA_TESTE=1`) |
+| GET | `/missoes` | As 3 missões do dia, com progresso |
+| POST | `/missoes/:id/resgatar` | Resgata as moedas de uma missão cumprida (uma vez) |
 | GET | `/amigos` | Amigos, pedidos recebidos e enviados |
 | POST | `/amigos` | `{ apelido }`: pede amizade (aceita na hora se o outro já tinha pedido) |
 | POST | `/amigos/:id/aceitar` | Aceita um pedido recebido |
