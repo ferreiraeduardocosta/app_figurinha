@@ -22,25 +22,54 @@ A API roda num container Docker ([`Dockerfile`](../Dockerfile)). Ao subir, ela:
 | `PORT` | não | Porta (padrão 3000; muitas hospedagens definem sozinhas) |
 | `TRUST_PROXY` | sim, em hospedagem | Número de proxies na frente da API, normalmente `1`. Sem isso o limite de tentativas de login trata todos os jogadores como um só |
 | `LIGA_SEMENTE` | recomendada | Texto secreto: impede prever os placares da liga lendo o código |
+| `ADMIN_EMAIL` | não | E-mail de uma conta **já cadastrada** que vira administradora quando o servidor sobe (para hospedagens sem terminal). Remova depois de usar |
 | `REVENUECAT_WEBHOOK_TOKEN` | quando ligar pagamentos | Ver [LOJA.md](LOJA.md) |
 | `NODE_ENV` | já vem `production` na imagem | Desliga o modo de teste da loja |
 
 **Nunca** defina `LOJA_TESTE=1` em produção (a imagem já o ignora com
 `NODE_ENV=production`).
 
-### Opção A — hospedagem gerenciada (mais simples)
+### Opção A — Render (escolhida)
 
-Serviços como Render, Railway ou Fly.io constroem o `Dockerfile` direto do
-GitHub e oferecem PostgreSQL gerenciado com backup e HTTPS automático:
+O arquivo [`render.yaml`](../render.yaml) na raiz descreve tudo: a API (construída
+pelo `Dockerfile`) e o banco PostgreSQL 16, já ligados um ao outro, com
+`TRUST_PROXY=1` e uma `LIGA_SEMENTE` secreta gerada pelo próprio Render.
 
-1. Criar um banco PostgreSQL 16 no serviço e copiar a URL de conexão.
-2. Criar um serviço web a partir deste repositório, usando o `Dockerfile` da raiz.
-3. Definir as variáveis da tabela acima (`TRUST_PROXY=1`).
-4. Aguardar o deploy e abrir `https://<seu-endereço>/saude` (deve responder
-   `{"status":"ok"}`).
+1. Criar conta em [render.com](https://render.com) entrando com o GitHub e
+   autorizar o acesso ao repositório `app_figurinha`.
+2. No painel: **New → Blueprint**, escolher o repositório `app_figurinha` e o
+   branch `claude/nice-tesla-bpz9cj` (é onde está o código hoje). Confirmar com
+   **Deploy Blueprint**.
+3. Esperar o primeiro deploy (de 5 a 10 minutos). O endereço aparece no serviço
+   `craques-da-varzea-api`, algo como `https://craques-da-varzea-api.onrender.com`.
+4. Abrir `https://<endereço>/saude`: deve responder `{"status":"ok"}`.
+5. Cada novo commit nesse branch gera um deploy automático.
 
-> Planos gratuitos costumam "dormir" quando ficam sem acesso; a primeira
-> requisição depois disso demora alguns segundos.
+**Planos.** O `render.yaml` começa nos planos gratuitos, bons para testar:
+
+- a API "dorme" após 15 minutos sem acesso, e o primeiro pedido depois disso
+  leva cerca de 1 minuto;
+- **o banco gratuito é apagado 30 dias depois de criado.**
+
+Antes de convidar jogadores de verdade, troque no painel do Render o banco para um
+plano pago (por exemplo "Basic") e a API para "Starter" — o custo fica por volta
+de US$ 13 a 15 por mês (confira os valores atuais no site do Render). A troca é
+feita no painel e não apaga os dados.
+
+**Primeiro administrador.** O plano gratuito não tem terminal, por isso:
+
+1. crie sua conta pelo app;
+2. no serviço `craques-da-varzea-api`, em **Environment**, adicione
+   `ADMIN_EMAIL` com o seu e-mail e salve (o Render reinicia a API);
+3. nos **Logs** deve aparecer `<seu apelido> <seu e-mail> agora é ADMIN.`;
+4. apague a variável `ADMIN_EMAIL` em seguida.
+
+Só faça o passo 2 depois de criar a conta: como o e-mail não é verificado, quem
+cadastrasse esse e-mail antes ganharia o acesso.
+
+Railway e Fly.io funcionam do mesmo jeito (constroem o `Dockerfile` e oferecem
+PostgreSQL), só sem o `render.yaml`: crie o banco, o serviço web e as variáveis
+da tabela acima à mão.
 
 ### Opção B — servidor próprio (VPS)
 
@@ -76,8 +105,7 @@ Crie uma conta pelo app ou pela API e promova-a dentro do container:
 docker compose -f docker-compose.prod.yml exec api npm run admin:promover -- seu-email@exemplo.com
 ```
 
-(Em hospedagem gerenciada, use o "shell"/"console" do serviço e rode
-`npm run admin:promover -- seu-email@exemplo.com` na pasta `/app/apps/api`.)
+(No Render, use a variável `ADMIN_EMAIL` como explicado na Opção A.)
 
 ### Se o Docker Hub limitar downloads
 

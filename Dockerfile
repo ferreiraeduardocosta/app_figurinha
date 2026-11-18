@@ -33,5 +33,6 @@ WORKDIR /app/apps/api
 USER node
 EXPOSE 3000
 # Aplica as migrações pendentes, carrega as figurinhas se o banco estiver vazio
-# (primeiro deploy) e sobe a API.
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed:se-vazio && node dist/main.js"]
+# (primeiro deploy), promove ADMIN_EMAIL a administrador se a variável existir
+# (para hospedagens sem terminal; a conta precisa já estar cadastrada) e sobe a API.
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run db:seed:se-vazio && if [ -n \"$ADMIN_EMAIL\" ]; then npm run admin:promover -- \"$ADMIN_EMAIL\" || true; fi && node dist/main.js"]
