@@ -37,6 +37,12 @@
         }
       ]
     ],
-    "scheme": "craquesdavarzea"
+    "scheme": "craquesdavarzea",
+    "extra": {
+      "eas": {
+        "projectId": "7b331f2d-5526-41b1-ae42-5321894eb060"
+      }
+    },
+    "owner": "ferreiraeduardocosta"
   }
 }
