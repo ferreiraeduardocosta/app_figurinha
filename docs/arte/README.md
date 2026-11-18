@@ -1,5 +1,9 @@
 # Arte final das figurinhas — PENDENTE
 
+Briefing pronto para o gerador de imagem, uma planilha por tipo, em
+[`planilhas/`](planilhas/) (jogadores/técnicos/lendas, escudos, estádios,
+mascotes e momentos). Para gerar de novo: `python3 -I tools/planilhas/gerar_planilhas_arte.py`.
+
 Hoje o app usa avatares provisórios (silhuetas). Esta pasta reúne o que é
 preciso para produzir a arte final.
 
