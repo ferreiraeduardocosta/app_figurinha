@@ -207,6 +207,32 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
   permite desativar ou reativar.
 - O resgate aceita 10 tentativas por minuto, para dificultar adivinhar códigos.
 
+### Bafo (implementado)
+
+Mini jogo de "bafo" com figurinhas repetidas, contra o computador ou contra amigos.
+
+- **Monte:** cada lado põe de 1 a 3 repetidas (a última cópia nunca entra). Contra o
+  computador, ele põe figurinhas sorteadas da **mesma raridade** das suas.
+- **Batida:** o jogador segura o botão, uma marca corre pela barra de força e ele solta.
+  Precisão = quão perto do centro soltou (0 a 1). Cada carta ainda para baixo vira com
+  chance de **8% + 30% × precisão** (8% a 38%). Precisão ≥ 0,95 é "bafo perfeito": vira
+  pelo menos uma. As que virarem ficam com quem bateu.
+- **Ordem:** A, B, B, A, A, B (3 batidas de cada lado). Começar alternando assim reduz a
+  vantagem de quem bate primeiro de ~0,67 para ~0,15 carta em 3 (simulação com 20 mil
+  partidas). O que ninguém virar volta para o dono.
+- **Amigos:** quem desafia escolhe as cartas e a quantidade; o amigo vê as cartas antes
+  de aceitar e põe a mesma quantidade. As figurinhas ficam **reservadas** (saem do álbum)
+  enquanto o jogo dura. Prazos: 24 h para aceitar e 24 h para cada vez; contra o
+  computador, 2 h. Se o prazo vence, a partida termina como está (convite: tudo volta).
+- **Limite:** 10 partidas por dia por jogador (contra o computador ou amigos).
+- **Segurança:** o sorteio é feito no servidor com o gerador criptográfico. A precisão é
+  informada pelo app (dá para trapacear com um app modificado); o ganho máximo é limitado
+  pelo monte de 3 cartas e pelo limite diário.
+- **Exclusão de conta:** devolve aos outros jogadores as figurinhas presas em bafos abertos.
+- **Atenção (lojas):** apostar figurinhas que também vêm de pacotes pagos pode ser visto
+  como jogo de azar. Antes de publicar, revisar as regras da Google Play e da App Store
+  (e a classificação etária) para este modo.
+
 ### Outras ideias
 
 1. Rodadas simuladas semanais com placares e artilheiros.

@@ -8,6 +8,7 @@ import { Botao } from './src/componentes/Botao';
 import { JogoProvider, useJogo } from './src/jogo';
 import { AbrirPacote } from './src/telas/AbrirPacote';
 import { Album } from './src/telas/Album';
+import { Bafo } from './src/telas/Bafo';
 import { Entrar } from './src/telas/Entrar';
 import { ExcluirConta } from './src/telas/ExcluirConta';
 import { Inicio } from './src/telas/Inicio';
@@ -32,7 +33,7 @@ export default function App() {
 }
 
 type Aba = 'inicio' | 'album' | 'liga' | 'trocas' | 'loja';
-type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir' | 'ranking';
+type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir' | 'ranking' | 'bafo';
 
 function Raiz() {
   const { carregando, erroInicial, sessao, perfil, tentarDeNovo, recarregar } = useJogo();
@@ -76,6 +77,7 @@ function Raiz() {
 
   if (sobreposta === 'excluir') return <ExcluirConta aoVoltar={() => setSobreposta(null)} />;
   if (sobreposta === 'ranking') return <RankingTela aoVoltar={() => setSobreposta(null)} />;
+  if (sobreposta === 'bafo') return <Bafo aoVoltar={() => setSobreposta(null)} />;
   if (sobreposta && sobreposta !== 'probabilidades') {
     return (
       <AbrirPacote
@@ -100,6 +102,7 @@ function Raiz() {
             aoVerProbabilidades={() => setSobreposta('probabilidades')}
             aoExcluirConta={() => setSobreposta('excluir')}
             aoVerRanking={() => setSobreposta('ranking')}
+            aoJogarBafo={() => setSobreposta('bafo')}
           />
         )}
         {aba === 'album' && <Album key={secaoAlbum} secaoInicial={secaoAlbum} />}
@@ -115,7 +118,7 @@ function Raiz() {
           ativa={aba === 'inicio'}
           onPress={() => setAba('inicio')}
           icone="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z"
-          contador={perfil.pendencias.missoesParaResgatar}
+          contador={perfil.pendencias.missoesParaResgatar + perfil.pendencias.bafo}
         />
         <BotaoAba
           rotulo="Álbum"

@@ -48,7 +48,35 @@ export interface Perfil {
   pacotesComprados: number;
   nascimentoInformado: boolean;
   recompensas: { tipo: 'PAGINA' | 'ALBUM'; chave: string; criadaEm: string }[];
-  pendencias: { pedidosAmizade: number; trocasRecebidas: number; missoesParaResgatar: number };
+  pendencias: { pedidosAmizade: number; trocasRecebidas: number; missoesParaResgatar: number; bafo: number };
+}
+
+export interface PartidaBafo {
+  id: string;
+  status: 'CONVITE' | 'JOGANDO' | 'FINALIZADA' | 'RECUSADA' | 'CANCELADA' | 'EXPIRADA';
+  contraComputador: boolean;
+  quantidade: number;
+  euDesafiei: boolean;
+  adversario: { id: string | null; apelido: string };
+  cartasDesafiante: string[];
+  monte: { minha: boolean; virou: 'EU' | 'ADVERSARIO' | null; codigo: string | null }[];
+  batidas: { minha: boolean; precisao: number; viradas: number[] }[];
+  minhaVez: boolean;
+  placar: { eu: number; adversario: number };
+  recebi: string[] | null;
+  expiraEm: string;
+  /** Só na resposta de uma batida que terminou a partida. */
+  novas?: string[];
+  recompensas?: RecompensaNova[];
+}
+
+export interface ListaBafo {
+  limiteDia: number;
+  jogadasHoje: number;
+  convitesRecebidos: PartidaBafo[];
+  convitesEnviados: PartidaBafo[];
+  emAndamento: PartidaBafo[];
+  recentes: PartidaBafo[];
 }
 
 export interface Missao {
@@ -303,6 +331,15 @@ export const api = {
   cupons: (token: string) => chamar<CupomMeu[]>('GET', '/cupons', token),
   resgatarCupom: (token: string, codigo: string) => chamar<CupomResgatado>('POST', '/cupons/resgatar', token, { codigo }),
   amigos: (token: string) => chamar<ListaAmigos>('GET', '/amigos', token),
+  bafo: (token: string) => chamar<ListaBafo>('GET', '/bafo', token),
+  partidaBafo: (token: string, id: string) => chamar<PartidaBafo>('GET', `/bafo/${id}`, token),
+  bafoComputador: (token: string, figurinhas: string[]) => chamar<PartidaBafo>('POST', '/bafo/computador', token, { figurinhas }),
+  desafiarBafo: (token: string, adversarioId: string, figurinhas: string[]) =>
+    chamar<PartidaBafo>('POST', '/bafo/desafios', token, { adversarioId, figurinhas }),
+  aceitarBafo: (token: string, id: string, figurinhas: string[]) => chamar<PartidaBafo>('POST', `/bafo/${id}/aceitar`, token, { figurinhas }),
+  recusarBafo: (token: string, id: string) => chamar<PartidaBafo>('POST', `/bafo/${id}/recusar`, token),
+  cancelarBafo: (token: string, id: string) => chamar<PartidaBafo>('POST', `/bafo/${id}/cancelar`, token),
+  baterBafo: (token: string, id: string, precisao: number) => chamar<PartidaBafo>('POST', `/bafo/${id}/bater`, token, { precisao }),
   pedirAmizade: (token: string, apelido: string) =>
     chamar<{ status: 'PENDENTE' | 'ACEITA'; usuario: UsuarioResumo }>('POST', '/amigos', token, { apelido }),
   aceitarAmizade: (token: string, id: string) => chamar<void>('POST', `/amigos/${id}/aceitar`, token),

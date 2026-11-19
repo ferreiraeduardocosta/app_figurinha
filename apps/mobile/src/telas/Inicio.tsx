@@ -23,11 +23,13 @@ export function Inicio({
   aoVerProbabilidades,
   aoExcluirConta,
   aoVerRanking,
+  aoJogarBafo,
 }: {
   aoAbrirPacote: (origem: OrigemPacote) => void;
   aoVerProbabilidades: () => void;
   aoExcluirConta: () => void;
   aoVerRanking: () => void;
+  aoJogarBafo: () => void;
 }) {
   const { perfil, recarregar, sair, sessao } = useJogo();
   const [ranking, setRanking] = useState<Ranking | null>(null);
@@ -123,6 +125,26 @@ export function Inicio({
         </View>
       )}
 
+      <Pressable
+        onPress={aoJogarBafo}
+        accessibilityRole="button"
+        accessibilityLabel={`Bafo${perfil.pendencias.bafo ? `, ${perfil.pendencias.bafo} esperando você` : ''}`}
+        style={[estilos.cartao, estilos.bafo]}
+      >
+        <Text style={estilos.bafoEmoji} importantForAccessibility="no" accessibilityElementsHidden>
+          🖐️
+        </Text>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={estilos.bafoTitulo}>Bafo</Text>
+          <Text style={estilos.bafoTexto}>Aposte repetidas contra o computador ou desafie amigos.</Text>
+        </View>
+        {perfil.pendencias.bafo > 0 && (
+          <View style={estilos.bafoSelo}>
+            <Text style={estilos.bafoSeloTexto}>{perfil.pendencias.bafo}</Text>
+          </View>
+        )}
+      </Pressable>
+
       <Missoes />
 
       <Pressable
@@ -211,6 +233,12 @@ const estilos = StyleSheet.create({
   },
   moedasTexto: { fontSize: 15, fontWeight: '700', color: cores.tinta },
   cartao: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: cores.borda, borderRadius: 16, padding: 16, gap: 4 },
+  bafo: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1F5130', borderColor: '#1F5130' },
+  bafoEmoji: { fontSize: 34 },
+  bafoTitulo: { fontSize: 20, fontWeight: '800', color: '#FFFFFF', textTransform: 'uppercase' },
+  bafoTexto: { fontSize: 14, color: '#D1FAE5' },
+  bafoSelo: { minWidth: 26, height: 26, borderRadius: 13, backgroundColor: '#FDE047', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  bafoSeloTexto: { fontSize: 14, fontWeight: '800', color: '#161A26' },
   rotulo: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', color: cores.apagado },
   numeroGrande: { fontSize: 40, fontWeight: '800', color: cores.tinta },
   deTotal: { fontSize: 18, fontWeight: '600', color: cores.apagado },
