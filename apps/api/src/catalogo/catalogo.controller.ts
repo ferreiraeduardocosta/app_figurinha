@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, NotFoundException, Param } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { probabilidadesPublicas } from '../pacotes/economia';
-import { comImagem } from './artes';
+import { comImagem, imagemDa } from './artes';
 
 /** Dados públicos do álbum: não exigem login. */
 @Controller()
@@ -9,8 +9,10 @@ export class CatalogoController {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   @Get('clubes')
-  listarClubes() {
-    return this.prisma.clube.findMany({ orderBy: { sigla: 'asc' } });
+  async listarClubes() {
+    const clubes = await this.prisma.clube.findMany({ orderBy: { sigla: 'asc' } });
+    // Escudo recortado (fundo transparente) para os ícones pequenos do app.
+    return clubes.map((c) => ({ ...c, escudoImagem: imagemDa(`escudo-${c.sigla}`) }));
   }
 
   @Get('figurinhas')

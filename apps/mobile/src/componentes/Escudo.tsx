@@ -1,8 +1,28 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
+import { Image } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Path, Polygon, Rect } from 'react-native-svg';
+import { API_URL } from '../api';
+import { useJogo } from '../jogo';
 
-/** Escudos dos 8 clubes (mesmos desenhos do kit visual). */
+/**
+ * Escudo do clube: a arte recortada que vem do servidor; sem ela (ou se não
+ * carregar), o desenho vetorial do kit visual.
+ */
 export function Escudo({ sigla, tamanho }: { sigla: string; tamanho: number }) {
+  const { clubes } = useJogo();
+  const [falhou, setFalhou] = useState(false);
+  const imagem = clubes[sigla]?.escudoImagem;
+  if (imagem && !falhou) {
+    return (
+      <Image
+        source={{ uri: API_URL + imagem }}
+        onError={() => setFalhou(true)}
+        style={{ width: tamanho, height: tamanho }}
+        resizeMode="contain"
+        accessibilityLabel={`Escudo ${clubes[sigla]?.nome ?? sigla}`}
+      />
+    );
+  }
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 100 100" accessibilityLabel={`Escudo ${sigla}`}>
       {DESENHOS[sigla] ?? <Circle cx="50" cy="50" r="46" fill="#D5D9E0" />}

@@ -11,6 +11,8 @@ export interface Clube {
   estadio: string;
   mascote: string;
   lema: string;
+  /** Escudo recortado no servidor (ex.: /artes/escudo-TUB.1a2b3c4d.webp); null = desenho do app. */
+  escudoImagem?: string | null;
 }
 
 export type TipoFigurinha = 'ESCUDO' | 'ESTADIO' | 'TECNICO' | 'JOGADOR' | 'MASCOTE' | 'LENDA' | 'MOMENTO';
