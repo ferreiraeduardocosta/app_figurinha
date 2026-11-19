@@ -389,4 +389,8 @@ TEXTOS_BR = [
  ("Malik Osei", "Maílson 'Canhotinha' Osório"),
  ("embora Malik seja", "embora Maílson seja"),
  ("Malik chutando", "Canhotinha chutando"),
+ # Lendas renomeadas depois pelo painel de administração
+ ("Aurelino 'Pulmão de Aço' Santos", "João Vitor 'Pulmão de Aço'"),
+ ("Bernardino 'Barão de Chuteira' Valmont", "Valentim 'Matador' Fernandes"),
+ ("Ponta tão rápido que os narradores diziam ver só a sombra dele passar.", "Ponta tão rápida que os narradores diziam ver só a sombra dela passar."),
 ]
