@@ -196,8 +196,8 @@ LENDAS = [
  ("CAP","MEI","Bernardo Valmont","O Conde",35,"Passe longo","Camisa 10 dos três títulos seguidos. Elegante até no carrinho.","Senhor de pele clara, cabelo grisalho penteado para trás, bigode fino, camisa retrô roxa com gola."),
  ("POL","ZAG","Gunnar Lund","O Glaciar",37,"Muralha","Zagueiro que passou 4 temporadas sem cometer pênalti.","Senhor de pele clara, barba branca longa, cabelo branco ralo, camisa retrô branca de lã."),
  ("VEN","MEI","Albano Quintela","Professor",39,"Visão de jogo","Jogou 15 anos e depois formou quase todos os jovens da base atual.","Senhor de pele clara, careca, óculos de aro grosso, cardigã laranja sobre a camisa retrô."),
- ("DRA","PON","Masaru Ikeda","Sombra",34,"Velocidade","Ponta tão rápido que os narradores diziam ver só a sombra dele passar.","Senhor de pele clara, cabelo grisalho curto, faixa vermelha na testa, camisa retrô vermelha."),
- ("LEO","ATA","Solomon Nkemdirim","O Rugido",36,"Força","Artilheiro de cinco copas da liga. Seu rugido na comemoração virou o grito da torcida.","Senhor de pele negra, barba branca cheia, cabelo grisalho curto, camisa retrô amarela."),
+ ("DRA","PON","Masaru Ikeda","Sombra",34,"Velocidade","Ponta tão rápido que os narradores diziam ver só a sombra dele passar.","Senhora de pele clara, cabelo grisalho curto, faixa vermelha na testa, camisa retrô vermelha."),
+ ("LEO","ATA","Solomon Nkemdirim","O Rugido",36,"Força","Artilheiro de cinco copas da liga. Seu rugido na comemoração virou o grito da torcida.","Senhor de pele branca, barba branca cheia, cabelo grisalho curto, camisa retrô amarela."),
 ]
 
 # Momentos: (clube, título, ano, protagonistas, descrição, visual)
@@ -363,14 +363,14 @@ NOMES_BR = {
  "Lungile Sow": ("Lindomar Souza", "Rolinho"),
  "Oumar Dlamini": ("Osmar Trovoada", "Bazuca"),
  # Lendas
- "Hélio Vasques": ("Heliodoro Vasques", "Ancorão"),
- "Aurélio Santos": ("Aurelino Santos", "Pulmão de Aço"),
- "Cândido Rosa": ("Cândido Rosa", "Mestre Pé-de-Chinelo"),
- "Bernardo Valmont": ("Bernardino Valmont", "Barão de Chuteira"),
- "Gunnar Lund": ("Gumercindo Lund", "Freezer"),
- "Albano Quintela": ("Albano Quintela", "Tio Albano"),
- "Masaru Ikeda": ("Marcelino Ikeda", "Assombração"),
- "Solomon Nkemdirim": ("Salomão Nascimento", "Rugidão"),
+ "Hélio Vasques": ("Rafael Fernandes", "Canhoto"),
+ "Aurélio Santos": ("João Vitor", "Pulmão de Aço"),
+ "Cândido Rosa": ("Benjamin Fernandes", "Benjola"),
+ "Bernardo Valmont": ("Valentim Fernandes", "Matador"),
+ "Gunnar Lund": ("Bruno Fernandes", "Zé Bubu"),
+ "Albano Quintela": ("Matheus Fernandes", "Brito"),
+ "Masaru Ikeda": ("Manuela Fernandes", "Nunuca"),
+ "Solomon Nkemdirim": ("Felipe Fernandes", "El Pipe"),
 }
 
 # Trechos de história, destaque e briefing que citavam os nomes antigos.

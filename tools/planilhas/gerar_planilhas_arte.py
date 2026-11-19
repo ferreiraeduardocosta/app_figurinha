@@ -37,7 +37,9 @@ def pessoas(f):
     if f["tipo"] == "TECNICO":
         quem = f"técnico de futebol fictício do {c['nome']}, {idade}roupa de treinador nas cores {cor}"
     elif f["tipo"] == "LENDA":
-        quem = (f"ídolo aposentado fictício do {c['nome']} ({POSICAO.get(f['posicao'], '')}), senhor, "
+        mulher = f["descricaoVisual"].lower().startswith(("senhora", "mulher"))
+        quem = (f"{'ídola aposentada fictícia' if mulher else 'ídolo aposentado fictício'} do {c['nome']} "
+                f"({POSICAO.get(f['posicao'], '')}), {'senhora' if mulher else 'senhor'}, "
                 f"visual retrô anos 80, camisa antiga {cor} com gola")
     else:
         quem = (f"{POSICAO[f['posicao']]} de futebol fictício do {c['nome']}, {idade}"
