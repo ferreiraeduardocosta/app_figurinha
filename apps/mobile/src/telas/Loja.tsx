@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, ScrollViewInstance, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollViewInstance, StyleSheet, Text, TextInput, View } from 'react-native';
+import { RolagemComTeclado } from '../componentes/RolagemComTeclado';
 import Svg, { Path } from 'react-native-svg';
 import { api, ErroApi, Loja as DadosLoja, Oferta, OrigemPacote } from '../api';
 import { Botao } from '../componentes/Botao';
@@ -68,7 +69,7 @@ export function Loja({
   const menorPacote = Math.min(...loja.ofertas.map((o) => o.precoReferenciaCentavos / o.pacotes));
 
   return (
-    <ScrollView
+    <RolagemComTeclado
       ref={rolagem}
       contentContainerStyle={{ padding: 16, gap: 14 }}
       refreshControl={
@@ -180,7 +181,7 @@ export function Loja({
       <Text style={estilos.rodape}>
         Pagamento processado pela App Store ou Google Play. Figurinhas e moedas não têm valor em dinheiro e não podem ser vendidas.
       </Text>
-    </ScrollView>
+    </RolagemComTeclado>
   );
 }
 

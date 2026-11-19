@@ -86,10 +86,15 @@ export function Figurinha({
         </View>
 
         <View style={{ paddingHorizontal: 14 * k, paddingTop: 10 * k, gap: 2 * k }}>
-          <Text numberOfLines={1} style={{ fontSize: 26 * k, fontWeight: '800', color: r.texto, textTransform: 'uppercase' }}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
+            style={{ fontSize: tamanhoNome(nomeGrande) * k, fontWeight: '800', color: r.texto, textTransform: 'uppercase' }}
+          >
             {nomeGrande}
           </Text>
-          <Text numberOfLines={1} style={{ fontSize: 12 * k, fontWeight: '500', color: r.sub }}>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={{ fontSize: 12 * k, fontWeight: '500', color: r.sub }}>
             {linhaSub}
           </Text>
         </View>
@@ -266,3 +271,13 @@ const estilos = StyleSheet.create({
   circulo: { backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   rodape: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1 },
 });
+
+/**
+ * Tamanho do nome (na escala da carta de 280 px) para caber numa linha.
+ * Letra maiúscula em negrito ocupa ~0,72 do tamanho da fonte; sobram 236 px de largura.
+ * O adjustsFontSizeToFit ainda reduz um pouco mais se a fonte do aparelho for mais larga.
+ */
+function tamanhoNome(nome: string) {
+  return Math.max(13, Math.min(26, 236 / (nome.length * 0.72)));
+}
+

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { RolagemComTeclado } from '../componentes/RolagemComTeclado';
 import Svg, { Path } from 'react-native-svg';
 import { api, OrigemPacote, Ranking } from '../api';
 import { Botao } from '../componentes/Botao';
@@ -51,7 +52,7 @@ export function Inicio({
   const paginas = perfil.recompensas.filter((r) => r.tipo === 'PAGINA').length;
 
   return (
-    <ScrollView
+    <RolagemComTeclado
       contentContainerStyle={estilos.conteudo}
       refreshControl={
         <RefreshControl
@@ -177,7 +178,7 @@ export function Inicio({
       <Pressable accessibilityRole="button" onPress={aoExcluirConta} style={estilos.link}>
         <Text style={[estilos.linkTexto, { color: cores.erro, fontWeight: '600', fontSize: 14 }]}>Excluir minha conta</Text>
       </Pressable>
-    </ScrollView>
+    </RolagemComTeclado>
   );
 }
 

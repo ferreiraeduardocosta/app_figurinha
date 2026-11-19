@@ -1,8 +1,9 @@
-import { type ComponentRef, forwardRef, useEffect, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { type ComponentRef, forwardRef, useRef, useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ErroApi } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Escudo } from '../componentes/Escudo';
+import { RolagemComTeclado } from '../componentes/RolagemComTeclado';
 import { useJogo } from '../jogo';
 import { cores } from '../tema';
 
@@ -14,15 +15,8 @@ export function Entrar() {
   const [senha, setSenha] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<{ campo?: Campo; mensagem: string } | null>(null);
-  const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const refEmail = useRef<ComponentRef<typeof TextInput>>(null);
   const refSenha = useRef<ComponentRef<typeof TextInput>>(null);
-
-  // Com o teclado aberto, rola até o fim para o campo e o botão ficarem à vista.
-  useEffect(() => {
-    const s = Keyboard.addListener('keyboardDidShow', () => rolagem.current?.scrollToEnd({ animated: true }));
-    return () => s.remove();
-  }, []);
 
   const enviar = async () => {
     setErro(null);
@@ -45,8 +39,7 @@ export function Entrar() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <ScrollView ref={rolagem} contentContainerStyle={estilos.conteudo} keyboardShouldPersistTaps="handled">
+    <RolagemComTeclado contentContainerStyle={estilos.conteudo}>
         <View style={estilos.escudos} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {['TUB', 'UNI', 'POL', 'LEO'].map((s) => (
             <Escudo key={s} sigla={s} tamanho={52} />
@@ -112,8 +105,7 @@ export function Entrar() {
           )}
           <Botao titulo={modo === 'entrar' ? 'Entrar' : 'Criar conta'} onPress={enviar} carregando={enviando} />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </RolagemComTeclado>
   );
 }
 

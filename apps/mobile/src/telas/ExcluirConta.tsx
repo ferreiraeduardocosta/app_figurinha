@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { RolagemComTeclado } from '../componentes/RolagemComTeclado';
 import Svg, { Path } from 'react-native-svg';
 import { ErroApi } from '../api';
 import { Botao } from '../componentes/Botao';
@@ -26,7 +27,7 @@ export function ExcluirConta({ aoVoltar }: { aoVoltar: () => void }) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: cores.fundo }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: cores.fundo }}>
       <View style={estilos.barra}>
         <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={aoVoltar} style={estilos.voltar}>
           <Svg width={22} height={22} viewBox="0 0 24 24">
@@ -35,7 +36,7 @@ export function ExcluirConta({ aoVoltar }: { aoVoltar: () => void }) {
         </Pressable>
         <Text style={estilos.titulo}>Excluir conta</Text>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} keyboardShouldPersistTaps="handled">
+      <RolagemComTeclado contentContainerStyle={{ padding: 16, gap: 14 }}>
         <View style={estilos.alerta}>
           <Text style={estilos.alertaTitulo}>Isto não pode ser desfeito</Text>
           <Text style={estilos.texto}>
@@ -91,8 +92,8 @@ export function ExcluirConta({ aoVoltar }: { aoVoltar: () => void }) {
           <Text style={estilos.botaoPerigoTexto}>{enviando ? 'Excluindo…' : 'Excluir minha conta'}</Text>
         </Pressable>
         <Botao titulo="Cancelar" variante="secundario" onPress={aoVoltar} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </RolagemComTeclado>
+    </View>
   );
 }
 

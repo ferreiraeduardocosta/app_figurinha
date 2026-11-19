@@ -1,5 +1,6 @@
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { RolagemComTeclado } from '../componentes/RolagemComTeclado';
 import { api, ErroApi, ListaAmigos, ListaTrocas, RecompensaNova, StatusTroca, Sugestao, Troca, UsuarioResumo } from '../api';
 import { Botao } from '../componentes/Botao';
 import { MiniFigurinhas } from '../componentes/MiniFigurinhas';
@@ -90,7 +91,7 @@ export function Trocas() {
         ))}
       </View>
 
-      <ScrollView
+      <RolagemComTeclado
         contentContainerStyle={{ padding: 16, gap: 14 }}
         refreshControl={
           <RefreshControl
@@ -141,7 +142,7 @@ export function Trocas() {
             remover={(id) => agir(() => api.removerAmizade(token, id), 'Feito.')}
           />
         )}
-      </ScrollView>
+      </RolagemComTeclado>
 
       {montando && (
         <MontarTroca
