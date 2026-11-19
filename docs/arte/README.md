@@ -7,7 +7,11 @@ As imagens são servidas pela API em `/artes/` (WebP 512×512, nome com hash, em
 
     python3 -I tools/artes/preparar_artes.py docs/arte/Briefing_Arte_T1_com_links.xlsx
 
-(precisa de acesso a drive.google.com e drive.usercontent.google.com). Depois do deploy,
+(precisa de acesso a drive.google.com e drive.usercontent.google.com, e de
+`opencv-python-headless` + `numpy` para a limpeza). O script apaga as marcas reais
+(Nike, Puma, Adidas, Under Armour, escudos que imitam clubes reais, patrocínios e
+assinaturas) nas áreas listadas em `tools/artes/marcas.json`; ao trocar uma arte,
+remova ou revise a entrada dela nesse arquivo. Depois do deploy,
 o app mostra as novas sem atualização. Figurinha sem arte usa o desenho provisório.
 
 

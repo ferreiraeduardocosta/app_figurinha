@@ -9,6 +9,9 @@ Uso, a partir da raiz do repositório:
 - O nome de cada arquivo leva um hash do conteúdo (TUB-04.1a2b3c4d.webp): o app pode
   guardar a imagem em cache para sempre e uma arte trocada aparece sozinha.
 - Os links precisam estar como "qualquer pessoa com o link pode ver".
+- Antes de converter, apaga as marcas reais (logos, escudos de clubes, patrocínios) nas
+  áreas de tools/artes/marcas.json, com limpar_marcas.py. Precisa de opencv-python-headless
+  e numpy. Ao trocar uma arte, revise/remova a entrada dela em marcas.json.
 """
 import hashlib
 import io
@@ -24,6 +27,7 @@ import openpyxl
 from PIL import Image
 
 RAIZ = Path(__file__).resolve().parents[2]
+MARCAS = json.loads((Path(__file__).with_name("marcas.json")).read_text())
 DESTINO = RAIZ / "apps/api/artes"
 LADO = 512
 QUALIDADE = 82
@@ -76,6 +80,14 @@ def main():
             if not original.exists():
                 baixar(id_drive, original)
             im = Image.open(original).convert("RGB")
+            if codigo in MARCAS:
+                import numpy as np  # só aqui: sem marcas, não precisa de OpenCV
+
+                sys.path.insert(0, str(Path(__file__).parent))
+                from limpar_marcas import limpar
+
+                bgr = np.array(im)[:, :, ::-1].copy()
+                im = Image.fromarray(limpar(bgr, codigo, MARCAS)[:, :, ::-1])
             if im.width != im.height:
                 # Não quadrada: recorta um quadrado (centro na horizontal, topo na vertical).
                 lado = min(im.size)
