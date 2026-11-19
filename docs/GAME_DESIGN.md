@@ -184,6 +184,11 @@ Detalhes da loja, modo de teste e passo a passo para ligar os pagamentos:
   **"Em alta"** até a rodada seguinte, com selo no álbum e nos pacotes.
 - Mudar atributos no painel muda a força do time nas rodadas seguintes.
 
+- **Fase de testes:** no painel (aba Testes) dá para reiniciar a liga na rodada 1, escolhendo
+  data/hora de início e o intervalo entre rodadas (de 5 minutos a 30 dias); cada reinício
+  sorteia resultados novos. Na mesma aba, "zerar figurinhas" esvazia o álbum de todas as
+  contas (e moedas, pacotes, missões, trocas e bafos) sem apagar nenhuma conta.
+
 ### Ranking de colecionadores (implementado)
 
 - Geral (50 primeiros + a posição do jogador) e entre amigos.

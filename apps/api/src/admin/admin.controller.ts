@@ -2,13 +2,17 @@ import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post, Qu
 import { AdminGuard, UsuarioAtual } from '../auth/auth.guard';
 import { UsuarioAutenticado } from '../auth/auth.service';
 import { AdminService } from './admin.service';
+import { TestesService } from './testes.service';
 import { validarEdicao, validarNova } from './validacao-figurinha';
 
 /** Rotas do painel de administração. Exigem login com papel ADMIN. */
 @Controller('admin')
 @UseGuards(AdminGuard)
 export class AdminController {
-  constructor(@Inject(AdminService) private readonly admin: AdminService) {}
+  constructor(
+    @Inject(AdminService) private readonly admin: AdminService,
+    @Inject(TestesService) private readonly testes: TestesService,
+  ) {}
 
   @Get('resumo')
   resumo() {
@@ -44,5 +48,25 @@ export class AdminController {
   @Get('usuarios')
   usuarios(@Query('busca') busca?: string) {
     return this.admin.listarUsuarios(typeof busca === 'string' ? busca.slice(0, 100) : undefined);
+  }
+
+  // ---------------- Fase de testes ----------------
+
+  @Get('testes')
+  situacaoTestes() {
+    return this.testes.situacao();
+  }
+
+  @Post('testes/liga')
+  @HttpCode(200)
+  reiniciarLiga(@Body() corpo: Record<string, unknown>) {
+    const c = corpo ?? {};
+    return this.testes.reiniciarLiga(c.primeiraRodada, c.intervalo, c.unidade);
+  }
+
+  @Post('testes/zerar-progresso')
+  @HttpCode(200)
+  zerarProgresso(@Body() corpo: Record<string, unknown>) {
+    return this.testes.zerarProgresso(corpo?.confirmacao);
   }
 }

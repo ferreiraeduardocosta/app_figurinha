@@ -394,3 +394,13 @@ model Bafo {
   @@index([adversarioId, status])
   @@index([status, expiraEm])
 }
+
+/// Configuração da liga definida pelo painel (sobrepõe data/temporada1/liga.json).
+/// versao sobe a cada reinício, para os resultados mudarem.
+model ConfiguracaoLiga {
+  temporada        Int      @id
+  primeiraRodada   DateTime
+  intervaloMinutos Int
+  versao           Int      @default(0)
+  atualizadoEm     DateTime @updatedAt
+}

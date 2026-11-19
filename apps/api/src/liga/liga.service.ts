@@ -23,7 +23,20 @@ interface ConfigLiga {
 }
 
 export const CONFIG_LIGA: ConfigLiga = JSON.parse(readFileSync(resolve(DADOS_DIR, 'liga.json'), 'utf8'));
-const DIA_MS = 24 * 60 * 60 * 1000;
+const MIN_MS = 60 * 1000;
+
+/** Data de início, intervalo entre rodadas e versão (muda o sorteio a cada reinício). */
+export interface AgendaLiga {
+  primeiraRodada: Date;
+  intervaloMinutos: number;
+  versao: number;
+}
+
+const AGENDA_PADRAO: AgendaLiga = {
+  primeiraRodada: new Date(CONFIG_LIGA.primeiraRodada),
+  intervaloMinutos: CONFIG_LIGA.intervaloDias * 24 * 60,
+  versao: 0,
+};
 /** Chave do lock do Postgres que impede duas simulações da mesma rodada ao mesmo tempo. */
 const LOCK_LIGA = 7_331_001;
 
@@ -35,18 +48,70 @@ const LOCK_LIGA = 7_331_001;
  */
 @Injectable()
 export class LigaService {
+  /** Última agenda lida do banco (o painel pode mudá-la; sem registro, vale o liga.json). */
+  private agendaAtual: AgendaLiga = AGENDA_PADRAO;
+
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   private get semente() {
-    return process.env.LIGA_SEMENTE || CONFIG_LIGA.semente;
+    const base = process.env.LIGA_SEMENTE || CONFIG_LIGA.semente;
+    return this.agendaAtual.versao ? `${base}:v${this.agendaAtual.versao}` : base;
+  }
+
+  async agenda(): Promise<AgendaLiga> {
+    const c = await this.prisma.configuracaoLiga.findUnique({ where: { temporada: CONFIG_LIGA.temporada } });
+    this.agendaAtual = c ? { primeiraRodada: c.primeiraRodada, intervaloMinutos: c.intervaloMinutos, versao: c.versao } : AGENDA_PADRAO;
+    return this.agendaAtual;
   }
 
   dataDaRodada(rodada: number) {
-    return new Date(new Date(CONFIG_LIGA.primeiraRodada).getTime() + (rodada - 1) * CONFIG_LIGA.intervaloDias * DIA_MS);
+    const a = this.agendaAtual;
+    return new Date(a.primeiraRodada.getTime() + (rodada - 1) * a.intervaloMinutos * MIN_MS);
+  }
+
+  /**
+   * Fase de testes: apaga o calendário e os resultados e recomeça a liga na rodada 1,
+   * com nova data de início e intervalo. A versão sobe para os resultados mudarem.
+   */
+  async reiniciar(primeiraRodada: Date, intervaloMinutos: number) {
+    const temporada = CONFIG_LIGA.temporada;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_LIGA})`;
+      const atual = await tx.configuracaoLiga.findUnique({ where: { temporada } });
+      await tx.partida.deleteMany({ where: { temporada } });
+      await tx.configuracaoLiga.upsert({
+        where: { temporada },
+        create: { temporada, primeiraRodada, intervaloMinutos, versao: 1 },
+        update: { primeiraRodada, intervaloMinutos, versao: (atual?.versao ?? 0) + 1 },
+      });
+    });
+    await this.agenda();
+    return this.situacao();
+  }
+
+  /** Resumo para o painel. */
+  async situacao(agora = new Date()) {
+    await this.atualizar(agora);
+    const a = this.agendaAtual;
+    const temporada = CONFIG_LIGA.temporada;
+    const [total, disputadas] = await Promise.all([
+      this.prisma.partida.findMany({ where: { temporada }, select: { rodada: true }, distinct: ['rodada'] }),
+      this.prisma.partida.findMany({ where: { temporada, simuladaEm: { not: null } }, select: { rodada: true }, distinct: ['rodada'] }),
+    ]);
+    const proxima = disputadas.length < total.length ? disputadas.length + 1 : null;
+    return {
+      primeiraRodada: a.primeiraRodada,
+      intervaloMinutos: a.intervaloMinutos,
+      versao: a.versao,
+      totalRodadas: total.length,
+      rodadasDisputadas: disputadas.length,
+      proximaRodada: proxima ? { numero: proxima, data: this.dataDaRodada(proxima) } : null,
+    };
   }
 
   /** Cria o calendário (se faltar) e simula as rodadas vencidas. */
   async atualizar(agora = new Date()) {
+    await this.agenda();
     const temporada = CONFIG_LIGA.temporada;
     const pendentes = await this.prisma.partida.count({ where: { temporada, simuladaEm: null, dataPrevista: { lte: agora } } });
     const existe = await this.prisma.partida.count({ where: { temporada } });

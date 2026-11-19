@@ -121,6 +121,7 @@ const ABAS = [
   ['alteracoes', 'Alterações'],
   ['usuarios', 'Usuários'],
   ['cupons', 'Cupons'],
+  ['testes', 'Testes'],
 ];
 
 function estrutura() {
@@ -161,7 +162,7 @@ async function trocarAba(id) {
   const alvo = document.getElementById('conteudo');
   alvo.replaceChildren(h('p', { class: 'carregando' }, 'Carregando…'));
   try {
-    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons };
+    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons, testes: telaTestes };
     await telas[id](alvo);
   } catch (err) {
     if (err.status !== 401) alvo.replaceChildren(h('p', { class: 'erro', role: 'alert' }, err.message));
@@ -663,3 +664,107 @@ async function iniciar() {
 }
 
 iniciar();
+
+/* ---------- fase de testes ---------- */
+
+const brasilia = (d) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' }).format(d).replace(' ', 'T');
+const dataBrasilia = (iso) => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+function intervaloTexto(min) {
+  if (min % (24 * 60) === 0) return `${min / (24 * 60)} dia(s)`;
+  if (min % 60 === 0) return `${min / 60} hora(s)`;
+  return `${min} minuto(s)`;
+}
+
+/** Ferramentas destrutivas para a fase de testes, cada uma com palavra de confirmação. */
+async function telaTestes(alvo) {
+  const s = await api('GET', '/admin/testes');
+  const l = s.liga;
+
+  // Liga
+  const erroLiga = h('p', { class: 'erro', role: 'alert', hidden: true });
+  const okLiga = h('p', { class: 'sucesso', role: 'status', hidden: true });
+  const inicio = h('input', { type: 'datetime-local', name: 'primeiraRodada', required: true, value: brasilia(new Date(Date.now() + 60 * 60 * 1000)) });
+  const intervalo = h('input', { type: 'number', name: 'intervalo', min: 1, max: 720, value: 7, required: true });
+  const unidade = h('select', { name: 'unidade' },
+    h('option', { value: 'minutos' }, 'minutos'), h('option', { value: 'horas' }, 'horas'), h('option', { value: 'dias', selected: true }, 'dias'));
+  const confLiga = h('input', { name: 'confirmacao', autocomplete: 'off', placeholder: 'REINICIAR' });
+  const botaoLiga = h('button', { class: 'botao perigo', type: 'submit' }, 'Reiniciar liga');
+  const formLiga = h('form', { class: 'form-cupom', onsubmit: async (e) => {
+    e.preventDefault();
+    erroLiga.hidden = okLiga.hidden = true;
+    if (confLiga.value.trim() !== 'REINICIAR') { erroLiga.textContent = 'Digite REINICIAR para confirmar.'; erroLiga.hidden = false; return; }
+    botaoLiga.disabled = true;
+    try {
+      const r = await api('POST', '/admin/testes/liga', { primeiraRodada: inicio.value, intervalo: Number(intervalo.value), unidade: unidade.value });
+      okLiga.textContent = `Liga reiniciada: rodada 1 em ${dataBrasilia(r.primeiraRodada)}, depois a cada ${intervaloTexto(r.intervaloMinutos)}.`;
+      okLiga.hidden = false;
+      setTimeout(() => trocarAba('testes'), 1500);
+    } catch (err) {
+      if (err.status !== 401) { erroLiga.textContent = err.message; erroLiga.hidden = false; }
+    } finally {
+      botaoLiga.disabled = false;
+    }
+  } },
+    h('h3', {}, 'Liga'),
+    h('p', { class: 'aviso' },
+      `Hoje: ${l.rodadasDisputadas} de ${l.totalRodadas} rodadas disputadas. ` +
+      `Início em ${dataBrasilia(l.primeiraRodada)}, uma rodada a cada ${intervaloTexto(l.intervaloMinutos)}. ` +
+      (l.proximaRodada ? `Próxima: rodada ${l.proximaRodada.numero} em ${dataBrasilia(l.proximaRodada.data)}.` : 'Temporada encerrada.')),
+    h('p', { class: 'aviso' }, 'Reiniciar apaga todos os resultados e recomeça na rodada 1, com resultados novos. ' +
+      'Rodadas com data no passado são disputadas na hora. Horário de Brasília.'),
+    h('div', { class: 'grade-campos' },
+      h('label', {}, 'Primeira rodada', inicio),
+      h('label', {}, 'Uma rodada a cada', intervalo),
+      h('label', {}, 'Unidade', unidade),
+    ),
+    h('label', {}, 'Para confirmar, digite REINICIAR', confLiga),
+    erroLiga, okLiga,
+    h('div', {}, botaoLiga),
+  );
+
+  // Jogadores
+  const j = s.jogadores;
+  const blocoPerigo = (titulo, texto, palavra, rota, rotulo, resumir) => {
+    const erro = h('p', { class: 'erro', role: 'alert', hidden: true });
+    const ok = h('p', { class: 'sucesso', role: 'status', hidden: true });
+    const conf = h('input', { name: 'confirmacao-' + palavra, autocomplete: 'off', placeholder: palavra });
+    const botao = h('button', { class: 'botao perigo', type: 'submit' }, rotulo);
+    return h('form', { class: 'form-cupom', onsubmit: async (e) => {
+      e.preventDefault();
+      erro.hidden = ok.hidden = true;
+      if (conf.value.trim() !== palavra) { erro.textContent = `Digite ${palavra} para confirmar.`; erro.hidden = false; return; }
+      botao.disabled = true;
+      try {
+        const r = await api('POST', rota, { confirmacao: palavra });
+        ok.textContent = resumir(r);
+        ok.hidden = false;
+        conf.value = '';
+      } catch (err) {
+        if (err.status !== 401) { erro.textContent = err.message; erro.hidden = false; }
+      } finally {
+        botao.disabled = false;
+      }
+    } },
+      h('h3', {}, titulo),
+      h('p', { class: 'aviso' }, texto),
+      h('label', {}, `Para confirmar, digite ${palavra}`, conf),
+      erro, ok,
+      h('div', {}, botao),
+    );
+  };
+
+  alvo.replaceChildren(
+    h('h2', {}, 'Fase de testes'),
+    h('p', { class: 'aviso' }, `${j.contas} conta(s), ${j.comFigurinhas} com figurinhas no álbum. Estas ações não têm volta.`),
+    h('div', { class: 'cartao' }, formLiga),
+    h('div', { class: 'cartao' }, blocoPerigo(
+      'Zerar as figurinhas dos jogadores',
+      'O álbum de todas as contas (inclusive administradores) fica vazio, como numa conta nova: some também o que depende ' +
+      'dele (moedas, pacotes guardados, missões, recompensas de página, trocas, bafos e cupons resgatados). ' +
+      'Nenhuma conta é apagada: logins, senhas e amizades continuam.',
+      'ZERAR', '/admin/testes/zerar-progresso', 'Zerar figurinhas',
+      (r) => `Pronto: ${r.jogadores} conta(s) zeradas; ${r.figurinhas} registros de figurinhas, ${r.trocas} trocas e ${r.bafos} bafos apagados.`,
+    )),
+  );
+}
+
