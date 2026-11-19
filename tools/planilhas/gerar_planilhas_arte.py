@@ -32,23 +32,25 @@ POSICAO = {"GOL": "goleiro", "ZAG": "zagueiro", "LAT": "lateral", "VOL": "volant
 
 
 def pessoas(f):
-    c, cor = clubes[f["clube"]], cores[f["clube"]]
+    # Sem o nome do clube: "Tubarões", "Leões", "Dragões" faziam o gerador desenhar bichos.
+    cor = cores[f["clube"]]
+    mulher = f["descricaoVisual"].lower().startswith(("senhora", "mulher"))
+    humano = "mulher" if mulher else "homem"
     idade = f"{f['idade']} anos, " if f.get("idade") else ""
     if f["tipo"] == "TECNICO":
-        quem = f"técnico de futebol fictício do {c['nome']}, {idade}roupa de treinador nas cores {cor}"
+        quem = f"técnico de futebol fictício, {idade}roupa de treinador nas cores {cor}"
     elif f["tipo"] == "LENDA":
-        mulher = f["descricaoVisual"].lower().startswith(("senhora", "mulher"))
-        quem = (f"{'ídola aposentada fictícia' if mulher else 'ídolo aposentado fictício'} do {c['nome']} "
-                f"({POSICAO.get(f['posicao'], '')}), {'senhora' if mulher else 'senhor'}, "
-                f"visual retrô anos 80, camisa antiga {cor} com gola")
+        quem = (f"{'ídola aposentada' if mulher else 'ídolo aposentado'} do futebol ({POSICAO.get(f['posicao'], '')}), "
+                f"{'senhora idosa' if mulher else 'senhor idoso'}, visual retrô anos 80, camisa antiga {cor} com gola")
     else:
-        quem = (f"{POSICAO[f['posicao']]} de futebol fictício do {c['nome']}, {idade}"
-                f"camisa do clube {cor} sem número e sem patrocínio")
+        quem = (f"jogador de futebol fictício ({POSICAO[f['posicao']]}), {idade}"
+                f"camisa de futebol {cor} sem número e sem patrocínio")
         if f["posicao"] == "GOL":
             quem += ", luvas de goleiro"
-    jeito = f"Personalidade para a expressão: apelido \"{f['apelido']}\" — {f['historia']}" if f.get("apelido") else f["historia"]
-    return (f"{ESTILO}. Retrato em busto, do peito para cima, olhando para a frente, rosto centralizado, "
-            f"fundo liso de uma cor clara. {quem[0].upper() + quem[1:]}. Aparência: {f['descricaoVisual']} {jeito}")
+    return (f"{ESTILO}. Retrato de um(a) {humano} de verdade, ser humano com rosto humano, em busto, do peito "
+            f"para cima, olhando para a frente, rosto centralizado, fundo liso de uma cor clara. "
+            f"{quem[0].upper() + quem[1:]}. Aparência física: {f['descricaoVisual']} "
+            f"Expressão que combine com esta história: {f['historia']}").replace("um(a) homem", "um homem").replace("um(a) mulher", "uma mulher")
 
 
 def escudo(f):
@@ -86,7 +88,9 @@ def momento(f):
 
 PLANILHAS = [
     ("1_Jogadores_Tecnicos_Lendas", ("JOGADOR", "TECNICO", "LENDA"), pessoas,
-     "Quadrado 1024×1024, PNG", EVITAR_BASE + ", corpo inteiro, mãos deformadas, chapéu cobrindo o rosto"),
+     "Quadrado 1024×1024, PNG",
+     EVITAR_BASE + ", animal, bicho com roupa, personagem antropomórfico, mascote, criatura, "
+     "corpo inteiro, mãos deformadas, chapéu cobrindo o rosto"),
     ("2_Escudos", ("ESCUDO",), escudo, "Quadrado 1024×1024, PNG com fundo transparente",
      EVITAR_BASE + ", efeito 3D exagerado, degradês complexos"),
     ("3_Estadios", ("ESTADIO",), estadio, "Horizontal 1024×832, PNG", EVITAR_BASE + ", estádio real conhecido"),
