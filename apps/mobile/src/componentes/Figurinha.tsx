@@ -1,8 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Polygon, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { Clube, Figurinha as DadosFigurinha } from '../api';
 import { cores, estiloRaridade } from '../tema';
 import { Avatar } from './Avatar';
+import { BrilhoLendario } from './BrilhoLendario';
 import { Escudo } from './Escudo';
 
 const BASE_L = 280;
@@ -44,10 +45,12 @@ export function Figurinha({
         ? `#${f.camisa}`
         : r.nome;
   const idGrad = `moldura-${f.raridade}`;
+  const lendaria = f.raridade === 'LENDARIA';
   const retratoA = 214 * k;
   const retratoL = largura - 16 * k;
 
   return (
+    <View style={lendaria ? brilhoExterno(k) : undefined}>
     <View
       style={{ width: largura, height: BASE_A * k, borderRadius: 18 * k, overflow: 'hidden' }}
       accessible
@@ -64,7 +67,13 @@ export function Figurinha({
         <Rect x="0" y="0" width="100" height="140" fill={`url(#${idGrad})`} />
       </Svg>
 
-      <View style={[estilos.interno, { margin: 8 * k, borderRadius: 12 * k, backgroundColor: r.interno }]}>
+      <View
+        style={[
+          estilos.interno,
+          { margin: 8 * k, borderRadius: 12 * k, backgroundColor: r.interno },
+          lendaria && { borderWidth: 1.5 * k, borderColor: '#FBBF24' },
+        ]}
+      >
         <View style={{ height: retratoA, backgroundColor: clube.corPrimaria, overflow: 'hidden' }}>
           <Retrato f={f} clube={clube} largura={retratoL} altura={retratoA} k={k} />
           <View style={[estilos.topo, { top: 10 * k, left: 10 * k, right: 10 * k }]}>
@@ -80,7 +89,7 @@ export function Figurinha({
               <Escudo sigla={clube.sigla} tamanho={38 * k} />
             </View>
           </View>
-          {f.tipo === 'LENDA' && <Etiqueta texto="LENDA" k={k} lado="esquerda" />}
+          {f.tipo === 'LENDA' && <Etiqueta texto="LENDA" k={k} lado="esquerda" cor="#B7791F" />}
           {emAlta && <Etiqueta texto="EM ALTA" k={k} lado="esquerda" cor="#EA580C" />}
           {brilhante && <Etiqueta texto="BRILHANTE" k={k} lado="direita" claro />}
         </View>
@@ -90,7 +99,10 @@ export function Figurinha({
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.6}
-            style={{ fontSize: tamanhoNome(nomeGrande) * k, fontWeight: '800', color: r.texto, textTransform: 'uppercase' }}
+            style={[
+              { fontSize: tamanhoNome(nomeGrande) * k, fontWeight: '800', color: r.texto, textTransform: 'uppercase' },
+              lendaria && { color: '#FDE68A', textShadowColor: '#F59E0B', textShadowRadius: 8 * k, textShadowOffset: { width: 0, height: 0 } },
+            ]}
           >
             {nomeGrande}
           </Text>
@@ -161,8 +173,27 @@ export function Figurinha({
           <Rect x="0" y="0" width="100" height="140" fill="url(#holo)" />
         </Svg>
       )}
+      {lendaria && <BrilhoLendario largura={largura} altura={BASE_A * k} k={k} />}
+    </View>
     </View>
   );
+}
+
+/** Aura dourada em volta da carta lendária. */
+function brilhoExterno(k: number) {
+  return Platform.select({
+    web: { borderRadius: 18 * k, boxShadow: `0 0 ${14 * k}px ${3 * k}px rgba(251, 191, 36, 0.65), 0 0 ${28 * k}px ${6 * k}px rgba(168, 85, 247, 0.35)` },
+    default: {
+      borderRadius: 18 * k,
+      // No Android a sombra precisa de um fundo para aparecer.
+      backgroundColor: '#7C3AED',
+      shadowColor: '#F59E0B',
+      shadowOpacity: 0.9,
+      shadowRadius: 12 * k,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 12,
+    },
+  }) as object;
 }
 
 function Retrato({ f, clube, largura, altura, k }: { f: DadosFigurinha; clube: Clube; largura: number; altura: number; k: number }) {
