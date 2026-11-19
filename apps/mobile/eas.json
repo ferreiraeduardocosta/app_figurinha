@@ -12,7 +12,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://craques-da-varzea-api.onrender.com"
-      }
+      },
+      "autoIncrement": true
     },
     "production": {
       "environment": "production",
