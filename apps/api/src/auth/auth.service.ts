@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { HASH_FALSO, conferirSenha, gerarHashSenha } from './senha';
+import { devolverBafosDaConta } from '../social/bafo.service';
 
 const DURACAO_SESSAO_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias
 
@@ -59,6 +60,8 @@ export class AuthService {
     }
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "Usuario" WHERE id = ${usuarioId} FOR UPDATE`;
+      // Figurinhas dos outros jogadores presas em bafos abertos voltam para eles.
+      await devolverBafosDaConta(tx, usuarioId);
       const compras = await tx.compra.count({ where: { usuarioId } });
       if (compras === 0) {
         await tx.usuario.delete({ where: { id: usuarioId } });
@@ -71,6 +74,7 @@ export class AuthService {
       await tx.missaoDia.deleteMany({ where: { usuarioId } });
       await tx.aberturaPacote.deleteMany({ where: { usuarioId } });
       await tx.amizade.deleteMany({ where: outro });
+      await tx.bafo.deleteMany({ where: { OR: [{ desafianteId: usuarioId }, { adversarioId: usuarioId }] } });
       await tx.troca.deleteMany({ where: { OR: [{ propostaPorId: usuarioId }, { paraId: usuarioId }] } });
       const marca = randomUUID();
       await tx.usuario.update({

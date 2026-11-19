@@ -3,6 +3,7 @@ import { AuthGuard, UsuarioAtual } from '../auth/auth.guard';
 import { UsuarioAutenticado } from '../auth/auth.service';
 import * as v from '../comum/validacao';
 import { AmigosService } from './amigos.service';
+import { BafoService } from './bafo.service';
 import { RankingService } from './ranking.service';
 import { TrocasService } from './trocas.service';
 
@@ -16,6 +17,7 @@ export class SocialController {
     @Inject(AmigosService) private readonly amigos: AmigosService,
     @Inject(TrocasService) private readonly trocas: TrocasService,
     @Inject(RankingService) private readonly rankingService: RankingService,
+    @Inject(BafoService) private readonly bafo: BafoService,
   ) {}
 
   /** Ranking de colecionadores: ?escopo=geral (padrão) ou amigos. */
@@ -83,5 +85,52 @@ export class SocialController {
   @HttpCode(200)
   cancelar(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
     return this.trocas.cancelar(u.id, id);
+  }
+
+  // ---------------- Bafo ----------------
+
+  @Get('bafo')
+  listarBafo(@UsuarioAtual() u: UsuarioAutenticado) {
+    return this.bafo.listar(u.id);
+  }
+
+  @Get('bafo/:id')
+  verBafo(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.bafo.ver(u.id, id);
+  }
+
+  @Post('bafo/computador')
+  bafoComputador(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    return this.bafo.contraComputador(u.id, v.figurinhasBafo(v.objeto(corpo)));
+  }
+
+  @Post('bafo/desafios')
+  desafiarBafo(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    const c = v.objeto(corpo);
+    return this.bafo.desafiar(u.id, v.idObrigatorio(c, 'adversarioId'), v.figurinhasBafo(c));
+  }
+
+  @Post('bafo/:id/aceitar')
+  @HttpCode(200)
+  aceitarBafo(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string, @Body() corpo: unknown) {
+    return this.bafo.aceitar(u.id, id, v.figurinhasBafo(v.objeto(corpo)));
+  }
+
+  @Post('bafo/:id/recusar')
+  @HttpCode(200)
+  recusarBafo(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.bafo.recusar(u.id, id);
+  }
+
+  @Post('bafo/:id/cancelar')
+  @HttpCode(200)
+  cancelarBafo(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.bafo.cancelar(u.id, id);
+  }
+
+  @Post('bafo/:id/bater')
+  @HttpCode(200)
+  baterBafo(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string, @Body() corpo: unknown) {
+    return this.bafo.bater(u.id, id, v.precisao(v.objeto(corpo)));
   }
 }

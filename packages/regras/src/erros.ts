@@ -5,7 +5,8 @@ export type CodigoErroRegra =
   | 'JA_POSSUI'
   | 'REPETIDAS_INSUFICIENTES'
   | 'TROCA_INVALIDA'
-  | 'SEM_REPETIDA';
+  | 'SEM_REPETIDA'
+  | 'BAFO_INVALIDO';
 
 /** Erro de regra do jogo: algo que o jogador ou a configuração não pode fazer. */
 export class ErroRegra extends Error {

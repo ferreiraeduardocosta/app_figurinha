@@ -71,3 +71,21 @@ export function idObrigatorio(corpo: Record<string, unknown>, campo: string): st
   if (!v) invalido(campo, `Informe ${campo}.`);
   return v;
 }
+
+/** Figurinhas postas no monte do bafo: lista de 1 a 3 códigos (pode repetir o código). */
+export function figurinhasBafo(corpo: Record<string, unknown>): string[] {
+  const v = corpo.figurinhas;
+  if (!Array.isArray(v) || v.length < 1 || v.length > 3) invalido('figurinhas', 'Ponha de 1 a 3 figurinhas no monte.');
+  return v.map((c: unknown) => {
+    const codigo = typeof c === 'string' ? c.trim().toUpperCase() : '';
+    if (!/^[A-Z]{3}-\d{2}$/.test(codigo)) invalido('figurinhas', 'Código de figurinha inválido (ex.: UNI-05).');
+    return codigo;
+  });
+}
+
+/** Precisão da batida, de 0 a 1. */
+export function precisao(corpo: Record<string, unknown>): number {
+  const v = corpo.precisao;
+  if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 1) invalido('precisao', 'precisao deve ser um número de 0 a 1.');
+  return v;
+}

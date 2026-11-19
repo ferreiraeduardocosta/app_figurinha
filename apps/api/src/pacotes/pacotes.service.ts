@@ -117,6 +117,20 @@ export class PacotesService implements OnModuleInit {
         trocasRecebidas: await this.prisma.troca.count({
           where: { paraId: usuarioId, status: 'PENDENTE', expiraEm: { gt: agora } },
         }),
+        // Desafios de bafo para responder + partidas com amigos esperando a minha batida.
+        bafo: Number(
+          (
+            await this.prisma.$queryRaw<{ n: bigint }[]>`
+              SELECT COUNT(*) AS n FROM "Bafo"
+              WHERE "expiraEm" > ${agora} AND (
+                ("status" = 'CONVITE' AND "adversarioId" = ${usuarioId})
+                OR ("status" = 'JOGANDO' AND NOT "contraComputador" AND (
+                  ("desafianteId" = ${usuarioId} AND "estado"->>'vez' = 'A')
+                  OR ("adversarioId" = ${usuarioId} AND "estado"->>'vez' = 'B')
+                ))
+              )`
+          )[0]?.n ?? 0,
+        ),
       },
     };
   }

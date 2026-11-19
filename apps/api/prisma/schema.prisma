@@ -148,6 +148,8 @@ model Usuario {
   amizadesRecebidas    Amizade[]           @relation("AmizadeDestinatario")
   trocasPropostas      Troca[]             @relation("TrocaProposta")
   trocasRecebidas      Troca[]             @relation("TrocaRecebida")
+  bafosDesafiados      Bafo[]              @relation("BafoDesafiante")
+  bafosRecebidos       Bafo[]              @relation("BafoAdversario")
 }
 
 /// Sessão de login. Guardamos só o hash SHA-256 do token; o token em si fica no aparelho.
@@ -352,4 +354,43 @@ model CupomResgate {
 
   @@id([cupomId, usuarioId])
   @@index([usuarioId])
+}
+
+enum StatusBafo {
+  /// Desafio enviado a um amigo, esperando ele aceitar.
+  CONVITE
+  JOGANDO
+  FINALIZADA
+  RECUSADA
+  CANCELADA
+  /// Convite não respondido ou vez não jogada a tempo: as cartas que sobraram voltam para os donos.
+  EXPIRADA
+}
+
+/// Partida de bafo. Lado A = quem desafia; lado B = amigo (ou o computador, sem adversarioId).
+/// As figurinhas postas no monte saem do álbum ao entrar no jogo e voltam (ou mudam de dono) no fim.
+model Bafo {
+  id               String     @id @default(uuid())
+  desafiante       Usuario    @relation("BafoDesafiante", fields: [desafianteId], references: [id], onDelete: Cascade)
+  desafianteId     String
+  adversario       Usuario?   @relation("BafoAdversario", fields: [adversarioId], references: [id], onDelete: Cascade)
+  adversarioId     String?
+  contraComputador Boolean    @default(false)
+  status           StatusBafo
+  /// Quantas figurinhas cada lado põe (1 a 3).
+  quantidade       Int
+  /// Figurinhas do lado A (códigos), postas ao desafiar.
+  cartasA          Json
+  /// Estado do jogo (monte, vez, batidas), igual ao EstadoBafo das regras. Nulo até começar.
+  estado           Json?
+  /// Dia (Brasília) em que a partida começou, para o limite diário.
+  dia              String?
+  criadoEm         DateTime   @default(now())
+  atualizadoEm     DateTime   @updatedAt
+  /// Prazo do convite ou da vez atual.
+  expiraEm         DateTime
+
+  @@index([desafianteId, status])
+  @@index([adversarioId, status])
+  @@index([status, expiraEm])
 }
