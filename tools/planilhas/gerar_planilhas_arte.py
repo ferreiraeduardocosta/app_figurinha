@@ -50,7 +50,8 @@ def pessoas(f):
     return (f"{ESTILO}. Retrato de um(a) {humano} de verdade, ser humano com rosto humano, em busto, do peito "
             f"para cima, olhando para a frente, rosto centralizado, fundo liso de uma cor clara. "
             f"{quem[0].upper() + quem[1:]}. Aparência física: {f['descricaoVisual']} "
-            f"Expressão que combine com esta história: {f['historia']}").replace("um(a) homem", "um homem").replace("um(a) mulher", "uma mulher")
+            # A história fica de fora: bichos e objetos citados nela (leão, robô, pipa...) iam parar no desenho.
+            f"Expressão confiante e simpática, só a pessoa, sem objetos nem animais na cena.").replace("um(a) homem", "um homem").replace("um(a) mulher", "uma mulher")
 
 
 def escudo(f):
