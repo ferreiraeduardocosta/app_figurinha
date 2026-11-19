@@ -1,6 +1,7 @@
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { NextFunction, Request, Response } from 'express';
 import { resolve } from 'node:path';
+import { PASTA_ARTES } from './catalogo/artes';
 
 /** Pasta da página do painel (apps/api/admin), a mesma rodando de src/ ou de dist/. */
 const PASTA_ADMIN = resolve(__dirname, '../admin');
@@ -32,4 +33,12 @@ export function configurarApp(app: NestExpressApplication) {
     next();
   });
   app.useStaticAssets(PASTA_ADMIN, { prefix: '/admin/', index: 'index.html', redirect: true });
+  // Artes das figurinhas. O nome do arquivo muda quando a arte muda, então dá para guardar em cache para sempre.
+  app.useStaticAssets(PASTA_ARTES, {
+    prefix: '/artes/',
+    index: false,
+    immutable: true,
+    maxAge: '365d',
+    setHeaders: (res: Response) => res.setHeader('Access-Control-Allow-Origin', '*'),
+  });
 }

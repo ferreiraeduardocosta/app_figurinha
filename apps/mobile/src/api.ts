@@ -34,6 +34,8 @@ export interface Figurinha {
   tecnica: number | null;
   velocidade: number | null;
   fisico: number | null;
+  /** Caminho da arte no servidor (ex.: /artes/TUB-04.1a2b3c4d.webp); null = desenho provisório. */
+  imagem?: string | null;
 }
 
 export interface Perfil {

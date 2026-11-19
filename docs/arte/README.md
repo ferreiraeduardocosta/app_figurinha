@@ -1,4 +1,15 @@
-# Arte final das figurinhas — PENDENTE
+# Arte final das figurinhas
+
+**Status:** as 136 artes estão no app (geradas com IA a partir do briefing). Os links
+do Google Drive ficam em [`Briefing_Arte_T1_com_links.xlsx`](Briefing_Arte_T1_com_links.xlsx).
+As imagens são servidas pela API em `/artes/` (WebP 512×512, nome com hash, em
+`apps/api/artes/`). Para trocar artes: atualize os links na planilha e rode
+
+    python3 -I tools/artes/preparar_artes.py docs/arte/Briefing_Arte_T1_com_links.xlsx
+
+(precisa de acesso a drive.google.com e drive.usercontent.google.com). Depois do deploy,
+o app mostra as novas sem atualização. Figurinha sem arte usa o desenho provisório.
+
 
 Briefing pronto para o gerador de imagem, uma planilha por tipo, em
 [`planilhas/`](planilhas/) (jogadores/técnicos/lendas, escudos, estádios,

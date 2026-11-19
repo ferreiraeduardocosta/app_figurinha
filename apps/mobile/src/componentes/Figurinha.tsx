@@ -1,6 +1,7 @@
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Polygon, Rect, Stop, Text as SvgText } from 'react-native-svg';
-import type { Clube, Figurinha as DadosFigurinha } from '../api';
+import { API_URL, type Clube, type Figurinha as DadosFigurinha } from '../api';
 import { cores, estiloRaridade } from '../tema';
 import { Avatar } from './Avatar';
 import { BrilhoLendario } from './BrilhoLendario';
@@ -196,7 +197,27 @@ function brilhoExterno(k: number) {
   }) as object;
 }
 
-function Retrato({ f, clube, largura, altura, k }: { f: DadosFigurinha; clube: Clube; largura: number; altura: number; k: number }) {
+function Retrato(props: { f: DadosFigurinha; clube: Clube; largura: number; altura: number; k: number }) {
+  const { f, largura, altura } = props;
+  const [falhou, setFalhou] = useState(false);
+  if (f.imagem && !falhou) {
+    // Arte quadrada no espaço do retrato (mais largo que alto): pessoas e mascotes
+    // alinhadas pelo topo (o corte fica embaixo, longe do rosto); cenas, pelo centro.
+    const pessoa = ['JOGADOR', 'TECNICO', 'LENDA', 'MASCOTE'].includes(f.tipo);
+    return (
+      <Image
+        source={{ uri: API_URL + f.imagem }}
+        onError={() => setFalhou(true)}
+        accessibilityIgnoresInvertColors
+        style={{ width: largura, height: largura, marginTop: pessoa ? 0 : (altura - largura) / 2 }}
+        resizeMode="cover"
+      />
+    );
+  }
+  return <RetratoProvisorio {...props} />;
+}
+
+function RetratoProvisorio({ f, clube, largura, altura, k }: { f: DadosFigurinha; clube: Clube; largura: number; altura: number; k: number }) {
   if (f.tipo === 'JOGADOR' || f.tipo === 'LENDA' || f.tipo === 'TECNICO') {
     return (
       <Avatar
