@@ -238,6 +238,36 @@ Mini jogo de "bafo" com figurinhas repetidas, contra o computador ou contra amig
   como jogo de azar. Antes de publicar, revisar as regras da Google Play e da App Store
   (e a classificação etária) para este modo.
 
+### Temporadas (estrutura implementada)
+
+O álbum é organizado em temporadas. A Temporada 1 é a atual; a estrutura já aceita as próximas.
+
+- **Liberação:** cada temporada pode exigir o **álbum completo de outra** (a T2 exige o da T1).
+  Quem ainda não completou vê a temporada com cadeado e quantas figurinhas faltam.
+- **A temporada anterior continua viva:** depois que a liga acaba, todos seguem colecionando,
+  abrindo pacotes, trocando e jogando bafo na T1.
+- **Pacote grátis:** um por dia **em cada temporada liberada**.
+- **Pacotes bônus, comprados e com moedas:** abrem na temporada escolhida no seletor do app.
+  Moedas e a garantia mínima são únicas para todas as temporadas.
+- **Páginas e álbum:** recompensas próprias por temporada (chave da página na T1 = nome da seção;
+  nas outras, `T2:Seção`; álbum completo = `T1`, `T2`...).
+- **Trocas e bafo:** só com figurinhas da mesma temporada, liberada para os dois jogadores.
+- **Liga:** cada temporada tem a sua. A da T1 segue o `liga.json`; as outras só começam depois
+  de marcadas no painel (aba Testes).
+- **App:** seletor de temporada no Início, Álbum, Liga e Loja (aparece só com mais de uma
+  temporada publicada). APKs antigos continuam funcionando: sem temporada, tudo vale para a T1.
+
+**Como montar uma nova temporada**
+
+1. Painel → aba **Temporadas** → criar (número, nome, requisito). Ela nasce **escondida**.
+2. Cadastrar as figurinhas com códigos `T2-ABC-01` (números de 1 em diante, únicos na temporada):
+   pela aba Figurinhas (campo Temporada) ou criando `data/temporada2/` com `temporada.json`
+   (`{"numero": 2, "nome": "...", "requisito": 1, "publicada": false}`) e `figurinhas.json`
+   no mesmo formato da T1. A pasta é carregada no próximo deploy.
+3. Artes: mesmas planilhas/scripts da T1 (`tools/artes`), com os códigos novos.
+4. **Publicar** na aba Temporadas (só publica com figurinhas de todas as raridades).
+5. Marcar a liga da temporada na aba **Testes** (data da primeira rodada e intervalo).
+
 ### Outras ideias
 
 1. Rodadas simuladas semanais com placares e artilheiros.

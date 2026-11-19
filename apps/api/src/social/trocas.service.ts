@@ -76,6 +76,16 @@ export class TrocasService {
 
       const [invEu, invOutro] = await Promise.all([lerInventario(tx, eu), lerInventario(tx, p.paraId)]);
       this.comoErroHttp(() => validarTroca(invEu, invOutro, p.oferta, p.pedido, this.pacotes.catalogoAtual));
+      // Uma troca é sempre dentro de uma temporada, liberada para os dois.
+      const temporadas = new Set([...p.oferta, ...p.pedido].map((i) => this.pacotes.temporadaDaFigurinha(i.codigo)));
+      if (temporadas.size > 1) {
+        throw new UnprocessableEntityException({ codigo: 'TROCA_INVALIDA', mensagem: 'Uma troca só pode ter figurinhas da mesma temporada.' });
+      }
+      const [temporada] = [...temporadas] as number[];
+      await this.pacotes.exigirLiberada(p.paraId, temporada, tx).catch(() => {
+        throw new UnprocessableEntityException({ codigo: 'TEMPORADA_BLOQUEADA', mensagem: 'Seu amigo ainda não liberou essa temporada.' });
+      });
+      await this.pacotes.exigirLiberada(eu, temporada, tx);
 
       if (p.respostaA) {
         const original = await tx.troca.findUnique({ where: { id: p.respostaA } });

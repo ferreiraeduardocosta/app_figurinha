@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import type { RecompensaNova } from '../api';
+import { nomeRecompensa, type RecompensaNova } from '../api';
 import { cores } from '../tema';
 
 /** Troféu Craques da Várzea — Temporada 1: a peça exclusiva de quem completa o álbum. */
@@ -20,8 +20,11 @@ export function Trofeu({ tamanho = 96 }: { tamanho?: number }) {
 
 /** Texto curto de uma recompensa recém-ganha. */
 export function descreverRecompensa(r: RecompensaNova): string {
-  if (r.tipo === 'ALBUM') return 'Álbum completo! Você ganhou o Troféu Craques da Várzea.';
-  return `Página completa: ${r.chave}! +${r.pacotes} ${r.pacotes === 1 ? 'pacote' : 'pacotes'} de recompensa.`;
+  if (r.tipo === 'ALBUM') {
+    const t = r.temporada ?? Number(r.chave.replace('T', '')) ?? 1;
+    return `Álbum da Temporada ${t} completo! Você ganhou o Troféu Craques da Várzea.`;
+  }
+  return `Página completa: ${nomeRecompensa(r.chave)}! +${r.pacotes} ${r.pacotes === 1 ? 'pacote' : 'pacotes'} de recompensa.`;
 }
 
 /** Faixa de comemoração com as recompensas ganhas agora. */

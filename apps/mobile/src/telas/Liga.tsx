@@ -3,6 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View }
 import { api, PainelLiga, PartidaLiga } from '../api';
 import { Escudo } from '../componentes/Escudo';
 import { Figurinha } from '../componentes/Figurinha';
+import { SeletorTemporada } from '../componentes/SeletorTemporada';
 import { useJogo } from '../jogo';
 import { cores } from '../tema';
 
@@ -11,19 +12,19 @@ const dataHora = (iso: string) =>
 
 /** Craques da Várzea: craque da rodada, resultados, próxima rodada, tabela e artilharia. */
 export function Liga() {
-  const { porCodigo, clubes, album } = useJogo();
+  const { porCodigo, clubes, album, temporada } = useJogo();
   const [liga, setLiga] = useState<PainelLiga | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [atualizando, setAtualizando] = useState(false);
 
   const carregar = useCallback(async () => {
     try {
-      setLiga(await api.liga());
+      setLiga(await api.liga(temporada));
       setErro(null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível carregar a liga.');
     }
-  }, []);
+  }, [temporada]);
 
   useEffect(() => {
     carregar();
@@ -50,12 +51,21 @@ export function Liga() {
         />
       }
     >
+      <SeletorTemporada />
       <View style={{ gap: 2, marginTop: 8 }}>
         <Text style={estilos.sobretitulo}>Temporada {liga.temporada}</Text>
         <Text style={estilos.titulo}>Craques da Várzea</Text>
         <Text style={estilos.legenda}>
-          {liga.ultimaRodada === 0 ? 'A liga ainda não começou.' : `Rodada ${liga.ultimaRodada} de ${liga.totalRodadas} disputada.`}
-          {liga.proximaRodada ? ` Próxima: ${dataHora(liga.proximaRodada.data)}.` : ' Temporada encerrada.'}
+          {liga.marcada === false
+            ? 'A liga desta temporada ainda não tem data marcada. O álbum já está valendo!'
+            : liga.ultimaRodada === 0
+              ? 'A liga ainda não começou.'
+              : `Rodada ${liga.ultimaRodada} de ${liga.totalRodadas} disputada.`}
+          {liga.marcada === false
+            ? ''
+            : liga.proximaRodada
+              ? ` Próxima: ${dataHora(liga.proximaRodada.data)}.`
+              : ' Temporada encerrada.'}
         </Text>
       </View>
 

@@ -81,8 +81,9 @@ export class BafoService {
     return this.prisma.$transaction(async (tx) => {
       await travarUsuarios(tx, [eu]);
       await this.exigirLimite(tx, [eu], agora);
+      const temporada = await this.temporadaDoMonte(tx, [eu], figurinhas);
       await this.reservar(tx, eu, figurinhas);
-      const cartasB = figurinhas.map((c) => this.sortearMesmaRaridade(c));
+      const cartasB = figurinhas.map((c) => this.sortearMesmaRaridade(c, temporada));
       const estado = this.regra(() => montarMonte(figurinhas, cartasB, this.rng));
       const b = await tx.bafo.create({
         data: {
@@ -115,6 +116,7 @@ export class BafoService {
         throw new ConflictException({ codigo: 'LIMITE_DESAFIOS', mensagem: 'Você já tem 5 desafios esperando resposta.' });
       }
       this.validarQuantidade(figurinhas);
+      await this.temporadaDoMonte(tx, [eu, adversarioId], figurinhas);
       await this.reservar(tx, eu, figurinhas);
       const b = await tx.bafo.create({
         data: {
@@ -146,6 +148,8 @@ export class BafoService {
         });
       }
       await this.exigirLimite(tx, [b.desafianteId, eu], agora);
+      // As figurinhas de quem aceita têm de ser da mesma temporada das do desafio.
+      await this.temporadaDoMonte(tx, [eu], [...(b.cartasA as string[]), ...figurinhas]);
       await this.reservar(tx, eu, figurinhas);
       const estado = this.regra(() => montarMonte(b.cartasA as string[], figurinhas, this.rng));
       const atualizado = await tx.bafo.update({
@@ -295,8 +299,22 @@ export class BafoService {
     }
   }
 
-  private sortearMesmaRaridade(codigo: string): string {
-    const cat = this.pacotes.catalogoAtual;
+  /** Todas as figurinhas do monte são da mesma temporada, liberada para quem joga. */
+  private async temporadaDoMonte(tx: Tx, jogadores: string[], codigos: string[]) {
+    const temporadas = new Set(codigos.map((c) => this.pacotes.temporadaDaFigurinha(c)));
+    if (temporadas.has(undefined)) {
+      throw new UnprocessableEntityException({ codigo: 'FIGURINHA_INEXISTENTE', mensagem: 'Figurinha inexistente no monte.' });
+    }
+    if (temporadas.size > 1) {
+      throw new UnprocessableEntityException({ codigo: 'BAFO_INVALIDO', mensagem: 'No bafo, todas as figurinhas são da mesma temporada.' });
+    }
+    const [temporada] = [...temporadas] as number[];
+    for (const j of jogadores) await this.pacotes.exigirLiberada(j, temporada, tx);
+    return temporada;
+  }
+
+  private sortearMesmaRaridade(codigo: string, temporada: number): string {
+    const cat = this.pacotes.catalogoDa(temporada);
     const raridade = (Object.keys(cat) as (keyof typeof cat)[]).find((r) => cat[r].some((f) => f.codigo === codigo));
     const lista = cat[raridade ?? 'COMUM'];
     return lista[Math.floor(this.rng() * lista.length)].codigo;

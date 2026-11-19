@@ -13,7 +13,7 @@ const POSICOES = ['', 'GOL', 'ZAG', 'LAT', 'VOL', 'MEI', 'PON', 'ATA', 'TEC'];
 const ATRIBUTOS = [['ataque', 'ATA'], ['defesa', 'DEF'], ['tecnica', 'TEC'], ['velocidade', 'VEL'], ['fisico', 'FIS']];
 const ACOES = { CRIAR: 'Criou', EDITAR: 'Editou', EXCLUIR: 'Excluiu' };
 
-const estado = { usuario: null, aba: 'resumo', figurinhas: [], clubes: [], filtros: { busca: '', secao: '', raridade: '', tipo: '' } };
+const estado = { usuario: null, aba: 'resumo', figurinhas: [], clubes: [], filtros: { busca: '', temporada: '', secao: '', raridade: '', tipo: '' } };
 
 /* ---------- utilidades ---------- */
 
@@ -121,6 +121,7 @@ const ABAS = [
   ['alteracoes', 'Alterações'],
   ['usuarios', 'Usuários'],
   ['cupons', 'Cupons'],
+  ['temporadas', 'Temporadas'],
   ['testes', 'Testes'],
 ];
 
@@ -162,7 +163,7 @@ async function trocarAba(id) {
   const alvo = document.getElementById('conteudo');
   alvo.replaceChildren(h('p', { class: 'carregando' }, 'Carregando…'));
   try {
-    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons, testes: telaTestes };
+    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons, temporadas: telaTemporadas, testes: telaTestes };
     await telas[id](alvo);
   } catch (err) {
     if (err.status !== 401) alvo.replaceChildren(h('p', { class: 'erro', role: 'alert' }, err.message));
@@ -247,6 +248,7 @@ async function telaFigurinhas(alvo) {
   const desenhar = () => {
     const termo = f.busca.trim().toLowerCase();
     const lista = estado.figurinhas.filter((x) =>
+      (!f.temporada || String(x.temporada) === f.temporada) &&
       (!f.secao || x.secao === f.secao) &&
       (!f.raridade || x.raridade === f.raridade) &&
       (!f.tipo || x.tipo === f.tipo) &&
@@ -284,6 +286,7 @@ async function telaFigurinhas(alvo) {
         type: 'search', value: f.busca, placeholder: 'Código, nome ou apelido',
         oninput: (e) => { f.busca = e.target.value; desenhar(); },
       })),
+      filtro('Temporada', 'temporada', [...new Set(figurinhas.map((x) => x.temporada))].map((t) => [String(t), `Temporada ${t}`])),
       filtro('Seção', 'secao', secoes.map((s) => [s, s])),
       filtro('Raridade', 'raridade', Object.entries(RARIDADES)),
       filtro('Tipo', 'tipo', Object.entries(TIPOS)),
@@ -316,12 +319,13 @@ function abrirEditor(fig) {
 
   const identificacao = nova
     ? h('div', { class: 'grade-campos' },
-        campo('Código', 'codigo', entrada('', { placeholder: 'ABC-16', maxlength: 6, required: true })),
+        campo('Temporada', 'temporada', entrada(estado.filtros.temporada || '1', { type: 'number', min: 1, max: 99, required: true })),
+        campo('Código', 'codigo', entrada('', { placeholder: 'ABC-16 (T2: T2-ABC-16)', maxlength: 10, required: true })),
         campo('Número no álbum', 'numero', entrada('', { type: 'number', min: 1, max: 9999, required: true })),
         campo('Clube', 'clubeSigla', escolha('', estado.clubes.map((c) => [c.sigla, c.nome]))),
         campo('Seção do álbum', 'secao', entrada(estado.clubes[0] ? estado.clubes[0].nome : '', { maxlength: 60, required: true })),
       )
-    : h('p', { class: 'aviso' }, `${v.codigo} · nº ${v.numero} · ${v.secao}. ${v.donos} jogador(es) têm esta figurinha.`);
+    : h('p', { class: 'aviso' }, `${v.codigo} · Temporada ${v.temporada} · nº ${v.numero} · ${v.secao}. ${v.donos} jogador(es) têm esta figurinha.`);
 
   // Ao trocar o clube de uma figurinha nova, a seção acompanha (se ainda for o nome de um clube).
   if (nova) {
@@ -382,6 +386,7 @@ function abrirEditor(fig) {
     for (const [k] of ATRIBUTOS) corpo[k] = numero(campos[k]);
     if (nova) {
       corpo.codigo = campos.codigo.value;
+      corpo.temporada = numero(campos.temporada);
       corpo.numero = numero(campos.numero);
       corpo.clubeSigla = campos.clubeSigla.value;
       corpo.secao = campos.secao.value;
@@ -678,7 +683,12 @@ function intervaloTexto(min) {
 /** Ferramentas destrutivas para a fase de testes, cada uma com palavra de confirmação. */
 async function telaTestes(alvo) {
   const s = await api('GET', '/admin/testes');
-  const l = s.liga;
+  const qual = h('select', { name: 'temporada' }, s.ligas.map((x) => h('option', { value: x.temporada }, x.nome)));
+  const resumoLiga = (x) => !x.marcada
+    ? `${x.nome}: liga ainda não marcada. Escolha a data abaixo para marcar.`
+    : `${x.nome}: ${x.rodadasDisputadas} de ${x.totalRodadas} rodadas disputadas. ` +
+      `Início em ${dataBrasilia(x.primeiraRodada)}, uma rodada a cada ${intervaloTexto(x.intervaloMinutos)}. ` +
+      (x.proximaRodada ? `Próxima: rodada ${x.proximaRodada.numero} em ${dataBrasilia(x.proximaRodada.data)}.` : 'Temporada encerrada.');
 
   // Liga
   const erroLiga = h('p', { class: 'erro', role: 'alert', hidden: true });
@@ -695,7 +705,7 @@ async function telaTestes(alvo) {
     if (confLiga.value.trim() !== 'REINICIAR') { erroLiga.textContent = 'Digite REINICIAR para confirmar.'; erroLiga.hidden = false; return; }
     botaoLiga.disabled = true;
     try {
-      const r = await api('POST', '/admin/testes/liga', { primeiraRodada: inicio.value, intervalo: Number(intervalo.value), unidade: unidade.value });
+      const r = await api('POST', '/admin/testes/liga', { primeiraRodada: inicio.value, intervalo: Number(intervalo.value), unidade: unidade.value, temporada: Number(qual.value) });
       okLiga.textContent = `Liga reiniciada: rodada 1 em ${dataBrasilia(r.primeiraRodada)}, depois a cada ${intervaloTexto(r.intervaloMinutos)}.`;
       okLiga.hidden = false;
       setTimeout(() => trocarAba('testes'), 1500);
@@ -706,13 +716,11 @@ async function telaTestes(alvo) {
     }
   } },
     h('h3', {}, 'Liga'),
-    h('p', { class: 'aviso' },
-      `Hoje: ${l.rodadasDisputadas} de ${l.totalRodadas} rodadas disputadas. ` +
-      `Início em ${dataBrasilia(l.primeiraRodada)}, uma rodada a cada ${intervaloTexto(l.intervaloMinutos)}. ` +
-      (l.proximaRodada ? `Próxima: rodada ${l.proximaRodada.numero} em ${dataBrasilia(l.proximaRodada.data)}.` : 'Temporada encerrada.')),
-    h('p', { class: 'aviso' }, 'Reiniciar apaga todos os resultados e recomeça na rodada 1, com resultados novos. ' +
+    ...s.ligas.map((x) => h('p', { class: 'aviso' }, resumoLiga(x))),
+    h('p', { class: 'aviso' }, 'Marcar ou reiniciar apaga os resultados daquela temporada e recomeça na rodada 1, com resultados novos. ' +
       'Rodadas com data no passado são disputadas na hora. Horário de Brasília.'),
     h('div', { class: 'grade-campos' },
+      h('label', {}, 'Temporada', qual),
       h('label', {}, 'Primeira rodada', inicio),
       h('label', {}, 'Uma rodada a cada', intervalo),
       h('label', {}, 'Unidade', unidade),
@@ -766,5 +774,76 @@ async function telaTestes(alvo) {
       (r) => `Pronto: ${r.jogadores} conta(s) zeradas; ${r.figurinhas} registros de figurinhas, ${r.trocas} trocas e ${r.bafos} bafos apagados.`,
     )),
   );
+}
+
+/* ---------- temporadas ---------- */
+
+async function telaTemporadas(alvo) {
+  const erro = h('p', { class: 'erro', role: 'alert', hidden: true });
+  const corpo = h('tbody');
+  const mostrarErro = (err) => { if (err.status !== 401) { erro.textContent = err.message; erro.hidden = false; } };
+  const desenhar = (lista) => {
+    corpo.replaceChildren(...lista.map((t) => {
+      const requisito = t.requisito ? `Álbum completo da Temporada ${t.requisito}` : 'Todos';
+      const estadoTxt = t.publicada ? 'PUBLICADA' : t.pronta ? 'PRONTA' : 'MONTANDO';
+      const acao = t.numero === 1 ? '' : h('button', {
+        class: t.publicada ? 'botao perigo pequeno' : 'botao pequeno',
+        type: 'button',
+        onclick: async (e) => {
+          erro.hidden = true;
+          e.target.disabled = true;
+          try { desenhar(await api('PATCH', '/admin/temporadas/' + t.numero, { publicada: !t.publicada })); }
+          catch (err) { mostrarErro(err); e.target.disabled = false; }
+        },
+      }, t.publicada ? 'Esconder' : 'Publicar');
+      return h('tr', {},
+        h('td', { class: 'num' }, t.numero),
+        h('td', {}, t.nome),
+        h('td', { class: 'num' }, t.figurinhas),
+        h('td', {}, requisito),
+        h('td', {}, h('span', { class: 'chip ' + (t.publicada ? 'ATIVO' : 'DESATIVADO') }, { PUBLICADA: 'Publicada', PRONTA: 'Pronta (escondida)', MONTANDO: 'Em montagem' }[estadoTxt])),
+        h('td', {}, acao),
+      );
+    }));
+  };
+
+  const numero = h('input', { type: 'number', name: 'numero', min: 2, max: 99, required: true });
+  const nome = h('input', { name: 'nome', maxlength: 40, required: true, placeholder: 'Temporada 2' });
+  const requisito = h('input', { type: 'number', name: 'requisito', min: 1, max: 98, placeholder: 'Ex.: 1' });
+  const botao = h('button', { class: 'botao', type: 'submit' }, 'Criar temporada');
+  const form = h('form', { class: 'form-cupom', onsubmit: async (e) => {
+    e.preventDefault();
+    erro.hidden = true;
+    botao.disabled = true;
+    try {
+      desenhar(await api('POST', '/admin/temporadas', { numero: Number(numero.value), nome: nome.value, requisito: requisito.value || null }));
+      form.reset();
+    } catch (err) { mostrarErro(err); } finally { botao.disabled = false; }
+  } },
+    h('h3', {}, 'Nova temporada'),
+    h('p', { class: 'aviso' }, 'A temporada nasce escondida. Cadastre as figurinhas dela (aba Figurinhas, com códigos T2-ABC-01, ou pelos ' +
+      'arquivos em data/temporada2) e publique quando tiver figurinhas de todas as raridades. A liga dela é marcada na aba Testes.'),
+    h('div', { class: 'grade-campos' },
+      h('label', {}, 'Número', numero),
+      h('label', {}, 'Nome', nome),
+      h('label', {}, 'Liberada para quem completar o álbum da temporada', requisito),
+    ),
+    h('div', {}, botao),
+  );
+
+  alvo.replaceChildren(
+    h('h2', {}, 'Temporadas'),
+    h('p', { class: 'aviso' }, 'Cada temporada tem seu álbum, sua liga e seu pacote grátis diário. Quem não cumpre o requisito vê a temporada bloqueada no app.'),
+    erro,
+    h('div', { class: 'caixa-tabela' },
+      h('table', {},
+        h('thead', {}, h('tr', {}, h('th', { class: 'num' }, 'Nº'), h('th', {}, 'Nome'), h('th', { class: 'num' }, 'Figurinhas'),
+          h('th', {}, 'Quem pode jogar'), h('th', {}, 'Situação'), h('th', {}, ''))),
+        corpo,
+      ),
+    ),
+    h('div', { class: 'cartao' }, form),
+  );
+  desenhar(await api('GET', '/admin/temporadas'));
 }
 

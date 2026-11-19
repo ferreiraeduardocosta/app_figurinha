@@ -262,7 +262,11 @@ function agrupar(codigos: string[]) {
 // ---------------------------------------------------------------------------
 
 function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; aoVoltar: () => void; aoComecar: (p: PartidaBafo) => void }) {
-  const { sessao, album, recarregar } = useJogo();
+  const { sessao, album, recarregar, porCodigo, temporada: escolhida, perfil } = useJogo();
+  // O monte é de uma temporada só: a das cartas do desafio, ou a escolhida no seletor.
+  const temporada =
+    escolha.modo === 'aceitar' ? (porCodigo[escolha.partida.cartasDesafiante[0]]?.temporada ?? 1) : escolhida;
+  const variasTemporadas = (perfil?.temporadas?.length ?? 1) > 1;
   const [marcadas, setMarcadas] = useState<Set<string>>(new Set());
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -272,10 +276,10 @@ function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; ao
   const repetidas = useMemo(
     () =>
       (album?.itens ?? [])
-        .filter((i) => i.quantidade > 1)
+        .filter((i) => i.quantidade > 1 && (porCodigo[i.codigo]?.temporada ?? 1) === temporada)
         .map((i) => i.codigo)
         .sort(),
-    [album],
+    [album, porCodigo, temporada],
   );
 
   const alternar = (codigo: string) => {
@@ -327,7 +331,7 @@ function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; ao
           </View>
         )}
         <Text style={estilos.rotulo}>
-          Suas repetidas ({marcadas.size}/{maximo})
+          Suas repetidas{variasTemporadas ? ` da Temporada ${temporada}` : ''} ({marcadas.size}/{maximo})
         </Text>
         <SeletorFigurinhas codigos={repetidas} marcados={marcadas} aoAlternar={alternar} />
         {erro && (

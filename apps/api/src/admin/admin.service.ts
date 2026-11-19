@@ -95,7 +95,7 @@ export class AdminService {
 
   async listarFigurinhas() {
     const lista = await this.prisma.figurinha.findMany({
-      orderBy: { numero: 'asc' },
+      orderBy: [{ temporada: 'asc' }, { numero: 'asc' }],
       include: { _count: { select: { itens: { where: { quantidade: { gt: 0 } } } } } },
     });
     return lista.map(({ _count, ...f }) => ({ ...f, donos: _count.itens }));
@@ -104,7 +104,7 @@ export class AdminService {
   async editarFigurinha(admin: UsuarioAutenticado, codigo: string, campos: CamposEditaveis) {
     const atual = await this.buscar(codigo);
     if (campos.raridade && campos.raridade !== atual.raridade) {
-      await this.conferirCatalogo((lista) =>
+      await this.conferirCatalogo(atual.temporada, (lista) =>
         lista.map((f) => (f.codigo === codigo ? { ...f, raridade: campos.raridade! } : f)),
       );
     }
@@ -130,6 +130,9 @@ export class AdminService {
   }
 
   async criarFigurinha(admin: UsuarioAutenticado, campos: CamposNovaFigurinha) {
+    if (!(await this.prisma.temporada.findUnique({ where: { numero: campos.temporada } }))) {
+      throw new UnprocessableEntityException({ codigo: 'TEMPORADA_INEXISTENTE', campo: 'temporada', mensagem: `Temporada ${campos.temporada} não existe.` });
+    }
     const clube = await this.prisma.clube.findUnique({ where: { sigla: campos.clubeSigla } });
     if (!clube) {
       throw new UnprocessableEntityException({ codigo: 'CLUBE_INEXISTENTE', campo: 'clubeSigla', mensagem: `Clube ${campos.clubeSigla} não existe.` });
@@ -152,7 +155,7 @@ export class AdminService {
       return nova;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException({ codigo: 'JA_EXISTE', mensagem: 'Já existe figurinha com esse código ou número.' });
+        throw new ConflictException({ codigo: 'JA_EXISTE', mensagem: 'Já existe figurinha com esse código, ou com esse número nesta temporada.' });
       }
       throw e;
     }
@@ -167,7 +170,7 @@ export class AdminService {
         mensagem: `${donos} jogador(es) já têm esta figurinha; ela não pode ser excluída.`,
       });
     }
-    await this.conferirCatalogo((lista) => lista.filter((f) => f.codigo !== codigo));
+    await this.conferirCatalogo(atual.temporada, (lista) => lista.filter((f) => f.codigo !== codigo));
     await this.prisma.$transaction([
       this.prisma.figurinha.delete({ where: { codigo } }),
       this.prisma.alteracaoAdmin.create({
@@ -215,9 +218,12 @@ export class AdminService {
     return f;
   }
 
-  /** Garante que a mudança não deixa nenhuma raridade sem figurinhas (o sorteio quebraria). */
-  private async conferirCatalogo(mudar: (lista: { codigo: string; raridade: Raridade }[]) => { codigo: string; raridade: Raridade }[]) {
-    const lista = await this.prisma.figurinha.findMany({ select: { codigo: true, raridade: true } });
+  /** Garante que a mudança não deixa nenhuma raridade da temporada sem figurinhas (o sorteio quebraria). */
+  private async conferirCatalogo(
+    temporada: number,
+    mudar: (lista: { codigo: string; raridade: Raridade }[]) => { codigo: string; raridade: Raridade }[],
+  ) {
+    const lista = await this.prisma.figurinha.findMany({ where: { temporada }, select: { codigo: true, raridade: true } });
     try {
       indexarCatalogo(mudar(lista), CONFIG_ECONOMIA);
     } catch (e) {

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminGuard, UsuarioAtual } from '../auth/auth.guard';
 import { UsuarioAutenticado } from '../auth/auth.service';
 import { AdminService } from './admin.service';
@@ -50,6 +50,23 @@ export class AdminController {
     return this.admin.listarUsuarios(typeof busca === 'string' ? busca.slice(0, 100) : undefined);
   }
 
+  // ---------------- Temporadas ----------------
+
+  @Get('temporadas')
+  temporadas() {
+    return this.testes.listarTemporadas();
+  }
+
+  @Post('temporadas')
+  criarTemporada(@Body() corpo: Record<string, unknown>) {
+    return this.testes.criarTemporada(corpo ?? {});
+  }
+
+  @Patch('temporadas/:numero')
+  editarTemporada(@Param('numero', ParseIntPipe) numero: number, @Body() corpo: Record<string, unknown>) {
+    return this.testes.editarTemporada(numero, corpo ?? {});
+  }
+
   // ---------------- Fase de testes ----------------
 
   @Get('testes')
@@ -61,7 +78,7 @@ export class AdminController {
   @HttpCode(200)
   reiniciarLiga(@Body() corpo: Record<string, unknown>) {
     const c = corpo ?? {};
-    return this.testes.reiniciarLiga(c.primeiraRodada, c.intervalo, c.unidade);
+    return this.testes.reiniciarLiga(c.primeiraRodada, c.intervalo, c.unidade, c.temporada);
   }
 
   @Post('testes/zerar-progresso')

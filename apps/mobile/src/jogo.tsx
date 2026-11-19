@@ -1,5 +1,5 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Album, api, Clube, ErroApi, Figurinha, OrigemPacote, Perfil, RecompensaNova, ResultadoPacote, Sessao } from './api';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Album, api, Clube, ErroApi, Figurinha, OrigemPacote, Perfil, RecompensaNova, ResultadoPacote, Sessao, TemporadaPerfil } from './api';
 import { apagarSessao, lerSessao, salvarSessao } from './armazenamento';
 
 interface Jogo {
@@ -13,6 +13,11 @@ interface Jogo {
   album: Album | null;
   /** Código da figurinha "Em alta" (craque da última rodada da liga). */
   emAlta: string | null;
+  /** Temporada escolhida no seletor (álbum, liga, pacotes). */
+  temporada: number;
+  setTemporada(t: number): void;
+  /** Dados da temporada escolhida no perfil do jogador. */
+  infoTemporada: TemporadaPerfil | null;
   entrar(email: string, senha: string): Promise<void>;
   cadastrar(apelido: string, email: string, senha: string): Promise<void>;
   sair(): Promise<void>;
@@ -41,6 +46,10 @@ export function JogoProvider({ children }: { children: ReactNode }) {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [album, setAlbum] = useState<Album | null>(null);
   const [emAlta, setEmAlta] = useState<string | null>(null);
+  const [temporada, setTemporada] = useState(1);
+  // A liga (figurinha "Em alta") é lida da temporada escolhida.
+  const temporadaRef = useRef(1);
+  temporadaRef.current = temporada;
 
   const limparSessao = useCallback(async () => {
     await apagarSessao();
@@ -57,7 +66,7 @@ export function JogoProvider({ children }: { children: ReactNode }) {
         setAlbum(a);
         // A liga é extra: se falhar, o resto do app segue normal.
         api
-          .liga()
+          .liga(temporadaRef.current)
           .then((l) => setEmAlta(l.emAlta?.codigo ?? null))
           .catch(() => undefined);
       } catch (e) {
@@ -95,6 +104,18 @@ export function JogoProvider({ children }: { children: ReactNode }) {
     };
   }, [carregarJogador, tentativa]);
 
+  // Se a temporada escolhida deixar de estar liberada (ou sumir), volta para a 1.
+  useEffect(() => {
+    if (perfil && !perfil.temporadas?.some((t) => t.numero === temporada && t.liberada)) setTemporada(1);
+  }, [perfil, temporada]);
+  // Trocar de temporada atualiza o "Em alta".
+  useEffect(() => {
+    api
+      .liga(temporada)
+      .then((l) => setEmAlta(l.emAlta?.codigo ?? null))
+      .catch(() => undefined);
+  }, [temporada]);
+
   const iniciarSessao = useCallback(
     async (s: Sessao) => {
       await salvarSessao(s);
@@ -113,6 +134,9 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       figurinhas,
       porCodigo: Object.fromEntries(figurinhas.map((f) => [f.codigo, f])),
       emAlta,
+      temporada,
+      setTemporada,
+      infoTemporada: perfil?.temporadas?.find((t) => t.numero === temporada) ?? null,
       perfil,
       album,
       entrar: async (email, senha) => iniciarSessao(await api.entrar(email, senha)),
@@ -131,7 +155,7 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       },
       abrirPacote: async (origem) => {
         if (!sessao) throw new Error('Sem sessão.');
-        const r = await api.abrirPacote(sessao.token, origem);
+        const r = await api.abrirPacote(sessao.token, origem, temporada);
         await carregarJogador(sessao);
         return r;
       },
@@ -143,7 +167,7 @@ export function JogoProvider({ children }: { children: ReactNode }) {
       },
       tentarDeNovo: () => setTentativa((t) => t + 1),
     }),
-    [carregando, erroInicial, sessao, clubes, figurinhas, perfil, album, emAlta, iniciarSessao, limparSessao, carregarJogador],
+    [carregando, erroInicial, sessao, clubes, figurinhas, perfil, album, emAlta, temporada, iniciarSessao, limparSessao, carregarJogador],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

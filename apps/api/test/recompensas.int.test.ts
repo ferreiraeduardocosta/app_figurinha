@@ -46,7 +46,7 @@ describe.skipIf(!temBanco)('Recompensas', () => {
     await colar(['TUB-01'], 5);
 
     const r = await servico.trocarNoBalcao(usuarioId, falta.codigo);
-    expect(r.recompensas).toEqual([{ tipo: 'PAGINA', chave: 'Unidos da Várzea', pacotes: 1 }]);
+    expect(r.recompensas).toEqual([{ tipo: 'PAGINA', chave: 'Unidos da Várzea', temporada: 1, pacotes: 1 }]);
     let u = await prisma.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
     expect(u.pacotesBonus).toBe(1);
 
@@ -75,7 +75,7 @@ describe.skipIf(!temBanco)('Recompensas', () => {
     const r = await servico.trocarNoBalcao(usuarioId, ultima.codigo);
     // As outras 9 páginas já estavam completas antes desta troca e também são entregues agora.
     expect(r.recompensas.filter((x) => x.tipo === 'PAGINA')).toHaveLength(10);
-    expect(r.recompensas).toContainEqual({ tipo: 'ALBUM', chave: 'T1', pacotes: 0 });
+    expect(r.recompensas).toContainEqual({ tipo: 'ALBUM', chave: 'T1', temporada: 1, pacotes: 0 });
 
     const perfil = await servico.perfil(usuarioId);
     expect(perfil.album).toEqual({ coladas: 136, total: 136 });

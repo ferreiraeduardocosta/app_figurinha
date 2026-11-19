@@ -22,26 +22,26 @@ export class JogoController {
 
   @Post('pacotes/diario')
   @HttpCode(200)
-  abrirDiario(@UsuarioAtual() u: UsuarioAutenticado) {
-    return this.pacotes.abrirPacoteDiario(u.id);
+  abrirDiario(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    return this.pacotes.abrirPacoteDiario(u.id, v.temporada(corpo));
   }
 
   @Post('pacotes/bonus')
   @HttpCode(200)
-  abrirBonus(@UsuarioAtual() u: UsuarioAutenticado) {
-    return this.pacotes.abrirPacoteBonus(u.id);
+  abrirBonus(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    return this.pacotes.abrirPacoteBonus(u.id, v.temporada(corpo));
   }
 
   @Post('pacotes/comprado')
   @HttpCode(200)
-  abrirComprado(@UsuarioAtual() u: UsuarioAutenticado) {
-    return this.pacotes.abrirPacoteComprado(u.id);
+  abrirComprado(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    return this.pacotes.abrirPacoteComprado(u.id, v.temporada(corpo));
   }
 
   @Post('pacotes/moedas')
   @HttpCode(200)
-  abrirComMoedas(@UsuarioAtual() u: UsuarioAutenticado) {
-    return this.pacotes.abrirPacoteComMoedas(u.id);
+  abrirComMoedas(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    return this.pacotes.abrirPacoteComMoedas(u.id, v.temporada(corpo));
   }
 
   @Post('balcao')

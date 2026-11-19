@@ -23,7 +23,10 @@ export function MontarTroca({
   aoFechar: () => void;
   aoEnviar: () => void;
 }) {
-  const { sessao, album } = useJogo();
+  const { sessao, album, porCodigo, temporada: escolhida, perfil } = useJogo();
+  // Troca é sempre dentro de uma temporada: a da proposta respondida ou a escolhida no seletor.
+  const temporada = respondendo ? (porCodigo[respondendo.oferta[0]?.codigo]?.temporada ?? 1) : escolhida;
+  const daTemporada = (codigo: string) => (porCodigo[codigo]?.temporada ?? 1) === temporada;
   const [carregando, setCarregando] = useState(true);
   const [recebiveis, setRecebiveis] = useState<string[]>([]);
   const [queFaltamPraEle, setQueFaltamPraEle] = useState<Set<string>>(new Set());
@@ -38,7 +41,7 @@ export function MontarTroca({
       .sugestoes(sessao.token)
       .then((lista) => {
         const s = lista.find((x) => x.amigo.id === amigo.id);
-        setRecebiveis(s?.euRecebo ?? []);
+        setRecebiveis((s?.euRecebo ?? []).filter(daTemporada));
         setQueFaltamPraEle(new Set(s?.euDou ?? []));
       })
       .catch((e: Error) => setErro(e.message))
@@ -51,8 +54,10 @@ export function MontarTroca({
       (album?.itens ?? [])
         .filter((i) => i.quantidade > 1)
         .map((i) => i.codigo)
+        .filter(daTemporada)
         .sort((a, b) => Number(queFaltamPraEle.has(b)) - Number(queFaltamPraEle.has(a))),
-    [album, queFaltamPraEle],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [album, queFaltamPraEle, temporada],
   );
 
   const alternar = (conjunto: Set<string>, definir: (s: Set<string>) => void) => (codigo: string) => {
@@ -82,7 +87,10 @@ export function MontarTroca({
       <View style={{ flex: 1, backgroundColor: cores.fundo }}>
         <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
           <Text style={estilos.titulo}>{respondendo ? 'Contraproposta' : 'Nova troca'}</Text>
-          <Text style={estilos.sub}>com {amigo.apelido} · até {MAX_POR_LADO} figurinhas de cada lado</Text>
+          <Text style={estilos.sub}>
+            com {amigo.apelido} · até {MAX_POR_LADO} figurinhas de cada lado
+            {(perfil?.temporadas?.length ?? 1) > 1 ? ` · só da Temporada ${temporada}` : ''}
+          </Text>
 
           {respondendo && (
             <View style={estilos.caixa}>

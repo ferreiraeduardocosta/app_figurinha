@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, Vi
 import { ErroApi, Figurinha as DadosFigurinha, RecompensaNova } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Escudo } from '../componentes/Escudo';
+import { SeletorTemporada } from '../componentes/SeletorTemporada';
 import { EspacoVazio, Figurinha } from '../componentes/Figurinha';
 import { AvisoRecompensas } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
@@ -18,10 +19,20 @@ const ROTULO_TIPO: Record<string, string> = {
 };
 
 export function Album({ secaoInicial }: { secaoInicial?: string }) {
-  const { figurinhas, clubes, album, perfil, emAlta } = useJogo();
+  const { figurinhas: todas, clubes, album, perfil, emAlta, temporada } = useJogo();
+  // Só a temporada escolhida no seletor.
+  const figurinhas = useMemo(() => todas.filter((f) => (f.temporada ?? 1) === temporada), [todas, temporada]);
+  // Recompensa de página: na T1 a chave é o nome da seção; nas outras, "T2:Seção".
   const paginasCompletas = useMemo(
-    () => new Set((perfil?.recompensas ?? []).filter((r) => r.tipo === 'PAGINA').map((r) => r.chave)),
-    [perfil],
+    () =>
+      new Set(
+        (perfil?.recompensas ?? [])
+          .filter((r) => r.tipo === 'PAGINA')
+          .map((r) => r.chave)
+          .filter((c) => (temporada === 1 ? !/^T\d+:/.test(c) : c.startsWith(`T${temporada}:`)))
+          .map((c) => c.replace(/^T\d+:/, '')),
+      ),
+    [perfil, temporada],
   );
   const { width } = useWindowDimensions();
   const secoes = useMemo(() => [...new Set(figurinhas.map((f) => f.secao))], [figurinhas]);
@@ -35,6 +46,11 @@ export function Album({ secaoInicial }: { secaoInicial?: string }) {
 
   return (
     <View style={{ flex: 1 }}>
+      {(perfil?.temporadas?.length ?? 1) > 1 && (
+        <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+          <SeletorTemporada />
+        </View>
+      )}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -115,7 +131,7 @@ function Detalhe({ figurinha: f, aoFechar }: { figurinha: DadosFigurinha; aoFech
   const item = album?.itens.find((i) => i.codigo === f.codigo);
   const r = estiloRaridade[f.raridade];
   const custo = album?.balcao.repetidasPorNova ?? 4;
-  const repetidas = album?.repetidas[f.raridade] ?? 0;
+  const repetidas = (album?.repetidasPorTemporada?.[String(f.temporada ?? 1)] ?? album?.repetidas)?.[f.raridade] ?? 0;
 
   const trocar = async () => {
     setErro(null);

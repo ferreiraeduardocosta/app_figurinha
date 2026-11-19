@@ -38,7 +38,7 @@ export function senha(corpo: Record<string, unknown>): string {
 
 export function codigoFigurinha(corpo: Record<string, unknown>): string {
   const c = texto(corpo, 'codigo', 5, 10).toUpperCase();
-  if (!/^[A-Z]{3}-\d{2}$/.test(c)) invalido('codigo', 'Código de figurinha inválido (ex.: UNI-05).');
+  if (!/^(T\d{1,2}-)?[A-Z]{3}-\d{2}$/.test(c)) invalido('codigo', 'Código de figurinha inválido (ex.: UNI-05).');
   return c;
 }
 
@@ -50,7 +50,7 @@ export function itensTroca(corpo: Record<string, unknown>, campo: 'oferta' | 'pe
     if (typeof item !== 'object' || item === null) invalido(campo, 'Item de troca inválido.');
     const i = item as Record<string, unknown>;
     const codigo = typeof i.codigo === 'string' ? i.codigo.trim().toUpperCase() : '';
-    if (!/^[A-Z]{3}-\d{2}$/.test(codigo)) invalido(campo, 'Código de figurinha inválido (ex.: UNI-05).');
+    if (!/^(T\d{1,2}-)?[A-Z]{3}-\d{2}$/.test(codigo)) invalido(campo, 'Código de figurinha inválido (ex.: UNI-05).');
     const quantidade = i.quantidade ?? 1;
     if (typeof quantidade !== 'number' || !Number.isInteger(quantidade) || quantidade < 1 || quantidade > 5) {
       invalido(campo, 'Quantidade deve ser de 1 a 5.');
@@ -78,7 +78,7 @@ export function figurinhasBafo(corpo: Record<string, unknown>): string[] {
   if (!Array.isArray(v) || v.length < 1 || v.length > 3) invalido('figurinhas', 'Ponha de 1 a 3 figurinhas no monte.');
   return v.map((c: unknown) => {
     const codigo = typeof c === 'string' ? c.trim().toUpperCase() : '';
-    if (!/^[A-Z]{3}-\d{2}$/.test(codigo)) invalido('figurinhas', 'Código de figurinha inválido (ex.: UNI-05).');
+    if (!/^(T\d{1,2}-)?[A-Z]{3}-\d{2}$/.test(codigo)) invalido('figurinhas', 'Código de figurinha inválido (ex.: UNI-05).');
     return codigo;
   });
 }
@@ -87,5 +87,13 @@ export function figurinhasBafo(corpo: Record<string, unknown>): string[] {
 export function precisao(corpo: Record<string, unknown>): number {
   const v = corpo.precisao;
   if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 1) invalido('precisao', 'precisao deve ser um número de 0 a 1.');
+  return v;
+}
+
+/** Temporada opcional no corpo (padrão 1, para versões antigas do app). */
+export function temporada(corpo: unknown): number {
+  const v = typeof corpo === 'object' && corpo !== null ? (corpo as Record<string, unknown>).temporada : undefined;
+  if (v === undefined || v === null) return 1;
+  if (typeof v !== 'number' || !Number.isInteger(v) || v < 1 || v > 99) invalido('temporada', 'Temporada inválida.');
   return v;
 }

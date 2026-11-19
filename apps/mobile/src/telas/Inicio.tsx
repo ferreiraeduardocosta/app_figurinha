@@ -5,6 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { api, OrigemPacote, Ranking } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Cupons } from '../componentes/Cupons';
+import { SeletorTemporada } from '../componentes/SeletorTemporada';
 import { Missoes } from '../componentes/Missoes';
 import { Trofeu } from '../componentes/Recompensas';
 import { useJogo } from '../jogo';
@@ -31,7 +32,7 @@ export function Inicio({
   aoVerRanking: () => void;
   aoJogarBafo: () => void;
 }) {
-  const { perfil, recarregar, sair, sessao } = useJogo();
+  const { perfil, recarregar, sair, sessao, infoTemporada, temporada, figurinhas } = useJogo();
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const carregarRanking = useCallback(() => {
     if (sessao) api.ranking(sessao.token, 'geral').then(setRanking, () => undefined);
@@ -48,10 +49,17 @@ export function Inicio({
   }, []);
 
   if (!perfil) return null;
-  const { coladas, total } = perfil.album;
+  // Tudo do cartão do álbum e do pacote grátis é da temporada escolhida.
+  const { coladas, total } = infoTemporada?.album ?? perfil.album;
+  const pacoteDiario = infoTemporada?.pacoteDiario ?? perfil.pacoteDiario;
+  const variasTemporadas = (perfil.temporadas?.length ?? 1) > 1;
+  const nomeTemporada = infoTemporada?.nome ?? 'Temporada 1';
   const pct = total ? coladas / total : 0;
   const campeao = perfil.recompensas.some((r) => r.tipo === 'ALBUM');
-  const paginas = perfil.recompensas.filter((r) => r.tipo === 'PAGINA').length;
+  // Página da T1: chave = nome da seção; das outras: "T2:Seção".
+  const daTemporada = (chave: string) => (temporada === 1 ? !/^T\d+:/.test(chave) : chave.startsWith(`T${temporada}:`));
+  const paginas = perfil.recompensas.filter((r) => r.tipo === 'PAGINA' && daTemporada(r.chave)).length;
+  const totalPaginas = new Set(figurinhas.filter((f) => (f.temporada ?? 1) === temporada).map((f) => f.secao)).size;
 
   return (
     <RolagemComTeclado
@@ -83,8 +91,10 @@ export function Inicio({
         </View>
       </View>
 
+      <SeletorTemporada />
+
       <View style={estilos.cartao}>
-        <Text style={estilos.rotulo}>Meu álbum</Text>
+        <Text style={estilos.rotulo}>{variasTemporadas ? `Meu álbum · ${nomeTemporada}` : 'Meu álbum'}</Text>
         <Text style={estilos.numeroGrande}>
           {coladas} <Text style={estilos.deTotal}>de {total}</Text>
         </Text>
@@ -96,18 +106,22 @@ export function Inicio({
         >
           <View style={[estilos.barraCheia, { width: `${Math.round(pct * 100)}%` }]} />
         </View>
-        <Text style={estilos.paginas}>{paginas} de 10 páginas completas · cada página completa vale 1 pacote</Text>
+        <Text style={estilos.paginas}>
+          {paginas} de {totalPaginas} páginas completas · cada página completa vale 1 pacote
+        </Text>
       </View>
 
       <View style={[estilos.cartao, { backgroundColor: cores.tinta, borderColor: cores.tinta }]}>
-        <Text style={[estilos.rotulo, { color: '#D1D5DB' }]}>Pacote grátis do dia</Text>
+        <Text style={[estilos.rotulo, { color: '#D1D5DB' }]}>
+          {variasTemporadas ? `Pacote grátis do dia · ${nomeTemporada}` : 'Pacote grátis do dia'}
+        </Text>
         <Text style={[estilos.pacoteTitulo]}>Craques da Várzea</Text>
         <Text style={{ color: '#D1D5DB', fontSize: 14, marginBottom: 14 }}>5 figurinhas</Text>
-        {perfil.pacoteDiario.disponivel ? (
+        {pacoteDiario.disponivel ? (
           <Botao titulo="Abrir pacote" onPress={() => aoAbrirPacote('diario')} />
         ) : (
           <View style={estilos.espera}>
-            <Text style={estilos.esperaTexto}>Próximo pacote grátis em {contagem(perfil.pacoteDiario.proximoEm)}</Text>
+            <Text style={estilos.esperaTexto}>Próximo pacote grátis em {contagem(pacoteDiario.proximoEm)}</Text>
           </View>
         )}
       </View>
@@ -119,7 +133,7 @@ export function Inicio({
           <Text style={estilos.rotulo}>Pacotes bônus</Text>
           <Text style={estilos.bonusTexto}>
             Você tem {perfil.pacotesBonus} {perfil.pacotesBonus === 1 ? 'pacote bônus' : 'pacotes bônus'} para abrir, de páginas
-            completas e cupons.
+            completas e cupons.{variasTemporadas ? ` Eles abrem na temporada escolhida acima (${nomeTemporada}).` : ''}
           </Text>
           <Botao titulo="Abrir pacote bônus" onPress={() => aoAbrirPacote('bonus')} />
         </View>

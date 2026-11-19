@@ -15,9 +15,22 @@ export class CatalogoController {
     return clubes.map((c) => ({ ...c, escudoImagem: imagemDa(`escudo-${c.sigla}`) }));
   }
 
+  /** Temporadas publicadas. */
+  @Get('temporadas')
+  temporadas() {
+    return this.prisma.temporada.findMany({
+      where: { publicada: true },
+      orderBy: { numero: 'asc' },
+      select: { numero: true, nome: true, requisito: true },
+    });
+  }
+
   @Get('figurinhas')
   async listarFigurinhas() {
-    return (await this.prisma.figurinha.findMany({ orderBy: { numero: 'asc' } })).map(comImagem);
+    // Só figurinhas de temporadas publicadas (as em montagem ficam escondidas).
+    return (
+      await this.prisma.figurinha.findMany({ where: { temporadaRef: { publicada: true } }, orderBy: [{ temporada: 'asc' }, { numero: 'asc' }] })
+    ).map(comImagem);
   }
 
   @Get('figurinhas/:codigo')

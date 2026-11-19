@@ -36,7 +36,7 @@ type Aba = 'inicio' | 'album' | 'liga' | 'trocas' | 'loja';
 type Sobreposta = null | OrigemPacote | 'probabilidades' | 'excluir' | 'ranking' | 'bafo';
 
 function Raiz() {
-  const { carregando, erroInicial, sessao, perfil, tentarDeNovo, recarregar } = useJogo();
+  const { carregando, erroInicial, sessao, perfil, tentarDeNovo, recarregar, temporada } = useJogo();
   const [aba, setAba] = useState<Aba>('inicio');
   const [sobreposta, setSobreposta] = useState<Sobreposta>(null);
 
@@ -105,7 +105,7 @@ function Raiz() {
             aoJogarBafo={() => setSobreposta('bafo')}
           />
         )}
-        {aba === 'album' && <Album key={secaoAlbum} secaoInicial={secaoAlbum} />}
+        {aba === 'album' && <Album key={`${temporada}:${secaoAlbum ?? ''}`} secaoInicial={secaoAlbum} />}
         {aba === 'liga' && <Liga />}
         {aba === 'trocas' && <Trocas />}
         {aba === 'loja' && (
@@ -118,7 +118,7 @@ function Raiz() {
           ativa={aba === 'inicio'}
           onPress={() => setAba('inicio')}
           icone="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z"
-          contador={perfil.pendencias.missoesParaResgatar + perfil.pendencias.bafo}
+          contador={perfil.pendencias.missoesParaResgatar + (perfil.pendencias.bafo ?? 0)}
         />
         <BotaoAba
           rotulo="Álbum"

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {
   GolMarcado,
@@ -48,33 +48,47 @@ const LOCK_LIGA = 7_331_001;
  */
 @Injectable()
 export class LigaService {
-  /** Última agenda lida do banco (o painel pode mudá-la; sem registro, vale o liga.json). */
-  private agendaAtual: AgendaLiga = AGENDA_PADRAO;
+  /** Agendas lidas do banco por temporada (null = temporada sem liga marcada). */
+  private agendas = new Map<number, AgendaLiga | null>([[CONFIG_LIGA.temporada, AGENDA_PADRAO]]);
 
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  private get semente() {
+  private semente(temporada: number) {
     const base = process.env.LIGA_SEMENTE || CONFIG_LIGA.semente;
-    return this.agendaAtual.versao ? `${base}:v${this.agendaAtual.versao}` : base;
+    const versao = this.agendas.get(temporada)?.versao ?? 0;
+    return versao ? `${base}:v${versao}` : base;
   }
 
-  async agenda(): Promise<AgendaLiga> {
-    const c = await this.prisma.configuracaoLiga.findUnique({ where: { temporada: CONFIG_LIGA.temporada } });
-    this.agendaAtual = c ? { primeiraRodada: c.primeiraRodada, intervaloMinutos: c.intervaloMinutos, versao: c.versao } : AGENDA_PADRAO;
-    return this.agendaAtual;
+  /**
+   * Agenda da liga de uma temporada. A Temporada 1 usa o liga.json enquanto o painel não
+   * marcar outra data; as demais só têm liga depois de marcada no painel.
+   */
+  async agenda(temporada = CONFIG_LIGA.temporada): Promise<AgendaLiga | null> {
+    const c = await this.prisma.configuracaoLiga.findUnique({ where: { temporada } });
+    const a = c
+      ? { primeiraRodada: c.primeiraRodada, intervaloMinutos: c.intervaloMinutos, versao: c.versao }
+      : temporada === CONFIG_LIGA.temporada
+        ? AGENDA_PADRAO
+        : null;
+    this.agendas.set(temporada, a);
+    return a;
   }
 
-  dataDaRodada(rodada: number) {
-    const a = this.agendaAtual;
+  dataDaRodada(rodada: number, temporada = CONFIG_LIGA.temporada) {
+    const a = this.agendas.get(temporada);
+    if (!a) throw new Error(`Temporada ${temporada} sem liga marcada.`);
     return new Date(a.primeiraRodada.getTime() + (rodada - 1) * a.intervaloMinutos * MIN_MS);
   }
 
   /**
-   * Fase de testes: apaga o calendário e os resultados e recomeça a liga na rodada 1,
-   * com nova data de início e intervalo. A versão sobe para os resultados mudarem.
+   * Marca (ou reinicia) a liga de uma temporada: apaga calendário e resultados e recomeça
+   * na rodada 1, com a data de início e o intervalo escolhidos. A versão sobe para os
+   * resultados mudarem.
    */
-  async reiniciar(primeiraRodada: Date, intervaloMinutos: number) {
-    const temporada = CONFIG_LIGA.temporada;
+  async reiniciar(primeiraRodada: Date, intervaloMinutos: number, temporada = CONFIG_LIGA.temporada) {
+    if (!(await this.prisma.temporada.findUnique({ where: { numero: temporada } }))) {
+      throw new NotFoundException({ codigo: 'TEMPORADA_INEXISTENTE', mensagem: `Temporada ${temporada} não existe.` });
+    }
     await this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_LIGA})`;
       const atual = await tx.configuracaoLiga.findUnique({ where: { temporada } });
@@ -85,34 +99,35 @@ export class LigaService {
         update: { primeiraRodada, intervaloMinutos, versao: (atual?.versao ?? 0) + 1 },
       });
     });
-    await this.agenda();
-    return this.situacao();
+    await this.agenda(temporada);
+    return this.situacao(temporada);
   }
 
   /** Resumo para o painel. */
-  async situacao(agora = new Date()) {
-    await this.atualizar(agora);
-    const a = this.agendaAtual;
-    const temporada = CONFIG_LIGA.temporada;
+  async situacao(temporada = CONFIG_LIGA.temporada, agora = new Date()) {
+    await this.atualizar(agora, temporada);
+    const a = this.agendas.get(temporada);
+    if (!a) return { temporada, marcada: false as const };
     const [total, disputadas] = await Promise.all([
       this.prisma.partida.findMany({ where: { temporada }, select: { rodada: true }, distinct: ['rodada'] }),
       this.prisma.partida.findMany({ where: { temporada, simuladaEm: { not: null } }, select: { rodada: true }, distinct: ['rodada'] }),
     ]);
     const proxima = disputadas.length < total.length ? disputadas.length + 1 : null;
     return {
+      temporada,
+      marcada: true as const,
       primeiraRodada: a.primeiraRodada,
       intervaloMinutos: a.intervaloMinutos,
       versao: a.versao,
       totalRodadas: total.length,
       rodadasDisputadas: disputadas.length,
-      proximaRodada: proxima ? { numero: proxima, data: this.dataDaRodada(proxima) } : null,
+      proximaRodada: proxima ? { numero: proxima, data: this.dataDaRodada(proxima, temporada) } : null,
     };
   }
 
   /** Cria o calendário (se faltar) e simula as rodadas vencidas. */
-  async atualizar(agora = new Date()) {
-    await this.agenda();
-    const temporada = CONFIG_LIGA.temporada;
+  async atualizar(agora = new Date(), temporada = CONFIG_LIGA.temporada) {
+    if (!(await this.agenda(temporada))) return;
     const pendentes = await this.prisma.partida.count({ where: { temporada, simuladaEm: null, dataPrevista: { lte: agora } } });
     const existe = await this.prisma.partida.count({ where: { temporada } });
     if (existe > 0 && pendentes === 0) return;
@@ -123,7 +138,7 @@ export class LigaService {
         if ((await tx.partida.count({ where: { temporada } })) === 0) {
           const siglas = (await tx.clube.findMany({ select: { sigla: true }, orderBy: { sigla: 'asc' } })).map((c) => c.sigla);
           await tx.partida.createMany({
-            data: gerarCalendario(siglas).map((p) => ({ temporada, ...p, dataPrevista: this.dataDaRodada(p.rodada) })),
+            data: gerarCalendario(siglas).map((p) => ({ temporada, ...p, dataPrevista: this.dataDaRodada(p.rodada, temporada) })),
           });
         }
         const vencidas = await tx.partida.findMany({
@@ -131,10 +146,10 @@ export class LigaService {
           orderBy: [{ rodada: 'asc' }, { mandante: 'asc' }],
         });
         if (vencidas.length === 0) return;
-        const times = await this.times(tx);
+        const times = await this.times(tx, temporada);
         for (const rodada of [...new Set(vencidas.map((p) => p.rodada))]) {
           const jogos = vencidas.filter((p) => p.rodada === rodada);
-          const resultados = simularRodada(times, jogos, `${this.semente}:${temporada}`);
+          const resultados = simularRodada(times, jogos, `${this.semente(temporada)}:${temporada}`);
           for (const [i, r] of resultados.entries()) {
             await tx.partida.update({
               where: { id: jogos[i].id },
@@ -153,14 +168,13 @@ export class LigaService {
   }
 
   /** Tudo que a tela da liga precisa. */
-  async painel(agora = new Date()) {
-    await this.atualizar(agora);
-    const temporada = CONFIG_LIGA.temporada;
+  async painel(agora = new Date(), temporada = CONFIG_LIGA.temporada) {
+    await this.atualizar(agora, temporada);
     const [partidas, clubes, jogadores] = await Promise.all([
       this.prisma.partida.findMany({ where: { temporada }, orderBy: [{ rodada: 'asc' }, { mandante: 'asc' }] }),
       this.prisma.clube.findMany({ select: { sigla: true, nome: true }, orderBy: { sigla: 'asc' } }),
       this.prisma.figurinha.findMany({
-        where: { tipo: 'JOGADOR' },
+        where: { tipo: 'JOGADOR', temporada },
         select: { codigo: true, nome: true, apelido: true, clubeSigla: true, ataque: true },
       }),
     ]);
@@ -204,7 +218,9 @@ export class LigaService {
       temporada,
       totalRodadas,
       ultimaRodada,
-      proximaRodada: proxima ? { numero: proxima, data: this.dataDaRodada(proxima) } : null,
+      // Temporada sem liga marcada ainda (só o álbum está aberto).
+      marcada: this.agendas.get(temporada) != null,
+      proximaRodada: proxima ? { numero: proxima, data: this.dataDaRodada(proxima, temporada) } : null,
       classificacao: classificar(
         clubes.map((c) => c.sigla),
         resultados,
@@ -217,9 +233,9 @@ export class LigaService {
     };
   }
 
-  private async times(tx: Prisma.TransactionClient): Promise<Record<string, TimeLiga>> {
+  private async times(tx: Prisma.TransactionClient, temporada: number): Promise<Record<string, TimeLiga>> {
     const lista = await tx.figurinha.findMany({
-      where: { tipo: 'JOGADOR', ataque: { not: null } },
+      where: { tipo: 'JOGADOR', temporada, ataque: { not: null } },
       select: { codigo: true, clubeSigla: true, posicao: true, ataque: true, defesa: true, tecnica: true, velocidade: true, fisico: true },
     });
     const times: Record<string, TimeLiga> = {};

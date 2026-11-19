@@ -36,7 +36,7 @@ describe.skipIf(!temBanco)('PacotesService (integração)', () => {
   });
 
   it('abre o pacote diário, guarda as figurinhas e registra a abertura', async () => {
-    const r = await servico.abrirPacoteDiario(usuarioId, new Date('2026-11-17T12:00:00Z'));
+    const r = await servico.abrirPacoteDiario(usuarioId, 1, new Date('2026-11-17T12:00:00Z'));
     expect(r.figurinhas).toHaveLength(5);
 
     const itens = await prisma.itemAlbum.findMany({ where: { usuarioId } });
@@ -47,20 +47,20 @@ describe.skipIf(!temBanco)('PacotesService (integração)', () => {
   });
 
   it('permite só um pacote grátis por dia (meia-noite de Brasília)', async () => {
-    await servico.abrirPacoteDiario(usuarioId, new Date('2026-11-17T12:00:00Z'));
+    await servico.abrirPacoteDiario(usuarioId, 1, new Date('2026-11-17T12:00:00Z'));
     // 23h50 em Brasília: ainda é o mesmo dia.
-    await expect(servico.abrirPacoteDiario(usuarioId, new Date('2026-11-18T02:50:00Z'))).rejects.toMatchObject({
+    await expect(servico.abrirPacoteDiario(usuarioId, 1, new Date('2026-11-18T02:50:00Z'))).rejects.toMatchObject({
       response: { codigo: 'PACOTE_DIARIO_JA_ABERTO' },
     });
     // 00h10 em Brasília: dia novo.
-    await expect(servico.abrirPacoteDiario(usuarioId, new Date('2026-11-18T03:10:00Z'))).resolves.toBeDefined();
+    await expect(servico.abrirPacoteDiario(usuarioId, 1, new Date('2026-11-18T03:10:00Z'))).resolves.toBeDefined();
   });
 
   it('não abre dois pacotes diários com pedidos simultâneos', async () => {
     const agora = new Date('2026-11-20T12:00:00Z');
     const resultados = await Promise.allSettled([
-      servico.abrirPacoteDiario(usuarioId, agora),
-      servico.abrirPacoteDiario(usuarioId, agora),
+      servico.abrirPacoteDiario(usuarioId, 1, agora),
+      servico.abrirPacoteDiario(usuarioId, 1, agora),
     ]);
     expect(resultados.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
     expect(await prisma.aberturaPacote.count({ where: { usuarioId } })).toBe(1);
@@ -69,7 +69,7 @@ describe.skipIf(!temBanco)('PacotesService (integração)', () => {
   it('aplica a garantia de Épica no 10º pacote sem Épica', async () => {
     servico.rng = () => 0; // o sorteio sozinho só daria Comuns
     await prisma.usuario.update({ where: { id: usuarioId }, data: { pacotesSemEpica: 9 } });
-    const r = await servico.abrirPacoteDiario(usuarioId, new Date('2026-11-21T12:00:00Z'));
+    const r = await servico.abrirPacoteDiario(usuarioId, 1, new Date('2026-11-21T12:00:00Z'));
     expect(r.figurinhas.some((f) => f.raridade === 'EPICA' && f.garantida)).toBe(true);
     const u = await prisma.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
     expect(u.pacotesSemEpica).toBe(0);

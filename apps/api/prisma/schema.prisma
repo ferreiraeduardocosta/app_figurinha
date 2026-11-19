@@ -89,7 +89,9 @@ model Clube {
 
 model Figurinha {
   codigo          String        @id
-  numero          Int           @unique
+  /// Número no álbum, único dentro da temporada.
+  numero          Int
+  temporadaRef    Temporada     @relation(fields: [temporada], references: [numero])
   temporada       Int           @default(1)
   secao           String
   clube           Clube         @relation(fields: [clubeSigla], references: [sigla])
@@ -111,45 +113,67 @@ model Figurinha {
   fisico          Int?
   itens           ItemAlbum[]
 
+  @@unique([temporada, numero])
   @@index([raridade])
 }
 
+/// Temporada do álbum (cada uma com suas figurinhas, liga e prêmio de álbum completo).
+model Temporada {
+  numero     Int         @id
+  nome       String
+  /// Temporada cujo álbum completo libera esta. Nulo = liberada para todos.
+  requisito  Int?
+  /// Falso enquanto a temporada está sendo montada: não aparece no app.
+  publicada  Boolean     @default(true)
+  criadaEm   DateTime    @default(now())
+  figurinhas Figurinha[]
+}
+
+/// Último pacote grátis aberto em cada temporada (um por dia em cada temporada liberada).
+model PacoteDiario {
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+  temporada Int
+  abertoEm  DateTime
+
+  @@id([usuarioId, temporada])
+}
+
 model Usuario {
-  id                   String              @id @default(uuid())
-  apelido              String              @unique
-  email                String              @unique
+  id                 String              @id @default(uuid())
+  apelido            String              @unique
+  email              String              @unique
   /// scrypt: "scrypt$N$r$p$sal$hash" (ver src/auth/senha.ts)
-  senhaHash            String
-  papel                Papel               @default(JOGADOR)
+  senhaHash          String
+  papel              Papel               @default(JOGADOR)
   /// Conta excluída pelo jogador e anonimizada (só sobra quando há compras a guardar).
-  excluidoEm           DateTime?
-  criadoEm             DateTime            @default(now())
-  moedas               Int                 @default(0)
+  excluidoEm         DateTime?
+  criadoEm           DateTime            @default(now())
+  moedas             Int                 @default(0)
   /// Contadores da garantia mínima (ver packages/regras).
-  pacotesSemEpica      Int                 @default(0)
-  pacotesSemLendaria   Int                 @default(0)
-  /// Último pacote diário grátis aberto (controle de 1 por dia).
-  ultimoPacoteDiarioEm DateTime?
+  pacotesSemEpica    Int                 @default(0)
+  pacotesSemLendaria Int                 @default(0)
   /// Pacotes ganhos como recompensa e ainda não abertos.
-  pacotesBonus         Int                 @default(0)
+  pacotesBonus       Int                 @default(0)
   /// Pacotes comprados na loja e ainda não abertos.
-  pacotesComprados     Int                 @default(0)
+  pacotesComprados   Int                 @default(0)
   /// Declarada pelo jogador antes da primeira compra (limites para menores).
-  dataNascimento       DateTime?           @db.Date
-  album                ItemAlbum[]
-  recompensas          Recompensa[]
-  aberturas            AberturaPacote[]
-  sessoes              Sessao[]
-  compras              Compra[]
-  missoes              MissaoDia[]
-  cuponsResgatados     CupomResgate[]
-  cuponsRecebidos      CupomDestinatario[]
-  amizadesEnviadas     Amizade[]           @relation("AmizadeSolicitante")
-  amizadesRecebidas    Amizade[]           @relation("AmizadeDestinatario")
-  trocasPropostas      Troca[]             @relation("TrocaProposta")
-  trocasRecebidas      Troca[]             @relation("TrocaRecebida")
-  bafosDesafiados      Bafo[]              @relation("BafoDesafiante")
-  bafosRecebidos       Bafo[]              @relation("BafoAdversario")
+  dataNascimento     DateTime?           @db.Date
+  album              ItemAlbum[]
+  recompensas        Recompensa[]
+  aberturas          AberturaPacote[]
+  sessoes            Sessao[]
+  compras            Compra[]
+  missoes            MissaoDia[]
+  cuponsResgatados   CupomResgate[]
+  cuponsRecebidos    CupomDestinatario[]
+  pacotesDiarios     PacoteDiario[]
+  amizadesEnviadas   Amizade[]           @relation("AmizadeSolicitante")
+  amizadesRecebidas  Amizade[]           @relation("AmizadeDestinatario")
+  trocasPropostas    Troca[]             @relation("TrocaProposta")
+  trocasRecebidas    Troca[]             @relation("TrocaRecebida")
+  bafosDesafiados    Bafo[]              @relation("BafoDesafiante")
+  bafosRecebidos     Bafo[]              @relation("BafoAdversario")
 }
 
 /// Sessão de login. Guardamos só o hash SHA-256 do token; o token em si fica no aparelho.
@@ -185,6 +209,7 @@ model AberturaPacote {
   origem    OrigemPacote
   /// Lista de { codigo, raridade, brilhante, garantida }.
   resultado Json
+  temporada Int          @default(1)
   criadoEm  DateTime     @default(now())
 
   @@index([usuarioId, criadoEm])

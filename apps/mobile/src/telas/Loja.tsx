@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollViewInstance, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RolagemComTeclado } from '../componentes/RolagemComTeclado';
+import { SeletorTemporada } from '../componentes/SeletorTemporada';
 import Svg, { Path } from 'react-native-svg';
 import { api, ErroApi, Loja as DadosLoja, Oferta, OrigemPacote } from '../api';
 import { Botao } from '../componentes/Botao';
@@ -93,6 +94,8 @@ export function Loja({
           <Text style={estilos.moedasTexto}>{loja.moedas.toLocaleString('pt-BR')}</Text>
         </View>
       </View>
+      {/* Com mais de uma temporada, os pacotes abrem na escolhida aqui. */}
+      <SeletorTemporada />
 
       {aviso && (
         <View style={estilos.sucesso} accessibilityRole="alert">

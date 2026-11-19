@@ -72,6 +72,7 @@ export class AuthService {
       await tx.itemAlbum.deleteMany({ where: { usuarioId } });
       await tx.recompensa.deleteMany({ where: { usuarioId } });
       await tx.missaoDia.deleteMany({ where: { usuarioId } });
+      await tx.pacoteDiario.deleteMany({ where: { usuarioId } });
       await tx.aberturaPacote.deleteMany({ where: { usuarioId } });
       await tx.amizade.deleteMany({ where: outro });
       await tx.bafo.deleteMany({ where: { OR: [{ desafianteId: usuarioId }, { adversarioId: usuarioId }] } });
@@ -90,7 +91,6 @@ export class AuthService {
           pacotesComprados: 0,
           pacotesSemEpica: 0,
           pacotesSemLendaria: 0,
-          ultimoPacoteDiarioEm: null,
           excluidoEm: new Date(),
         },
       });

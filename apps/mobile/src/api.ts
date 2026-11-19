@@ -38,6 +38,18 @@ export interface Figurinha {
   fisico: number | null;
   /** Caminho da arte no servidor (ex.: /artes/TUB-04.1a2b3c4d.webp); null = desenho provisório. */
   imagem?: string | null;
+  /** Temporada do álbum (1, 2...). */
+  temporada: number;
+}
+
+export interface TemporadaPerfil {
+  numero: number;
+  nome: string;
+  /** Temporada cujo álbum completo libera esta. */
+  requisito: number | null;
+  liberada: boolean;
+  album: { coladas: number; total: number };
+  pacoteDiario: { disponivel: boolean; proximoEm: string | null };
 }
 
 export interface Perfil {
@@ -46,6 +58,8 @@ export interface Perfil {
   email: string;
   moedas: number;
   pacoteDiario: { disponivel: boolean; proximoEm: string | null };
+  /** Temporadas publicadas, com liberação, álbum e pacote grátis de cada uma. */
+  temporadas: TemporadaPerfil[];
   garantia: { pacotesParaEpica: number; pacotesParaLendaria: number };
   album: { coladas: number; total: number };
   pacotesBonus: number;
@@ -111,6 +125,8 @@ export interface PartidaLiga {
 
 export interface PainelLiga {
   temporada: number;
+  /** Falso enquanto a liga da temporada não foi marcada. */
+  marcada?: boolean;
   totalRodadas: number;
   ultimaRodada: number;
   proximaRodada: { numero: number; data: string } | null;
@@ -233,8 +249,12 @@ export interface Sugestao {
 export interface RecompensaNova {
   tipo: 'PAGINA' | 'ALBUM';
   chave: string;
+  temporada?: number;
   pacotes: number;
 }
+
+/** Nome para mostrar de uma recompensa ("T2:Tubarões do Cais" vira "Tubarões do Cais"). */
+export const nomeRecompensa = (chave: string) => chave.replace(/^T\d+:/, '');
 
 export interface ResultadoPacote {
   figurinhas: FigurinhaSorteada[];
@@ -245,12 +265,14 @@ export interface ItemAlbum {
   codigo: string;
   quantidade: number;
   brilhantes: number;
+  temporada?: number;
 }
 
 export interface Album {
   itens: ItemAlbum[];
   repetidas: Record<Raridade, number>;
   balcao: { repetidasPorNova: number };
+  repetidasPorTemporada?: Record<string, Record<Raridade, number>>;
 }
 
 export interface FigurinhaSorteada {
@@ -313,7 +335,7 @@ export const api = {
   clubes: () => chamar<Clube[]>('GET', '/clubes'),
   figurinhas: () => chamar<Figurinha[]>('GET', '/figurinhas'),
   probabilidades: () => chamar<Probabilidades>('GET', '/probabilidades'),
-  liga: () => chamar<PainelLiga>('GET', '/liga'),
+  liga: (temporada = 1) => chamar<PainelLiga>('GET', `/liga?temporada=${temporada}`),
   ranking: (token: string, escopo: 'geral' | 'amigos') => chamar<Ranking>('GET', `/ranking?escopo=${escopo}`, token),
   cadastrar: (apelido: string, email: string, senha: string) =>
     chamar<Sessao>('POST', '/auth/cadastro', null, { apelido, email, senha }),
@@ -323,7 +345,8 @@ export const api = {
     chamar<{ resultado: 'APAGADA' | 'ANONIMIZADA' }>('POST', '/auth/excluir-conta', token, { senha }),
   perfil: (token: string) => chamar<Perfil>('GET', '/eu', token),
   album: (token: string) => chamar<Album>('GET', '/album', token),
-  abrirPacote: (token: string, origem: OrigemPacote) => chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token),
+  abrirPacote: (token: string, origem: OrigemPacote, temporada = 1) =>
+    chamar<ResultadoPacote>('POST', `/pacotes/${origem}`, token, { temporada }),
   loja: (token: string) => chamar<Loja>('GET', '/loja', token),
   missoes: (token: string) => chamar<MissoesDoDia>('GET', '/missoes', token),
   resgatarMissao: (token: string, id: string) =>

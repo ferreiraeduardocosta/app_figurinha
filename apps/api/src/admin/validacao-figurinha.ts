@@ -28,6 +28,7 @@ export interface CamposEditaveis {
 export interface CamposNovaFigurinha extends CamposEditaveis {
   codigo: string;
   numero: number;
+  temporada: number;
   secao: string;
   clubeSigla: string;
   nome: string;
@@ -39,7 +40,7 @@ export interface CamposNovaFigurinha extends CamposEditaveis {
 
 /** Nome de cada campo como aparece no painel, para as mensagens de erro. */
 const ROTULOS: Record<string, string> = {
-  codigo: 'Código', numero: 'Número no álbum', secao: 'Seção do álbum', clubeSigla: 'Clube', nome: 'Nome',
+  codigo: 'Código', numero: 'Número no álbum', temporada: 'Temporada', secao: 'Seção do álbum', clubeSigla: 'Clube', nome: 'Nome',
   apelido: 'Apelido', posicao: 'Posição', camisa: 'Camisa', idade: 'Idade', raridade: 'Raridade', tipo: 'Tipo',
   destaque: 'Traço especial / destaque', historia: 'Mini-história', descricaoVisual: 'Descrição visual',
   ataque: 'ATA', defesa: 'DEF', tecnica: 'TEC', velocidade: 'VEL', fisico: 'FIS',
@@ -121,15 +122,18 @@ export function validarEdicao(corpo: unknown): CamposEditaveis {
 export function validarNova(corpo: unknown): CamposNovaFigurinha {
   if (typeof corpo !== 'object' || corpo === null || Array.isArray(corpo)) invalido('corpo', 'Envie um objeto JSON.');
   const c = { ...(corpo as Record<string, unknown>) };
-  const codigo = texto(c, 'codigo', 6, 6, false)!.toUpperCase();
-  if (!/^[A-Z]{3}-\d{2}$/.test(codigo)) invalido('codigo', 'Código no formato ABC-01.');
+  const codigo = texto(c, 'codigo', 6, 10, false)!.toUpperCase();
+  const temporada = 'temporada' in c ? inteiro(c, 'temporada', 1, 99, false)! : 1;
+  // Temporada 1: ABC-01. Outras: T2-ABC-01 (os clubes se repetem entre temporadas).
+  const esperado = temporada === 1 ? /^[A-Z]{3}-\d{2}$/ : new RegExp(`^T${temporada}-[A-Z]{3}-\\d{2}$`);
+  if (!esperado.test(codigo)) invalido('codigo', temporada === 1 ? 'Código no formato ABC-01.' : `Código no formato T${temporada}-ABC-01.`);
   const numero = inteiro(c, 'numero', 1, 9999, false)!;
   const secao = texto(c, 'secao', 1, 60, false)!;
   const clubeSigla = texto(c, 'clubeSigla', 3, 3, false)!.toUpperCase();
-  for (const k of ['codigo', 'numero', 'secao', 'clubeSigla']) delete c[k];
+  for (const k of ['codigo', 'numero', 'temporada', 'secao', 'clubeSigla']) delete c[k];
   for (const k of ['nome', 'raridade', 'tipo', 'historia', 'descricaoVisual']) {
     if (!(k in c)) invalido(k, `${rotulo(k)} é obrigatório.`);
   }
   const resto = validarEdicao(c);
-  return { ...resto, codigo, numero, secao, clubeSigla } as CamposNovaFigurinha;
+  return { ...resto, codigo, numero, temporada, secao, clubeSigla } as CamposNovaFigurinha;
 }
