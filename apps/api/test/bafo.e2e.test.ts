@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { BAFO } from '@craques-da-varzea/regras';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -166,12 +167,12 @@ describe.skipIf(!temBanco)('Bafo', () => {
     expect(await quantidades('ana')).toEqual({ 'UNI-05': 4 });
   });
 
-  it('só desafia amigos e respeita o limite de 10 partidas por dia', async () => {
+  it('só desafia amigos e respeita o limite diário de partidas', async () => {
     await definir('ana', { 'UNI-05': 3 });
     expect((await ana.post('/bafo/desafios', { adversarioId: j.caio.id, figurinhas: ['UNI-05'] })).corpo.codigo).toBe('SO_ENTRE_AMIGOS');
     const dia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
     await prisma.bafo.createMany({
-      data: Array.from({ length: 10 }, () => ({
+      data: Array.from({ length: BAFO.partidasPorDia }, () => ({
         desafianteId: j.ana.id,
         contraComputador: true,
         status: 'FINALIZADA' as const,
@@ -184,7 +185,7 @@ describe.skipIf(!temBanco)('Bafo', () => {
     const r = await ana.post('/bafo/computador', { figurinhas: ['UNI-05'] });
     expect(r.status).toBe(409);
     expect(r.corpo.codigo).toBe('LIMITE_BAFO_DIA');
-    expect((await ana.get('/bafo')).corpo).toMatchObject({ limiteDia: 10, jogadasHoje: 10 });
+    expect((await ana.get('/bafo')).corpo).toMatchObject({ limiteDia: BAFO.partidasPorDia, jogadasHoje: BAFO.partidasPorDia });
     expect(await quantidades('ana')).toEqual({ 'UNI-05': 3 });
   });
 
