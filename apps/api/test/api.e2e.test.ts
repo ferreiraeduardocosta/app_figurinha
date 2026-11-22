@@ -87,7 +87,10 @@ describe.skipIf(!temBanco)('API (ponta a ponta)', () => {
   });
 
   it('recusa balcão sem repetidas suficientes e código inválido', async () => {
-    expect((await chamar('POST', '/balcao', { codigo: 'LEN-01' })).corpo.codigo).toBe('REPETIDAS_INSUFICIENTES');
+    // Uma lendária que o jogador não tem (o pacote aberto antes pode ter trazido alguma).
+    const tem = new Set((await chamar('GET', '/album')).corpo.itens.map((i: { codigo: string }) => i.codigo));
+    const lendaria = ['LEN-01', 'LEN-02', 'LEN-03', 'LEN-04', 'LEN-05', 'LEN-06'].find((c) => !tem.has(c))!;
+    expect((await chamar('POST', '/balcao', { codigo: lendaria })).corpo.codigo).toBe('REPETIDAS_INSUFICIENTES');
     expect((await chamar('POST', '/balcao', { codigo: 'drop table' })).status).toBe(400);
   });
 
