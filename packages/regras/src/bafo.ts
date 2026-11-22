@@ -39,8 +39,8 @@ export const BAFO = {
   chanceBonus: 0.3,
   /** A partir desta precisão é "bafo perfeito": vira pelo menos uma carta. */
   perfeito: 0.95,
-  // Fase de testes: praticamente sem limite (o app mostra o número que vier daqui). Valor de lançamento: 10.
-  partidasPorDia: 1000,
+  /** Partidas por dia contra o computador. Entre amigos não há limite. */
+  partidasPorDiaComputador: 10,
 } as const;
 
 /**

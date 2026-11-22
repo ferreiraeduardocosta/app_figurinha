@@ -91,6 +91,9 @@ export interface PartidaBafo {
 export interface ListaBafo {
   limiteDia: number;
   jogadasHoje: number;
+  /** Limite diário contra o computador (entre amigos não há limite). */
+  limiteComputador?: number;
+  jogadasComputadorHoje?: number;
   convitesRecebidos: PartidaBafo[];
   convitesEnviados: PartidaBafo[];
   emAndamento: PartidaBafo[];

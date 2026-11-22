@@ -229,7 +229,7 @@ Mini jogo de "bafo" com figurinhas repetidas, contra o computador ou contra amig
   de aceitar e põe a mesma quantidade. As figurinhas ficam **reservadas** (saem do álbum)
   enquanto o jogo dura. Prazos: 24 h para aceitar e 24 h para cada vez; contra o
   computador, 2 h. Se o prazo vence, a partida termina como está (convite: tudo volta).
-- **Limite:** 10 partidas por dia por jogador no lançamento. Na fase de testes está em 1000 (`BAFO.partidasPorDia`).
+- **Limite:** 10 partidas por dia contra o computador (`BAFO.partidasPorDiaComputador`). Entre amigos não há limite.
 - **Segurança:** o sorteio é feito no servidor com o gerador criptográfico. A precisão é
   informada pelo app (dá para trapacear com um app modificado); o ganho máximo é limitado
   pelo monte de 3 cartas e pelo limite diário.

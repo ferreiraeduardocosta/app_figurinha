@@ -167,12 +167,12 @@ describe.skipIf(!temBanco)('Bafo', () => {
     expect(await quantidades('ana')).toEqual({ 'UNI-05': 4 });
   });
 
-  it('só desafia amigos e respeita o limite diário de partidas', async () => {
+  it('só desafia amigos; o limite diário vale contra o computador, entre amigos é livre', async () => {
     await definir('ana', { 'UNI-05': 3 });
     expect((await ana.post('/bafo/desafios', { adversarioId: j.caio.id, figurinhas: ['UNI-05'] })).corpo.codigo).toBe('SO_ENTRE_AMIGOS');
     const dia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
     await prisma.bafo.createMany({
-      data: Array.from({ length: BAFO.partidasPorDia }, () => ({
+      data: Array.from({ length: BAFO.partidasPorDiaComputador }, () => ({
         desafianteId: j.ana.id,
         contraComputador: true,
         status: 'FINALIZADA' as const,
@@ -185,8 +185,17 @@ describe.skipIf(!temBanco)('Bafo', () => {
     const r = await ana.post('/bafo/computador', { figurinhas: ['UNI-05'] });
     expect(r.status).toBe(409);
     expect(r.corpo.codigo).toBe('LIMITE_BAFO_DIA');
-    expect((await ana.get('/bafo')).corpo).toMatchObject({ limiteDia: BAFO.partidasPorDia, jogadasHoje: BAFO.partidasPorDia });
+    expect((await ana.get('/bafo')).corpo).toMatchObject({
+      limiteComputador: BAFO.partidasPorDiaComputador,
+      jogadasComputadorHoje: BAFO.partidasPorDiaComputador,
+    });
     expect(await quantidades('ana')).toEqual({ 'UNI-05': 3 });
+
+    // Entre amigos continua liberado, para quem desafia e para quem aceita.
+    await definir('bia', { 'SER-04': 3 });
+    const d = await ana.post('/bafo/desafios', { adversarioId: j.bia.id, figurinhas: ['UNI-05'] });
+    expect(d.status).toBe(201);
+    expect((await bia.post(`/bafo/${d.corpo.id}/aceitar`, { figurinhas: ['SER-04'] })).status).toBe(200);
   });
 
   it('partida contra o computador abandonada termina como está e devolve o que não virou', async () => {

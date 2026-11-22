@@ -82,7 +82,10 @@ function Lobby({
   }, [carregar]);
 
   const repetidas = (album?.itens ?? []).filter((i) => i.quantidade > 1).length;
-  const esgotou = !!lista && lista.jogadasHoje >= lista.limiteDia;
+  // Só contra o computador há limite diário; entre amigos é livre.
+  const limite = lista?.limiteComputador ?? lista?.limiteDia ?? 0;
+  const jogadas = lista?.jogadasComputadorHoje ?? lista?.jogadasHoje ?? 0;
+  const esgotou = !!lista && jogadas >= limite;
 
   const acao = async (id: string, fn: () => Promise<unknown>) => {
     setOcupado(id);
@@ -110,7 +113,7 @@ function Lobby({
           </Text>
           {lista && (
             <Text style={estilos.capaContador}>
-              {lista.jogadasHoje}/{lista.limiteDia} partidas hoje
+              {jogadas}/{limite} contra o computador hoje · entre amigos é livre
             </Text>
           )}
         </View>
@@ -130,7 +133,7 @@ function Lobby({
                     <MiniFigurinhas itens={agrupar(p.cartasDesafiante)} />
                     <View style={estilos.linhaBotoes}>
                       <View style={{ flex: 1 }}>
-                        <Botao titulo="Aceitar" onPress={() => aoEscolher({ modo: 'aceitar', partida: p })} desabilitado={esgotou} />
+                        <Botao titulo="Aceitar" onPress={() => aoEscolher({ modo: 'aceitar', partida: p })} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Botao
@@ -168,7 +171,11 @@ function Lobby({
                 onPress={() => aoEscolher({ modo: 'computador' })}
                 desabilitado={repetidas === 0 || esgotou}
               />
-              {esgotou && <Text style={estilos.legenda}>Você já jogou {lista.limiteDia} partidas hoje. Volte amanhã!</Text>}
+              {esgotou && (
+                <Text style={estilos.legenda}>
+                  Você já jogou {limite} partidas contra o computador hoje. Volte amanhã, ou desafie um amigo!
+                </Text>
+              )}
               <Text style={[estilos.legenda, { marginTop: 6 }]}>Ou desafie um amigo:</Text>
               {(amigos?.amigos ?? []).length === 0 && (
                 <Text style={estilos.legenda}>Adicione amigos na aba Trocas para desafiar.</Text>
@@ -179,9 +186,9 @@ function Lobby({
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={`Desafiar ${a.usuario.apelido}`}
-                    disabled={repetidas === 0 || esgotou}
+                    disabled={repetidas === 0}
                     onPress={() => aoEscolher({ modo: 'desafio', amigo: a.usuario })}
-                    style={[estilos.desafiar, (repetidas === 0 || esgotou) && { opacity: 0.4 }]}
+                    style={[estilos.desafiar, repetidas === 0 && { opacity: 0.4 }]}
                   >
                     <Text style={estilos.desafiarTexto}>Desafiar</Text>
                   </Pressable>

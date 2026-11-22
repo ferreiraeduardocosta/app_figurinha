@@ -50,7 +50,7 @@ export class BafoService {
   async listar(eu: string, agora = new Date()) {
     await this.expirarVencidos(agora);
     const meus = { OR: [{ desafianteId: eu }, { adversarioId: eu }] };
-    const [abertos, recentes, jogadasHoje] = await Promise.all([
+    const [abertos, recentes, jogadasHoje, jogadasComputadorHoje] = await Promise.all([
       this.prisma.bafo.findMany({ where: { ...meus, status: { in: [...ABERTOS] } }, include: incluir, orderBy: { atualizadoEm: 'desc' } }),
       this.prisma.bafo.findMany({
         where: { ...meus, status: { notIn: [...ABERTOS] } },
@@ -59,10 +59,16 @@ export class BafoService {
         take: 10,
       }),
       this.jogadasHoje(this.prisma, eu, agora),
+      this.jogadasComputadorHoje(this.prisma, eu, agora),
     ]);
     const lista = (l: BafoCompleto[]) => l.map((b) => this.apresentar(b, eu));
     return {
-      limiteDia: BAFO.partidasPorDia,
+      // Só contra o computador há limite; entre amigos é livre.
+      limiteComputador: BAFO.partidasPorDiaComputador,
+      jogadasComputadorHoje,
+      // Campos das versões antigas do app (que bloqueavam tudo ao atingir limiteDia):
+      // um número alto mantém os desafios entre amigos liberados nelas.
+      limiteDia: 9999,
       jogadasHoje,
       convitesRecebidos: lista(abertos.filter((b) => b.status === 'CONVITE' && b.adversarioId === eu)),
       convitesEnviados: lista(abertos.filter((b) => b.status === 'CONVITE' && b.desafianteId === eu)),
@@ -80,7 +86,7 @@ export class BafoService {
   async contraComputador(eu: string, figurinhas: string[], agora = new Date()) {
     return this.prisma.$transaction(async (tx) => {
       await travarUsuarios(tx, [eu]);
-      await this.exigirLimite(tx, [eu], agora);
+      await this.exigirLimiteComputador(tx, eu, agora);
       const temporada = await this.temporadaDoMonte(tx, [eu], figurinhas);
       await this.reservar(tx, eu, figurinhas);
       const cartasB = figurinhas.map((c) => this.sortearMesmaRaridade(c, temporada));
@@ -110,7 +116,6 @@ export class BafoService {
       if (!(await this.amigos.saoAmigos(tx, eu, adversarioId))) {
         throw new ForbiddenException({ codigo: 'SO_ENTRE_AMIGOS', mensagem: 'Só dá para desafiar amigos.' });
       }
-      await this.exigirLimite(tx, [eu], agora);
       const pendentes = await tx.bafo.count({ where: { desafianteId: eu, status: 'CONVITE' } });
       if (pendentes >= 5) {
         throw new ConflictException({ codigo: 'LIMITE_DESAFIOS', mensagem: 'Você já tem 5 desafios esperando resposta.' });
@@ -147,7 +152,6 @@ export class BafoService {
           mensagem: `Este desafio vale ${b.quantidade} figurinha(s) de cada lado.`,
         });
       }
-      await this.exigirLimite(tx, [b.desafianteId, eu], agora);
       // As figurinhas de quem aceita têm de ser da mesma temporada das do desafio.
       await this.temporadaDoMonte(tx, [eu], [...(b.cartasA as string[]), ...figurinhas]);
       await this.reservar(tx, eu, figurinhas);
@@ -282,14 +286,16 @@ export class BafoService {
     });
   }
 
-  private async exigirLimite(tx: Tx, ids: string[], agora: Date) {
-    for (const id of ids) {
-      if ((await this.jogadasHoje(tx, id, agora)) >= BAFO.partidasPorDia) {
-        throw new ConflictException({
-          codigo: 'LIMITE_BAFO_DIA',
-          mensagem: `Limite de ${BAFO.partidasPorDia} partidas de bafo por dia atingido${ids.length > 1 ? ' por um dos jogadores' : ''}. Volte amanhã!`,
-        });
-      }
+  private async jogadasComputadorHoje(tx: Tx | PrismaService, usuarioId: string, agora: Date) {
+    return tx.bafo.count({ where: { dia: diaLocal(agora), desafianteId: usuarioId, contraComputador: true } });
+  }
+
+  private async exigirLimiteComputador(tx: Tx, usuarioId: string, agora: Date) {
+    if ((await this.jogadasComputadorHoje(tx, usuarioId, agora)) >= BAFO.partidasPorDiaComputador) {
+      throw new ConflictException({
+        codigo: 'LIMITE_BAFO_DIA',
+        mensagem: `Limite de ${BAFO.partidasPorDiaComputador} partidas contra o computador por dia atingido. Volte amanhã, ou desafie um amigo: entre amigos não tem limite!`,
+      });
     }
   }
 
