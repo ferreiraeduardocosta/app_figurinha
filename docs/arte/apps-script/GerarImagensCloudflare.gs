@@ -121,7 +121,7 @@ function gerarLinha(aba, linha, cols) {
     const prompt = `${traduzir(String(v[cols.descricao]))} ${SEM_TEXTO}`.slice(0, 2048);
     const blob = gerarImagem(prompt).setName(`${codigo}.jpg`);
 
-    const pasta = subpasta(aba.getName());
+    const pasta = subpasta(aba.getName(), codigo);
     for (const antigo of iterar(pasta.getFilesByName(`${codigo}.jpg`))) antigo.setTrashed(true);
     const arquivo = pasta.createFile(blob);
     // Qualquer pessoa com o link pode ver: assim a imagem pode ser baixada para o app.
@@ -179,9 +179,12 @@ function gerarImagem(prompt) {
   return Utilities.newBlob(Utilities.base64Decode(r.image), 'image/jpeg');
 }
 
-function subpasta(nome) {
+/** Pasta da imagem: PASTA_RAIZ / Temporada N / aba (a temporada vem do código: T2-FUR-04 → 2). */
+function subpasta(nome, codigo) {
   const raiz = pegarOuCriar(DriveApp.getRootFolder(), PASTA_RAIZ);
-  return pegarOuCriar(raiz, nome);
+  const m = /^T(\d+)-/.exec(codigo || '');
+  const temporada = pegarOuCriar(raiz, `Temporada ${m ? m[1] : 1}`);
+  return pegarOuCriar(temporada, nome);
 }
 
 function pegarOuCriar(pai, nome) {

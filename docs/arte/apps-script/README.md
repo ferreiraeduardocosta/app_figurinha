@@ -28,7 +28,8 @@ imagem ao Gemini, salva o PNG no seu Google Drive e preenche **Link da Imagem**.
 - Para refazer uma imagem: apague o link da linha (ou use "linha selecionada").
 - Se uma linha falhar, a célula do link ganha uma **nota** com o motivo.
 
-As imagens ficam em **Meu Drive → Craques da Várzea - Artes → (uma pasta por aba)**,
+As imagens ficam em **Meu Drive → Craques da Várzea - Artes → Temporada N → (uma pasta por aba)**
+(a temporada vem do código: `T2-FUR-04` vai para Temporada 2),
 com o nome do código (`TUB-04.png`) e compartilhadas como "qualquer pessoa com o link
 pode ver", para poderem ser baixadas e colocadas no app.
 
@@ -58,4 +59,7 @@ Diferenças em relação ao Gemini:
   quadrados; o app corta as bordas na hora de mostrar.
 - **Qualidade:** o FLUX schnell é rápido, mas costuma seguir menos os detalhes do
   texto que o Gemini. Gere algumas linhas de teste e compare.
-- Pasta no Drive: **Craques da Várzea - Artes (Cloudflare)**.
+- Pasta no Drive: **Craques da Várzea - Artes (Cloudflare) → Temporada N → aba**.
+
+**Temporada 2 (Inter Classes):** importe `docs/arte/temporada2/Briefing_Arte_T2.xlsx` numa planilha nova
+do Google Sheets e cole o mesmo script; tudo funciona igual.
