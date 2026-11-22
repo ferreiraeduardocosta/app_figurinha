@@ -113,6 +113,8 @@ export class TestesService {
 
   /** dataHora no formato AAAA-MM-DDTHH:MM, no horário de Brasília. */
   reiniciarLiga(dataHora: unknown, intervalo: unknown, unidade: unknown, temporada: unknown = 1) {
+    // Alguns navegadores mandam os segundos junto (AAAA-MM-DDTHH:MM:SS).
+    if (typeof dataHora === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(dataHora)) dataHora = dataHora.slice(0, 16);
     if (typeof dataHora !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dataHora)) {
       throw new BadRequestException({ codigo: 'ENTRADA_INVALIDA', campo: 'primeiraRodada', mensagem: 'Informe data e hora da primeira rodada.' });
     }

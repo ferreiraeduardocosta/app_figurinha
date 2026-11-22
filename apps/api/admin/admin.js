@@ -693,22 +693,49 @@ async function telaTestes(alvo) {
   // Liga
   const erroLiga = h('p', { class: 'erro', role: 'alert', hidden: true });
   const okLiga = h('p', { class: 'sucesso', role: 'status', hidden: true });
-  const inicio = h('input', { type: 'datetime-local', name: 'primeiraRodada', required: true, value: brasilia(new Date(Date.now() + 60 * 60 * 1000)) });
-  const intervalo = h('input', { type: 'number', name: 'intervalo', min: 1, max: 720, value: 7, required: true });
+  const inicio = h('input', { type: 'datetime-local', name: 'primeiraRodada', required: true });
+  const intervalo = h('input', { type: 'number', name: 'intervalo', min: 1, max: 720, required: true });
   const unidade = h('select', { name: 'unidade' },
-    h('option', { value: 'minutos' }, 'minutos'), h('option', { value: 'horas' }, 'horas'), h('option', { value: 'dias', selected: true }, 'dias'));
-  const confLiga = h('input', { name: 'confirmacao', autocomplete: 'off', placeholder: 'REINICIAR' });
-  const botaoLiga = h('button', { class: 'botao perigo', type: 'submit' }, 'Reiniciar liga');
+    h('option', { value: 'minutos' }, 'minutos'), h('option', { value: 'horas' }, 'horas'), h('option', { value: 'dias' }, 'dias'));
+  const confLiga = h('input', { name: 'confirmacao', autocomplete: 'off', autocapitalize: 'characters' });
+  const botaoLiga = h('button', { class: 'botao perigo', type: 'submit' }, 'Salvar e reiniciar liga');
+  const resumos = h('div', {});
+  const desenharResumos = () => resumos.replaceChildren(...s.ligas.map((x) => h('p', { class: 'aviso' }, resumoLiga(x))));
+  // O formulário mostra a agenda salva da temporada escolhida (sem liga marcada: daqui a 1 hora, a cada 7 dias).
+  const preencher = () => {
+    const x = s.ligas.find((l) => String(l.temporada) === qual.value) ?? s.ligas[0];
+    inicio.value = brasilia(x && x.marcada ? new Date(x.primeiraRodada) : new Date(Date.now() + 60 * 60 * 1000));
+    const min = x && x.marcada ? x.intervaloMinutos : 7 * 24 * 60;
+    const [v, u] = min % 1440 === 0 ? [min / 1440, 'dias'] : min % 60 === 0 ? [min / 60, 'horas'] : [min, 'minutos'];
+    intervalo.value = v;
+    unidade.value = u;
+  };
+  qual.addEventListener('change', () => { erroLiga.hidden = okLiga.hidden = true; preencher(); });
+  desenharResumos();
+  preencher();
   const formLiga = h('form', { class: 'form-cupom', onsubmit: async (e) => {
     e.preventDefault();
     erroLiga.hidden = okLiga.hidden = true;
-    if (confLiga.value.trim() !== 'REINICIAR') { erroLiga.textContent = 'Digite REINICIAR para confirmar.'; erroLiga.hidden = false; return; }
+    if (confLiga.value.trim().toUpperCase() !== 'REINICIAR') {
+      erroLiga.textContent = 'Para salvar, digite a palavra REINICIAR no campo de confirmação.';
+      erroLiga.hidden = false;
+      confLiga.focus();
+      return;
+    }
+    if (!inicio.value) { erroLiga.textContent = 'Escolha a data e a hora da primeira rodada.'; erroLiga.hidden = false; return; }
     botaoLiga.disabled = true;
     try {
-      const r = await api('POST', '/admin/testes/liga', { primeiraRodada: inicio.value, intervalo: Number(intervalo.value), unidade: unidade.value, temporada: Number(qual.value) });
-      okLiga.textContent = `Liga reiniciada: rodada 1 em ${dataBrasilia(r.primeiraRodada)}, depois a cada ${intervaloTexto(r.intervaloMinutos)}.`;
+      const r = await api('POST', '/admin/testes/liga', {
+        primeiraRodada: inicio.value.slice(0, 16), intervalo: Number(intervalo.value), unidade: unidade.value, temporada: Number(qual.value),
+      });
+      const i = s.ligas.findIndex((l) => l.temporada === r.temporada);
+      if (i >= 0) s.ligas[i] = { ...s.ligas[i], ...r };
+      desenharResumos();
+      preencher();
+      confLiga.value = '';
+      okLiga.textContent = `Salvo! ${s.ligas[i]?.nome ?? 'Liga'}: rodada 1 em ${dataBrasilia(r.primeiraRodada)}, depois uma a cada ${intervaloTexto(r.intervaloMinutos)}.` +
+        (r.rodadasDisputadas ? ` ${r.rodadasDisputadas} rodada(s) com data passada já foram disputadas.` : '');
       okLiga.hidden = false;
-      setTimeout(() => trocarAba('testes'), 1500);
     } catch (err) {
       if (err.status !== 401) { erroLiga.textContent = err.message; erroLiga.hidden = false; }
     } finally {
@@ -716,8 +743,8 @@ async function telaTestes(alvo) {
     }
   } },
     h('h3', {}, 'Liga'),
-    ...s.ligas.map((x) => h('p', { class: 'aviso' }, resumoLiga(x))),
-    h('p', { class: 'aviso' }, 'Marcar ou reiniciar apaga os resultados daquela temporada e recomeça na rodada 1, com resultados novos. ' +
+    resumos,
+    h('p', { class: 'aviso' }, 'Salvar apaga os resultados daquela temporada e recomeça na rodada 1, com resultados novos. ' +
       'Rodadas com data no passado são disputadas na hora. Horário de Brasília.'),
     h('div', { class: 'grade-campos' },
       h('label', {}, 'Temporada', qual),
@@ -725,7 +752,7 @@ async function telaTestes(alvo) {
       h('label', {}, 'Uma rodada a cada', intervalo),
       h('label', {}, 'Unidade', unidade),
     ),
-    h('label', {}, 'Para confirmar, digite REINICIAR', confLiga),
+    h('label', {}, 'Para confirmar, digite a palavra REINICIAR', confLiga),
     erroLiga, okLiga,
     h('div', {}, botaoLiga),
   );
@@ -735,12 +762,12 @@ async function telaTestes(alvo) {
   const blocoPerigo = (titulo, texto, palavra, rota, rotulo, resumir) => {
     const erro = h('p', { class: 'erro', role: 'alert', hidden: true });
     const ok = h('p', { class: 'sucesso', role: 'status', hidden: true });
-    const conf = h('input', { name: 'confirmacao-' + palavra, autocomplete: 'off', placeholder: palavra });
+    const conf = h('input', { name: 'confirmacao-' + palavra, autocomplete: 'off', autocapitalize: 'characters' });
     const botao = h('button', { class: 'botao perigo', type: 'submit' }, rotulo);
     return h('form', { class: 'form-cupom', onsubmit: async (e) => {
       e.preventDefault();
       erro.hidden = ok.hidden = true;
-      if (conf.value.trim() !== palavra) { erro.textContent = `Digite ${palavra} para confirmar.`; erro.hidden = false; return; }
+      if (conf.value.trim().toUpperCase() !== palavra) { erro.textContent = `Para confirmar, digite a palavra ${palavra}.`; erro.hidden = false; return; }
       botao.disabled = true;
       try {
         const r = await api('POST', rota, { confirmacao: palavra });
@@ -755,7 +782,7 @@ async function telaTestes(alvo) {
     } },
       h('h3', {}, titulo),
       h('p', { class: 'aviso' }, texto),
-      h('label', {}, `Para confirmar, digite ${palavra}`, conf),
+      h('label', {}, `Para confirmar, digite a palavra ${palavra}`, conf),
       erro, ok,
       h('div', {}, botao),
     );
