@@ -3,7 +3,8 @@
 apps/api/artes/escudo-SIGLA.<hash>.webp e registra no manifesto como "escudo-SIGLA".
 
 Uso, a partir da raiz (depois do preparar_artes.py, com os originais baixados):
-    python3 -I tools/artes/recortar_escudos.py PASTA_DOWNLOADS
+    python3 -I tools/artes/recortar_escudos.py PASTA_DOWNLOADS        # Temporada 1
+    python3 -I tools/artes/recortar_escudos.py PASTA_DOWNLOADS 2      # Temporada 2
 Precisa de opencv-python-headless, numpy e pillow.
 """
 import hashlib
@@ -18,7 +19,8 @@ from PIL import Image
 
 RAIZ = Path(__file__).resolve().parents[2]
 DESTINO = RAIZ / "apps/api/artes"
-SIGLAS = ["CAP", "DRA", "LEO", "POL", "SER", "TUB", "UNI", "VEN"]
+SIGLAS = {1: ["CAP", "DRA", "LEO", "POL", "SER", "TUB", "UNI", "VEN"],
+          2: ["BRB", "CAL", "FOR", "FUN", "FUR", "GAL", "REC", "TSU"]}
 LADO = 256
 
 
@@ -58,9 +60,11 @@ def recortar(img, mascara):
 
 def main():
     downloads = Path(sys.argv[1])
+    temporada = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    prefixo = "" if temporada == 1 else f"T{temporada}-"
     manifesto = json.loads((DESTINO / "manifest.json").read_text())
-    for sigla in SIGLAS:
-        img = cv2.imread(str(downloads / f"{sigla}-01.bin"))
+    for sigla in SIGLAS[temporada]:
+        img = cv2.imread(str(downloads / f"{prefixo}{sigla}-01.bin"))
         im = recortar(img, mascara_por_cor(img) if sigla == "VEN" else mascara_grabcut(img))
         buf = io.BytesIO()
         im.save(buf, "WEBP", quality=90, method=6)
@@ -71,7 +75,7 @@ def main():
         (DESTINO / nome).write_bytes(buf.getvalue())
         manifesto[f"escudo-{sigla}"] = nome
     (DESTINO / "manifest.json").write_text(json.dumps(dict(sorted(manifesto.items())), indent=1) + "\n")
-    print("8 escudos recortados")
+    print(f"{len(SIGLAS[temporada])} escudos recortados (temporada {temporada})")
 
 
 if __name__ == "__main__":

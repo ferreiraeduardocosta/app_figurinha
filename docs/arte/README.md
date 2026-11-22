@@ -1,6 +1,6 @@
 # Arte final das figurinhas
 
-**Status:** as 136 artes estão no app (geradas com IA a partir do briefing). Os links
+**Status:** T1 e T2 (Inter Classes) com as 136 artes cada no servidor; links em `Briefing_Arte_T1_com_links.xlsx` e `temporada2/Briefing_Arte_T2_com_links.xlsx`. As 136 artes da T1 estão no app (geradas com IA a partir do briefing). Os links
 do Google Drive ficam em [`Briefing_Arte_T1_com_links.xlsx`](Briefing_Arte_T1_com_links.xlsx).
 As imagens são servidas pela API em `/artes/` (WebP 512×512, nome com hash, em
 `apps/api/artes/`). Para trocar artes: atualize os links na planilha e rode

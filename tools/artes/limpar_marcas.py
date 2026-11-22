@@ -11,7 +11,13 @@ import cv2, numpy as np
 
 ANGULOS = [0, 15, -15, 30, -30, 45, -45]
 # Onde o entorno é liso ou irregular (cenas), o preenchimento suave do OpenCV fica melhor.
-SUAVE = {'LEN-02', 'LEN-06', 'LEO-04', 'LEO-13', 'TUB-15', 'POL-10', 'POL-11', 'POL-12', 'POL-14', 'MOM-05'}
+SUAVE = {'LEN-02', 'LEN-06', 'LEO-04', 'LEO-13', 'TUB-15', 'POL-10', 'POL-11', 'POL-12', 'POL-14', 'MOM-05',
+         'T2-LEN-01', 'T2-GAL-13', 'T2-TSU-06'}
+
+
+def suave(cod):
+    # Nas temporadas novas, escudos, cenários e momentos usam o preenchimento suave.
+    return cod in SUAVE or (cod.startswith('T') and (cod.endswith(('-01', '-02')) or '-MOM-' in cod))
 MARGEM = 4
 
 def amostra(img, xs, ys):
@@ -60,11 +66,11 @@ def limpar(img, cod, caixas):
         x1, y1, x2, y2 = [max(1, min(1022, v)) for v in (c[0] - folga, c[1] - folga, c[2] + folga, c[3] + folga)]
         anel = np.concatenate([img[max(0, y1 - 5):y1, x1:x2].reshape(-1, 3), img[y2:y2 + 5, x1:x2].reshape(-1, 3),
                                img[y1:y2, max(0, x1 - 5):x1].reshape(-1, 3), img[y1:y2, x2:x2 + 5].reshape(-1, 3)]).astype(np.float32)
-        if cod in SUAVE or float(anel.std(axis=0).mean()) < 14:
+        if suave(cod) or float(anel.std(axis=0).mean()) < 14:
             m = np.zeros(img.shape[:2], np.uint8); m[y1:y2, x1:x2] = 255
             img = cv2.inpaint(img, m, 9, cv2.INPAINT_TELEA)
         else:
             preencher(img, c, cod)
             cv2.rectangle(borda, (x1, y1), (x2 - 1, y2 - 1), 255, 3)
-    suave = cv2.GaussianBlur(img, (5, 5), 0)
-    return np.where(borda[..., None] > 0, suave, img)
+    desfocada = cv2.GaussianBlur(img, (5, 5), 0)
+    return np.where(borda[..., None] > 0, desfocada, img)
