@@ -1,0 +1,154 @@
+[
+  {
+    "sigla": "FUR",
+    "nome": "Furacão do 8º A",
+    "cidade": "Colégio Várzea Nova · 8º A",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#C62828",
+      "#FBC02D"
+    ],
+    "nomeCores": "vermelho e amarelo",
+    "estadio": "Sala 8A, a do ventilador quebrado",
+    "capacidade": 32,
+    "mascote": "Pião, pião de brinquedo",
+    "rival": "Tsunami do 8º B",
+    "classico": "Clássico do 8º Ano",
+    "lema": "Pequenos no tamanho, gigantes na zoeira!",
+    "identidade": "A turma mais nova do Inter Classes. Ninguém leva a sério até levar um gol no primeiro minuto.",
+    "tecnico": "Rogério Tavares"
+  },
+  {
+    "sigla": "TSU",
+    "nome": "Tsunami do 8º B",
+    "cidade": "Colégio Várzea Nova · 8º B",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#00ACC1",
+      "#FFFFFF"
+    ],
+    "nomeCores": "azul-turquesa e branco",
+    "estadio": "Biblioteca",
+    "capacidade": 40,
+    "mascote": "Marola, tartaruga-marinha",
+    "rival": "Furacão do 8º A",
+    "classico": "Clássico do 8º Ano",
+    "lema": "Chega devagar e leva tudo!",
+    "identidade": "Turma calma na sala e barulhenta na quadra. Fama de virar jogo no segundo tempo.",
+    "tecnico": "Sandra Melo"
+  },
+  {
+    "sigla": "BRB",
+    "nome": "Os Brabos do 9º A",
+    "cidade": "Colégio Várzea Nova · 9º A",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#212121",
+      "#F57C00"
+    ],
+    "nomeCores": "preto e laranja",
+    "estadio": "Quadra de areia",
+    "capacidade": 60,
+    "mascote": "Bodão, bode",
+    "rival": "Galáticos do 9º B",
+    "classico": "Clássico do 9º Ano",
+    "lema": "Aqui é raça, não é mimimi!",
+    "identidade": "Turma conhecida pela garra e pelas broncas da coordenação. Nunca perdeu uma dividida.",
+    "tecnico": "Carlos Pimenta"
+  },
+  {
+    "sigla": "GAL",
+    "nome": "Galáticos do 9º B",
+    "cidade": "Colégio Várzea Nova · 9º B",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#6A1B9A",
+      "#B0BEC5"
+    ],
+    "nomeCores": "roxo e prata",
+    "estadio": "Laboratório de Informática",
+    "capacidade": 30,
+    "mascote": "Zé Cometa, alienígena",
+    "rival": "Os Brabos do 9º A",
+    "classico": "Clássico do 9º Ano",
+    "lema": "Nosso futebol é de outro planeta.",
+    "identidade": "Turma dos gamers e dos crânios em exatas. Jogam como no videogame: muito passe e pouca corrida.",
+    "tecnico": "Juliana Kato"
+  },
+  {
+    "sigla": "CAL",
+    "nome": "Calouros FC do 1º A",
+    "cidade": "Colégio Várzea Nova · 1º A",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#C0CA33",
+      "#616161"
+    ],
+    "nomeCores": "verde-limão e cinza",
+    "estadio": "Cantina",
+    "capacidade": 80,
+    "mascote": "Pintado, pintinho",
+    "rival": "Unidos do Fundão do 1º B",
+    "classico": "Clássico dos Calouros",
+    "lema": "Primeiro ano, primeiro título!",
+    "identidade": "Recém-chegados ao ensino médio, querem provar que não são mais 'os pequenos'.",
+    "tecnico": "Anderson Lima"
+  },
+  {
+    "sigla": "FUN",
+    "nome": "Unidos do Fundão do 1º B",
+    "cidade": "Colégio Várzea Nova · 1º B",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#1A237E",
+      "#D32F2F"
+    ],
+    "nomeCores": "azul-marinho e vermelho",
+    "estadio": "Fundão da sala 15",
+    "capacidade": 12,
+    "mascote": "Lúcia, preguiça",
+    "rival": "Calouros FC do 1º A",
+    "classico": "Clássico dos Calouros",
+    "lema": "Do fundão para o pódio!",
+    "identidade": "A turma que senta no fundo da sala. Dormem na aula de química e acordam no apito do jogo.",
+    "tecnico": "Márcia Couto"
+  },
+  {
+    "sigla": "REC",
+    "nome": "Real Recreio do 2º A",
+    "cidade": "Colégio Várzea Nova · 2º A",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#F5F5F5",
+      "#FFB300"
+    ],
+    "nomeCores": "branco e dourado",
+    "estadio": "Pátio do recreio",
+    "capacidade": 300,
+    "mascote": "Dim-Dom, sino da escola",
+    "rival": "Formandos do 3º A",
+    "classico": "Clássico dos Veteranos",
+    "lema": "Nosso campeonato começa no sinal do recreio.",
+    "identidade": "Turma mais organizada do colégio: tem até uniforme de gala e torcida com bandeirão.",
+    "tecnico": "Eduardo Saldanha"
+  },
+  {
+    "sigla": "FOR",
+    "nome": "Formandos do 3º A",
+    "cidade": "Colégio Várzea Nova · 3º A",
+    "inspiracao": "Inter Classes",
+    "cores": [
+      "#263238",
+      "#26A69A"
+    ],
+    "nomeCores": "preto e verde-água",
+    "estadio": "Auditório",
+    "capacidade": 200,
+    "mascote": "Capelo, coruja",
+    "rival": "Real Recreio do 2º A",
+    "classico": "Clássico dos Veteranos",
+    "lema": "Último ano, última chance, último grito!",
+    "identidade": "A turma do último ano. Querem sair da escola com a taça e uma foto de formatura com ela.",
+    "tecnico": "Regina Alves"
+  }
+]

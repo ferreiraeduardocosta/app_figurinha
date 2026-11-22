@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, NotFoundException, Param } from '@nestjs/common';
+import { Controller, Get, Inject, NotFoundException, Param, Query } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { probabilidadesPublicas } from '../pacotes/economia';
 import { comImagem, imagemDa } from './artes';
@@ -9,8 +9,12 @@ export class CatalogoController {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   @Get('clubes')
-  async listarClubes() {
-    const clubes = await this.prisma.clube.findMany({ orderBy: { sigla: 'asc' } });
+  async listarClubes(@Query('todas') todas?: string) {
+    // ?todas=1 (painel): inclui clubes de temporadas ainda em montagem.
+    const temporadas = (
+      await this.prisma.temporada.findMany({ where: todas === '1' ? {} : { publicada: true }, select: { numero: true } })
+    ).map((t) => t.numero);
+    const clubes = await this.prisma.clube.findMany({ where: { temporada: { in: temporadas } }, orderBy: [{ temporada: 'asc' }, { sigla: 'asc' }] });
     // Escudo recortado (fundo transparente) para os ícones pequenos do app.
     return clubes.map((c) => ({ ...c, escudoImagem: imagemDa(`escudo-${c.sigla}`) }));
   }

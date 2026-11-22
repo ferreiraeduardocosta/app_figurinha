@@ -227,7 +227,7 @@ function RetratoProvisorio({ f, clube, largura, altura, k }: { f: DadosFigurinha
         numero={f.tipo === 'LENDA' ? '★' : f.camisa ? String(f.camisa) : ''}
         largura={largura}
         altura={altura}
-        barbaBranca={f.tipo === 'LENDA'}
+        barbaBranca={f.tipo === 'LENDA' && (f.temporada ?? 1) === 1}
       />
     );
   }

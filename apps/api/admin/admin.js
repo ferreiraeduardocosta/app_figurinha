@@ -236,7 +236,7 @@ async function telaResumo(alvo) {
 /* ---------- figurinhas ---------- */
 
 async function telaFigurinhas(alvo) {
-  const [figurinhas, clubes] = await Promise.all([api('GET', '/admin/figurinhas'), api('GET', '/clubes')]);
+  const [figurinhas, clubes] = await Promise.all([api('GET', '/admin/figurinhas'), api('GET', '/clubes?todas=1')]);
   estado.figurinhas = figurinhas;
   estado.clubes = clubes;
   const secoes = [...new Set(figurinhas.map((f) => f.secao))];
@@ -322,7 +322,7 @@ function abrirEditor(fig) {
         campo('Temporada', 'temporada', entrada(estado.filtros.temporada || '1', { type: 'number', min: 1, max: 99, required: true })),
         campo('Código', 'codigo', entrada('', { placeholder: 'ABC-16 (T2: T2-ABC-16)', maxlength: 10, required: true })),
         campo('Número no álbum', 'numero', entrada('', { type: 'number', min: 1, max: 9999, required: true })),
-        campo('Clube', 'clubeSigla', escolha('', estado.clubes.map((c) => [c.sigla, c.nome]))),
+        campo('Clube', 'clubeSigla', escolha('', estado.clubes.map((c) => [c.sigla, `${c.nome} (T${c.temporada ?? 1})`]))),
         campo('Seção do álbum', 'secao', entrada(estado.clubes[0] ? estado.clubes[0].nome : '', { maxlength: 60, required: true })),
       )
     : h('p', { class: 'aviso' }, `${v.codigo} · Temporada ${v.temporada} · nº ${v.numero} · ${v.secao}. ${v.donos} jogador(es) têm esta figurinha.`);

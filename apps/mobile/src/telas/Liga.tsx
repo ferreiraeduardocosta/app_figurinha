@@ -12,7 +12,7 @@ const dataHora = (iso: string) =>
 
 /** Craques da Várzea: craque da rodada, resultados, próxima rodada, tabela e artilharia. */
 export function Liga() {
-  const { porCodigo, clubes, album, temporada } = useJogo();
+  const { porCodigo, clubes, album, temporada, infoTemporada } = useJogo();
   const [liga, setLiga] = useState<PainelLiga | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [atualizando, setAtualizando] = useState(false);
@@ -54,7 +54,7 @@ export function Liga() {
       <SeletorTemporada />
       <View style={{ gap: 2, marginTop: 8 }}>
         <Text style={estilos.sobretitulo}>Temporada {liga.temporada}</Text>
-        <Text style={estilos.titulo}>Craques da Várzea</Text>
+        <Text style={estilos.titulo}>{temporada === 1 ? 'Craques da Várzea' : (infoTemporada?.nome ?? 'Craques da Várzea')}</Text>
         <Text style={estilos.legenda}>
           {liga.marcada === false
             ? 'A liga desta temporada ainda não tem data marcada. O álbum já está valendo!'

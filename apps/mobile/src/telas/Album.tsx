@@ -78,7 +78,7 @@ export function Album({ secaoInicial }: { secaoInicial?: string }) {
               {clube ? (
                 <Escudo sigla={clube.sigla} tamanho={30} />
               ) : (
-                <Text style={[estilos.abaTexto, ativa && { color: '#FFFFFF' }]}>{s === 'Lendas da Liga' ? 'Lendas' : 'Momentos'}</Text>
+                <Text style={[estilos.abaTexto, ativa && { color: '#FFFFFF' }]}>{s.startsWith('Lendas') ? 'Lendas' : 'Momentos'}</Text>
               )}
             </Pressable>
           );

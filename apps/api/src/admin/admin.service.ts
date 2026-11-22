@@ -134,6 +134,13 @@ export class AdminService {
       throw new UnprocessableEntityException({ codigo: 'TEMPORADA_INEXISTENTE', campo: 'temporada', mensagem: `Temporada ${campos.temporada} não existe.` });
     }
     const clube = await this.prisma.clube.findUnique({ where: { sigla: campos.clubeSigla } });
+    if (clube && clube.temporada !== campos.temporada) {
+      throw new UnprocessableEntityException({
+        codigo: 'CLUBE_DE_OUTRA_TEMPORADA',
+        campo: 'clubeSigla',
+        mensagem: `O clube ${campos.clubeSigla} é da Temporada ${clube.temporada}.`,
+      });
+    }
     if (!clube) {
       throw new UnprocessableEntityException({ codigo: 'CLUBE_INEXISTENTE', campo: 'clubeSigla', mensagem: `Clube ${campos.clubeSigla} não existe.` });
     }

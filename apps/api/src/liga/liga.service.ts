@@ -136,7 +136,7 @@ export class LigaService {
       async (tx) => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_LIGA})`;
         if ((await tx.partida.count({ where: { temporada } })) === 0) {
-          const siglas = (await tx.clube.findMany({ select: { sigla: true }, orderBy: { sigla: 'asc' } })).map((c) => c.sigla);
+          const siglas = (await tx.clube.findMany({ where: { temporada }, select: { sigla: true }, orderBy: { sigla: 'asc' } })).map((c) => c.sigla);
           await tx.partida.createMany({
             data: gerarCalendario(siglas).map((p) => ({ temporada, ...p, dataPrevista: this.dataDaRodada(p.rodada, temporada) })),
           });
@@ -172,7 +172,7 @@ export class LigaService {
     await this.atualizar(agora, temporada);
     const [partidas, clubes, jogadores] = await Promise.all([
       this.prisma.partida.findMany({ where: { temporada }, orderBy: [{ rodada: 'asc' }, { mandante: 'asc' }] }),
-      this.prisma.clube.findMany({ select: { sigla: true, nome: true }, orderBy: { sigla: 'asc' } }),
+      this.prisma.clube.findMany({ where: { temporada }, select: { sigla: true, nome: true }, orderBy: { sigla: 'asc' } }),
       this.prisma.figurinha.findMany({
         where: { tipo: 'JOGADOR', temporada },
         select: { codigo: true, nome: true, apelido: true, clubeSigla: true, ataque: true },

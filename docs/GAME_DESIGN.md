@@ -268,6 +268,30 @@ O álbum é organizado em temporadas. A Temporada 1 é a atual; a estrutura já 
 4. **Publicar** na aba Temporadas (só publica com figurinhas de todas as raridades).
 5. Marcar a liga da temporada na aba **Testes** (data da primeira rodada e intervalo).
 
+### Temporada 2 — Inter Classes (fichas prontas, escondida)
+
+Campeonato entre turmas do **Colégio Várzea Nova**: 8 turmas do 8º ano ao 3º ano, alunos de 13 a 18
+anos, meninos e meninas misturados, nomes contemporâneos e apelidos de escola.
+
+| Sigla | Turma | Série | QG | Mascote | Professor(a) |
+|---|---|---|---|---|---|
+| FUR | Furacão do 8º A | 8º A | Sala 8A, a do ventilador quebrado | Pião | Prof. Rogerinho (Ed. Física) |
+| TSU | Tsunami do 8º B | 8º B | Biblioteca | Marola, a tartaruga | Profª Sandrinha (Geografia) |
+| BRB | Os Brabos do 9º A | 9º A | Quadra de areia | Bodão, o bode | Prof. Pimenta (Matemática) |
+| GAL | Galáticos do 9º B | 9º B | Laboratório de Informática | Zé Cometa, o ET | Profª Ju (Ciências) |
+| CAL | Calouros FC do 1º A | 1º A | Cantina | Pintado, o pintinho | Prof. Andinho (História) |
+| FUN | Unidos do Fundão do 1º B | 1º B | Fundão da sala 15 | Lúcia, a preguiça | Profª Márcia (Química) |
+| REC | Real Recreio do 2º A | 2º A | Pátio do recreio | Dim-Dom, o sino | Prof. Edu (Português) |
+| FOR | Formandos do 3º A | 3º A | Auditório | Capelo, a coruja | Dona Regi (Biologia) |
+
+- Mesmo formato da T1: 136 figurinhas (escudo, QG no lugar do estádio, professor(a), 11 alunos e
+  mascote por turma; 8 lendas ex-alunas "na foto da época"; 8 grandes momentos). Mesma distribuição
+  de raridades da T1. Códigos `T2-FUR-04`, `T2-LEN-01`...
+- Fonte: `tools/planilhas/temporada2/dados_t2.py` → `gerar_t2.py` gera `data/temporada2/` e
+  `docs/planilhas/Inter_Classes_Fichas_T2.xlsx`. Briefing de arte: `docs/arte/temporada2/`.
+- Liberada para quem completar o álbum da T1. Entra **escondida**: publicar no painel quando as
+  artes estiverem prontas, e marcar a liga na aba Testes.
+
 ### Outras ideias
 
 1. Rodadas simuladas semanais com placares e artilheiros.

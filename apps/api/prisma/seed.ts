@@ -53,6 +53,7 @@ async function main() {
           mascote: c.mascote,
           lema: c.lema,
           identidade: c.identidade,
+          temporada: t.numero,
         };
         await prisma.clube.upsert({ where: { sigla: c.sigla }, create: { sigla: c.sigla, ...dados }, update: dados });
       }

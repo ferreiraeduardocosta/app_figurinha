@@ -1,6 +1,6 @@
 import { type ReactElement, useState } from 'react';
 import { Image } from 'react-native';
-import Svg, { Circle, ClipPath, Defs, G, Path, Polygon, Rect } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { API_URL } from '../api';
 import { useJogo } from '../jogo';
 
@@ -23,9 +23,21 @@ export function Escudo({ sigla, tamanho }: { sigla: string; tamanho: number }) {
       />
     );
   }
+  const clube = clubes[sigla];
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 100 100" accessibilityLabel={`Escudo ${sigla}`}>
-      {DESENHOS[sigla] ?? <Circle cx="50" cy="50" r="46" fill="#D5D9E0" />}
+      {DESENHOS[sigla] ??
+        (clube ? (
+          // Sem arte nem desenho próprio (ex.: turmas novas): círculo nas cores do time com a sigla.
+          <G>
+            <Circle cx="50" cy="50" r="46" fill={clube.corPrimaria} stroke={clube.corSecundaria} strokeWidth={6} />
+            <SvgText x="50" y="60" fill={clube.corSecundaria} fontSize="28" fontWeight="800" textAnchor="middle">
+              {sigla}
+            </SvgText>
+          </G>
+        ) : (
+          <Circle cx="50" cy="50" r="46" fill="#D5D9E0" />
+        ))}
     </Svg>
   );
 }

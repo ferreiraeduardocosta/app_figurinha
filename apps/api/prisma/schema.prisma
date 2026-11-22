@@ -84,7 +84,11 @@ model Clube {
   mascote       String
   lema          String
   identidade    String
+  /// Temporada em que o clube (ou turma) joga a liga.
+  temporada     Int         @default(1)
   figurinhas    Figurinha[]
+
+  @@index([temporada])
 }
 
 model Figurinha {
