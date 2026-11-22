@@ -83,14 +83,15 @@ describe.skipIf(!temBanco)('Painel de administração', () => {
   it('mostra o resumo e a conferência do sorteio', async () => {
     const r = await chamar('GET', '/admin/resumo', tokenAdmin);
     expect(r.status).toBe(200);
-    expect(r.corpo.figurinhasNoCatalogo).toBe(136);
+    expect(r.corpo.figurinhasNoCatalogo).toBe(await prisma.figurinha.count());
     expect(r.corpo.sorteio.porRaridade.map((x: { raridade: string }) => x.raridade)).toEqual(['COMUM', 'RARA', 'EPICA', 'LENDARIA']);
     expect(r.corpo.sorteio.porRaridade[3].esperado).toBe(0.03);
   });
 
   it('lista as figurinhas com o número de donos', async () => {
     const r = await chamar('GET', '/admin/figurinhas', tokenAdmin);
-    expect(r.corpo).toHaveLength(136);
+    expect(r.corpo).toHaveLength(await prisma.figurinha.count());
+    expect(r.corpo.filter((f: { temporada: number }) => f.temporada === 1)).toHaveLength(136);
     expect(r.corpo[0]).toMatchObject({ codigo: 'TUB-01', donos: expect.any(Number) });
   });
 

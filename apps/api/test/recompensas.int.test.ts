@@ -23,7 +23,7 @@ describe.skipIf(!temBanco)('Recompensas', () => {
   beforeAll(async () => {
     await prisma.$connect();
     await servico.onModuleInit();
-    catalogo = await prisma.figurinha.findMany({ select: { codigo: true, secao: true, raridade: true }, orderBy: { numero: 'asc' } });
+    catalogo = await prisma.figurinha.findMany({ where: { temporada: 1 }, select: { codigo: true, secao: true, raridade: true }, orderBy: { numero: 'asc' } });
   });
 
   afterAll(async () => {

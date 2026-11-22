@@ -33,6 +33,7 @@ export async function entregarRecompensas(tx: Prisma.TransactionClient, usuarioI
            COUNT(*) AS total,
            COUNT(i."figurinhaCodigo") FILTER (WHERE i."quantidade" > 0) AS coladas
     FROM "Figurinha" f
+    JOIN "Temporada" t ON t."numero" = f."temporada" AND t."publicada"
     LEFT JOIN "ItemAlbum" i ON i."figurinhaCodigo" = f."codigo" AND i."usuarioId" = ${usuarioId}
     GROUP BY f."temporada", f."secao"`;
 

@@ -134,7 +134,7 @@ describe.skipIf(!temBanco)('Temporadas', () => {
     // O da T1 continua disponível no mesmo dia (sem corpo = T1, como no app antigo).
     const t1 = await chamar('POST', '/pacotes/diario', c.ana.token);
     expect(t1.status).toBe(200);
-    expect(t1.corpo.figurinhas.every((f: { codigo: string }) => !f.codigo.startsWith('T'))).toBe(true);
+    expect(t1.corpo.figurinhas.every((f: { codigo: string }) => !/^T\d+-/.test(f.codigo))).toBe(true);
 
     const eu = (await chamar('GET', '/eu', c.ana.token)).corpo;
     expect(eu.temporadas[0].pacoteDiario.disponivel).toBe(false);
