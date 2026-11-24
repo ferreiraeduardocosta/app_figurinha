@@ -215,7 +215,8 @@ export class BafoService {
   // ---------------------------------------------------------------------------
 
   /** Tira as figurinhas do álbum para o monte. Só repetidas: a última cópia nunca entra. */
-  private async reservar(tx: Tx, usuarioId: string, codigos: string[]) {
+  /** Tira as figurinhas do álbum para o monte (só repetidas). Usado também pela rodinha. */
+  async reservar(tx: Tx, usuarioId: string, codigos: string[]) {
     this.validarQuantidade(codigos);
     const precisa = contar(codigos);
     const itens = await tx.itemAlbum.findMany({ where: { usuarioId, figurinhaCodigo: { in: Object.keys(precisa) } } });
@@ -306,7 +307,7 @@ export class BafoService {
   }
 
   /** Todas as figurinhas do monte são da mesma temporada, liberada para quem joga. */
-  private async temporadaDoMonte(tx: Tx, jogadores: string[], codigos: string[]) {
+  async temporadaDoMonte(tx: Tx, jogadores: string[], codigos: string[]) {
     const temporadas = new Set(codigos.map((c) => this.pacotes.temporadaDaFigurinha(c)));
     if (temporadas.has(undefined)) {
       throw new UnprocessableEntityException({ codigo: 'FIGURINHA_INEXISTENTE', mensagem: 'Figurinha inexistente no monte.' });
@@ -447,7 +448,7 @@ async function finalizar(
 }
 
 /** Devolve/entrega figurinhas, entrega recompensas de página e conta as novas para as missões. */
-async function creditar(tx: Tx, usuarioId: string, codigos: string[], agora: Date) {
+export async function creditar(tx: Tx, usuarioId: string, codigos: string[], agora: Date) {
   if (codigos.length === 0) return { recompensas: [] as RecompensaNova[], novas: [] as string[] };
   const novas: string[] = [];
   for (const [codigo, n] of Object.entries(contar(codigos))) {

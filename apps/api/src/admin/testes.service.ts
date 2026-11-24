@@ -155,7 +155,7 @@ export class TestesService {
         recompensas: (await tx.recompensa.deleteMany({})).count,
         missoes: (await tx.missaoDia.deleteMany({})).count,
         trocas: (await tx.troca.deleteMany({})).count,
-        bafos: (await tx.bafo.deleteMany({})).count,
+        bafos: (await tx.bafo.deleteMany({})).count + (await tx.rodaBafo.deleteMany({})).count,
         cuponsResgatados: (await tx.cupomResgate.deleteMany({})).count,
         pacotesDiarios: (await tx.pacoteDiario.deleteMany({})).count,
         comprasDeTeste: (await tx.compra.deleteMany({ where: { loja: 'TESTE' } })).count,

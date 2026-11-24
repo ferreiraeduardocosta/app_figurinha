@@ -142,3 +142,54 @@ describe('ordem do bafo', () => {
     expect(e.batidas.map((b) => b.lado)).toEqual(ORDEM_BAFO.slice(0, e.batidas.length));
   });
 });
+
+describe('rodinha', () => {
+  it('ordem em cobrinha e 3 batidas para cada um', async () => {
+    const { ordemRoda, montarRoda, bater: b, resultadoBafo: res } = await import('../src');
+    expect(ordemRoda(['A', 'B', 'C'])).toEqual(['A', 'B', 'C', 'C', 'B', 'A', 'A', 'B', 'C']);
+    expect(ordemRoda(['A', 'B'])).toEqual(['A', 'B', 'B', 'A', 'A', 'B']);
+    for (let s = 0; s < 200; s++) {
+      const rng = rngComSemente(s);
+      let e = montarRoda([['a1', 'a2'], ['b1', 'b2'], ['c1', 'c2'], ['d1', 'd2']], rng);
+      expect(e.monte).toHaveLength(8);
+      while (!e.terminou) e = b(e, e.vez, 0.3, rng);
+      const porLado: Record<string, number> = {};
+      e.batidas.forEach((x) => (porLado[x.lado] = (porLado[x.lado] ?? 0) + 1));
+      expect(Object.values(porLado).every((n) => n <= 3)).toBe(true);
+      const r = res(e);
+      expect(Object.keys(r).sort()).toEqual(['A', 'B', 'C', 'D']);
+      expect(Object.values(r).flatMap((x) => x.recebe).sort()).toEqual(e.monte.map((c) => c.codigo).sort());
+    }
+  });
+
+  it('exige de 2 a 6 jogadores e a mesma quantidade', async () => {
+    const { montarRoda } = await import('../src');
+    const rng = rngComSemente(1);
+    expect(codigoErro(() => montarRoda([['a']], rng))).toBe('BAFO_INVALIDO');
+    expect(codigoErro(() => montarRoda(Array.from({ length: 7 }, () => ['x']), rng))).toBe('BAFO_INVALIDO');
+    expect(codigoErro(() => montarRoda([['a'], ['b', 'c'], ['d']], rng))).toBe('BAFO_INVALIDO');
+  });
+
+  it('pular a vez conta como batida sem virar nada', async () => {
+    const { montarRoda, pularVez } = await import('../src');
+    const e = montarRoda([['a'], ['b'], ['c']], rngComSemente(3));
+    const p = pularVez(e);
+    expect(p.batidas).toHaveLength(1);
+    expect(p.batidas[0]).toMatchObject({ lado: 'A', viradas: [] });
+    expect(p.vez).toBe('B');
+  });
+
+  it('na rodinha ninguém leva vantagem grande por começar', async () => {
+    const { montarRoda, bater: b, resultadoBafo: res } = await import('../src');
+    const saldo: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+    const N = 4000;
+    for (let s = 0; s < N; s++) {
+      const rng = rngComSemente(s + 900);
+      let e = montarRoda([['a1', 'a2'], ['b1', 'b2'], ['c1', 'c2'], ['d1', 'd2']], rng);
+      while (!e.terminou) e = b(e, e.vez, 0.6, rng);
+      const r = res(e);
+      for (const l of Object.keys(saldo)) saldo[l] += r[l].recebe.length - 2;
+    }
+    for (const l of Object.keys(saldo)) expect(Math.abs(saldo[l] / N)).toBeLessThan(0.25);
+  });
+});

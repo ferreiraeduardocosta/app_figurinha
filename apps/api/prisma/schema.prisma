@@ -178,6 +178,8 @@ model Usuario {
   trocasRecebidas    Troca[]             @relation("TrocaRecebida")
   bafosDesafiados    Bafo[]              @relation("BafoDesafiante")
   bafosRecebidos     Bafo[]              @relation("BafoAdversario")
+  rodaBafos          RodaBafo[]
+  rodaParticipantes  RodaParticipante[]
 }
 
 /// Sessão de login. Guardamos só o hash SHA-256 do token; o token em si fica no aparelho.
@@ -432,4 +434,48 @@ model ConfiguracaoLiga {
   intervaloMinutos Int
   versao           Int      @default(0)
   atualizadoEm     DateTime @updatedAt
+}
+
+enum StatusParticipante {
+  CONVIDADO
+  DENTRO
+  RECUSOU
+}
+
+/// Rodinha de bafo: de 3 a 6 amigos no mesmo monte, batendo em rodízio.
+/// Usa os mesmos status do bafo 1 contra 1 (CONVITE até começar, depois JOGANDO).
+model RodaBafo {
+  id            String             @id @default(uuid())
+  anfitriao     Usuario            @relation(fields: [anfitriaoId], references: [id], onDelete: Cascade)
+  anfitriaoId   String
+  status        StatusBafo
+  /// Figurinhas de cada jogador no monte (1 a 3).
+  quantidade    Int
+  temporada     Int
+  /// EstadoBafo das regras (monte, vez, batidas, ordem). Nulo até começar.
+  estado        Json?
+  dia           String?
+  criadoEm      DateTime           @default(now())
+  atualizadoEm  DateTime           @updatedAt
+  /// Prazo do convite ou da vez atual.
+  expiraEm      DateTime
+  participantes RodaParticipante[]
+
+  @@index([status, expiraEm])
+}
+
+/// Quem está na rodinha. As figurinhas ficam reservadas (fora do álbum) enquanto dura.
+model RodaParticipante {
+  roda      RodaBafo           @relation(fields: [rodaId], references: [id], onDelete: Cascade)
+  rodaId    String
+  usuario   Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId String
+  status    StatusParticipante
+  /// Lado no monte ('A' a 'F'), definido quando a rodinha começa.
+  lado      String?
+  cartas    Json?
+  entrouEm  DateTime?
+
+  @@id([rodaId, usuarioId])
+  @@index([usuarioId, status])
 }

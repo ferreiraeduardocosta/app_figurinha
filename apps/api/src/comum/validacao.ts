@@ -97,3 +97,13 @@ export function temporada(corpo: unknown): number {
   if (typeof v !== 'number' || !Number.isInteger(v) || v < 1 || v > 99) invalido('temporada', 'Temporada inválida.');
   return v;
 }
+
+/** Amigos convidados para uma rodinha de bafo: lista de ids. */
+export function convidados(corpo: Record<string, unknown>): string[] {
+  const v = corpo.convidados;
+  if (!Array.isArray(v) || v.length < 1 || v.length > 10) invalido('convidados', 'Escolha os amigos da rodinha.');
+  return v.map((x: unknown) => {
+    if (typeof x !== 'string' || !/^[0-9a-f-]{36}$/i.test(x)) invalido('convidados', 'Amigo inválido.');
+    return x;
+  });
+}

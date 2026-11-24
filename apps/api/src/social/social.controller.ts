@@ -4,6 +4,7 @@ import { UsuarioAutenticado } from '../auth/auth.service';
 import * as v from '../comum/validacao';
 import { AmigosService } from './amigos.service';
 import { BafoService } from './bafo.service';
+import { RodaService } from './roda.service';
 import { RankingService } from './ranking.service';
 import { TrocasService } from './trocas.service';
 
@@ -18,6 +19,7 @@ export class SocialController {
     @Inject(TrocasService) private readonly trocas: TrocasService,
     @Inject(RankingService) private readonly rankingService: RankingService,
     @Inject(BafoService) private readonly bafo: BafoService,
+    @Inject(RodaService) private readonly rodas: RodaService,
   ) {}
 
   /** Ranking de colecionadores: ?escopo=geral (padrão) ou amigos. */
@@ -92,6 +94,54 @@ export class SocialController {
   @Get('bafo')
   listarBafo(@UsuarioAtual() u: UsuarioAutenticado) {
     return this.bafo.listar(u.id);
+  }
+
+  // ---------------- Rodinha de bafo ----------------
+
+  @Get('bafo/rodas')
+  listarRodas(@UsuarioAtual() u: UsuarioAutenticado) {
+    return this.rodas.listar(u.id);
+  }
+
+  @Get('bafo/rodas/:id')
+  verRoda(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.rodas.ver(u.id, id);
+  }
+
+  @Post('bafo/rodas')
+  criarRoda(@UsuarioAtual() u: UsuarioAutenticado, @Body() corpo: unknown) {
+    const c = v.objeto(corpo);
+    return this.rodas.criar(u.id, v.convidados(c), v.figurinhasBafo(c));
+  }
+
+  @Post('bafo/rodas/:id/entrar')
+  @HttpCode(200)
+  entrarRoda(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string, @Body() corpo: unknown) {
+    return this.rodas.entrar(u.id, id, v.figurinhasBafo(v.objeto(corpo)));
+  }
+
+  @Post('bafo/rodas/:id/recusar')
+  @HttpCode(200)
+  recusarRoda(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.rodas.recusar(u.id, id);
+  }
+
+  @Post('bafo/rodas/:id/comecar')
+  @HttpCode(200)
+  comecarRoda(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.rodas.comecar(u.id, id);
+  }
+
+  @Post('bafo/rodas/:id/cancelar')
+  @HttpCode(200)
+  cancelarRoda(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string) {
+    return this.rodas.cancelar(u.id, id);
+  }
+
+  @Post('bafo/rodas/:id/bater')
+  @HttpCode(200)
+  baterRoda(@UsuarioAtual() u: UsuarioAutenticado, @Param('id', uuid) id: string, @Body() corpo: unknown) {
+    return this.rodas.bater(u.id, id, v.precisao(v.objeto(corpo)));
   }
 
   @Get('bafo/:id')

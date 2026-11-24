@@ -8,7 +8,9 @@ import { Rng } from './tipos';
  * quem bateu. Cada lado bate 3 vezes (ordem A B B A A B); o que sobrar volta para o dono.
  */
 
-export type LadoBafo = 'A' | 'B';
+/** Lado de cada jogador no monte: 'A' e 'B' no 1 contra 1; de 'A' a 'F' na rodinha. */
+export type LadoBafo = string;
+export const LADOS_RODA = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
 
 export interface CartaBafo {
   codigo: string;
@@ -31,6 +33,13 @@ export interface EstadoBafo {
   vez: LadoBafo;
   batidas: BatidaBafo[];
   terminou: boolean;
+  /** Ordem das batidas (rodinha). Sem ela, vale ORDEM_BAFO (1 contra 1). */
+  ordem?: LadoBafo[];
+  /**
+   * Multiplicador da chance de virar (rodinha). Com mais gente o monte é maior e quem
+   * bate primeiro levaria quase tudo; a chance menor espalha as cartas entre as batidas.
+   */
+  fatorChance?: number;
 }
 
 export const BAFO = {
@@ -50,6 +59,9 @@ export const BAFO = {
   minimoOuro: 2,
   /** Partidas por dia contra o computador. Entre amigos não há limite. */
   partidasPorDiaComputador: 10,
+  /** Rodinha: de 3 a 6 jogadores. */
+  minRoda: 3,
+  maxRoda: 6,
 } as const;
 
 /**
@@ -57,6 +69,38 @@ export const BAFO = {
  * alternar assim tira quase toda a vantagem de quem começa.
  */
 export const ORDEM_BAFO: readonly LadoBafo[] = ['A', 'B', 'B', 'A', 'A', 'B'];
+
+/**
+ * Ordem "em cobrinha" de uma rodinha: A B C, C B A, A B C (3 batidas cada).
+ * Com 2 jogadores é a própria ORDEM_BAFO.
+ */
+export function ordemRoda(lados: readonly LadoBafo[]): LadoBafo[] {
+  const ida = [...lados];
+  const volta = [...lados].reverse();
+  return [...ida, ...volta, ...ida];
+}
+
+/** Monta o monte de uma rodinha: cada mão é a lista de figurinhas de um jogador (mesma quantidade). */
+export function montarRoda(maos: readonly (readonly string[])[], rng: Rng): EstadoBafo {
+  if (maos.length < 2 || maos.length > BAFO.maxRoda) {
+    throw new ErroRegra('BAFO_INVALIDO', `A rodinha tem de 2 a ${BAFO.maxRoda} jogadores.`);
+  }
+  const n = maos[0].length;
+  if (n < 1 || n > BAFO.maxCartasPorLado || maos.some((m) => m.length !== n)) {
+    throw new ErroRegra('BAFO_INVALIDO', `Todos põem a mesma quantidade de figurinhas (de 1 a ${BAFO.maxCartasPorLado}).`);
+  }
+  const lados = LADOS_RODA.slice(0, maos.length);
+  const monte: CartaBafo[] = maos.flatMap((m, i) => m.map((codigo) => ({ codigo, dono: lados[i], virou: null })));
+  for (let i = monte.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [monte[i], monte[j]] = [monte[j], monte[i]];
+  }
+  const ordem = ordemRoda(lados);
+  return { monte, vez: ordem[0], batidas: [], terminou: false, ordem, fatorChance: FATOR_RODA[maos.length] ?? 1 };
+}
+
+/** Multiplicador da chance por tamanho da rodinha (calibrado por simulação). */
+export const FATOR_RODA: Record<number, number> = { 2: 1, 3: 0.55, 4: 0.4, 5: 0.32, 6: 0.27 };
 
 export function chanceDeVirar(precisao: number): number {
   return BAFO.chanceBase + BAFO.chanceBonus * limitarPrecisao(precisao);
@@ -94,7 +138,7 @@ export function bater(estado: EstadoBafo, lado: LadoBafo, precisao: number, rng:
   if (estado.vez !== lado) throw new ErroRegra('BAFO_INVALIDO', 'Não é a sua vez.');
   const p = limitarPrecisao(precisao);
   const especial = p >= BAFO.ouro || (p >= BAFO.verde && rng() < BAFO.sorteOuro);
-  const chance = Math.min(0.95, chanceDeVirar(p) * (especial ? BAFO.multiplicadorOuro : 1));
+  const chance = Math.min(0.95, chanceDeVirar(p) * (especial ? BAFO.multiplicadorOuro : 1) * (estado.fatorChance ?? 1));
   const monte = estado.monte.map((c) => ({ ...c }));
   const paraBaixo = monte.map((c, i) => (c.virou ? -1 : i)).filter((i) => i >= 0);
   const viradas: number[] = [];
@@ -110,13 +154,29 @@ export function bater(estado: EstadoBafo, lado: LadoBafo, precisao: number, rng:
   for (const i of viradas) monte[i].virou = lado;
 
   const batidas = [...estado.batidas, { lado, precisao: p, viradas, ...(especial ? { especial: true } : {}) }];
-  const acabaramAsBatidas = batidas.length >= ORDEM_BAFO.length;
+  const ordem = estado.ordem ?? ORDEM_BAFO;
+  const acabaramAsBatidas = batidas.length >= ordem.length;
   const acabouOMonte = monte.every((c) => c.virou);
   return {
+    ...(estado.ordem ? { ordem: estado.ordem } : {}),
+    ...(estado.fatorChance ? { fatorChance: estado.fatorChance } : {}),
     monte,
     batidas,
-    vez: ORDEM_BAFO[batidas.length] ?? 'A',
+    vez: ordem[batidas.length] ?? ordem[0],
     terminou: acabaramAsBatidas || acabouOMonte,
+  };
+}
+
+/** Pula a vez de um jogador (saiu da rodinha ou deixou o prazo passar): conta como batida sem virar nada. */
+export function pularVez(estado: EstadoBafo): EstadoBafo {
+  if (estado.terminou) return estado;
+  const ordem = estado.ordem ?? ORDEM_BAFO;
+  const batidas = [...estado.batidas, { lado: estado.vez, precisao: 0, viradas: [] }];
+  return {
+    ...estado,
+    batidas,
+    vez: ordem[batidas.length] ?? ordem[0],
+    terminou: batidas.length >= ordem.length || estado.monte.every((c) => c.virou),
   };
 }
 
@@ -125,15 +185,14 @@ export function bater(estado: EstadoBafo, lado: LadoBafo, precisao: number, rng:
  * que ninguém virou (voltam para o dono).
  */
 export function resultadoBafo(estado: EstadoBafo): Record<LadoBafo, { ganhou: string[]; devolvidas: string[]; recebe: string[] }> {
-  const r = {
-    A: { ganhou: [] as string[], devolvidas: [] as string[], recebe: [] as string[] },
-    B: { ganhou: [] as string[], devolvidas: [] as string[], recebe: [] as string[] },
-  };
+  const lados = new Set<LadoBafo>(['A', 'B', ...estado.monte.map((c) => c.dono)]);
+  const r: Record<LadoBafo, { ganhou: string[]; devolvidas: string[]; recebe: string[] }> = {};
+  for (const l of lados) r[l] = { ganhou: [], devolvidas: [], recebe: [] };
   for (const c of estado.monte) {
     if (c.virou) r[c.virou].ganhou.push(c.codigo);
     else r[c.dono].devolvidas.push(c.codigo);
   }
-  for (const lado of ['A', 'B'] as const) r[lado].recebe = [...r[lado].ganhou, ...r[lado].devolvidas];
+  for (const l of lados) r[l].recebe = [...r[l].ganhou, ...r[l].devolvidas];
   return r;
 }
 

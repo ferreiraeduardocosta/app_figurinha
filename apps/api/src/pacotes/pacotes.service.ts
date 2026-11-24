@@ -218,7 +218,19 @@ export class PacotesService implements OnModuleInit {
                 ))
               )`
           )[0]?.n ?? 0,
-        ),
+        ) +
+          // Rodinhas: convite para responder ou minha vez de bater.
+          Number(
+            (
+              await this.prisma.$queryRaw<{ n: bigint }[]>`
+                SELECT COUNT(*) AS n FROM "RodaBafo" r
+                JOIN "RodaParticipante" p ON p."rodaId" = r."id" AND p."usuarioId" = ${usuarioId}
+                WHERE r."expiraEm" > ${agora} AND (
+                  (r."status" = 'CONVITE' AND p."status" = 'CONVIDADO')
+                  OR (r."status" = 'JOGANDO' AND p."status" = 'DENTRO' AND r."estado"->>'vez' = p."lado")
+                )`
+            )[0]?.n ?? 0,
+          ),
       },
     };
   }
