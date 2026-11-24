@@ -53,7 +53,7 @@ export function Inicio({
   const { coladas, total } = infoTemporada?.album ?? perfil.album;
   const pacoteDiario = infoTemporada?.pacoteDiario ?? perfil.pacoteDiario;
   const variasTemporadas = (perfil.temporadas?.length ?? 1) > 1;
-  const nomeTemporada = infoTemporada?.nome ?? 'Temporada 1';
+  const nomeTemporada = infoTemporada?.nome ?? 'Várzea';
   const pct = total ? coladas / total : 0;
   const campeao = perfil.recompensas.some((r) => r.tipo === 'ALBUM');
   // Página da T1: chave = nome da seção; das outras: "T2:Seção".
@@ -194,7 +194,7 @@ export function Inicio({
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[estilos.rotulo, { color: '#FBBF24' }]}>Exclusivo</Text>
             <Text style={estilos.trofeuTitulo}>Troféu Craques da Várzea</Text>
-            <Text style={{ color: '#D1D5DB', fontSize: 14 }}>Álbum da Temporada 1 completo.</Text>
+            <Text style={{ color: '#D1D5DB', fontSize: 14 }}>Álbum da Várzea completo.</Text>
           </View>
         </View>
       )}

@@ -118,7 +118,7 @@ describe.skipIf(!temBanco)('Temporadas', () => {
     const r = await chamar('POST', '/pacotes/diario', c.ana.token, { temporada: T2 });
     expect(r.status).toBe(403);
     expect(r.corpo.codigo).toBe('TEMPORADA_BLOQUEADA');
-    expect(r.corpo.mensagem).toContain('Temporada 1');
+    expect(r.corpo.mensagem).toContain('Complete o álbum da Várzea');
   });
 
   it('com a T1 completa: pacote grátis próprio da T2, independente do da T1', async () => {
