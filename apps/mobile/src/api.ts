@@ -79,7 +79,7 @@ export interface PartidaBafo {
   adversario: { id: string | null; apelido: string };
   cartasDesafiante: string[];
   monte: { minha: boolean; virou: 'EU' | 'ADVERSARIO' | null; codigo: string | null }[];
-  batidas: { minha: boolean; precisao: number; viradas: number[]; especial?: boolean }[];
+  batidas: { minha: boolean; precisao: number; viradas: number[]; especial?: boolean; apelido?: string }[];
   minhaVez: boolean;
   placar: { eu: number; adversario: number };
   recebi: string[] | null;
@@ -87,6 +87,32 @@ export interface PartidaBafo {
   /** Só na resposta de uma batida que terminou a partida. */
   novas?: string[];
   recompensas?: RecompensaNova[];
+}
+
+export interface RodaBafo {
+  id: string;
+  status: PartidaBafo['status'];
+  quantidade: number;
+  temporada: number;
+  souAnfitriao: boolean;
+  anfitriao: { id: string; apelido: string };
+  jogadores: { id: string; apelido: string; status: 'CONVIDADO' | 'DENTRO' | 'RECUSOU'; lado: string | null; minha: boolean; placar: number }[];
+  cartasAnfitriao: string[];
+  monte: { minha: boolean; dono: string | null; virouPor: string | null; codigo: string | null }[];
+  batidas: { jogadorId: string | null; apelido: string; minha: boolean; precisao: number; viradas: number[]; especial: boolean }[];
+  vez: { id: string; apelido: string } | null;
+  minhaVez: boolean;
+  recebi: string[] | null;
+  expiraEm: string;
+  novas?: string[];
+  recompensas?: RecompensaNova[];
+}
+
+export interface ListaRodas {
+  convites: RodaBafo[];
+  esperando: RodaBafo[];
+  emAndamento: RodaBafo[];
+  recentes: RodaBafo[];
 }
 
 export interface ListaBafo {
@@ -371,6 +397,15 @@ export const api = {
   recusarBafo: (token: string, id: string) => chamar<PartidaBafo>('POST', `/bafo/${id}/recusar`, token),
   cancelarBafo: (token: string, id: string) => chamar<PartidaBafo>('POST', `/bafo/${id}/cancelar`, token),
   baterBafo: (token: string, id: string, precisao: number) => chamar<PartidaBafo>('POST', `/bafo/${id}/bater`, token, { precisao }),
+  rodas: (token: string) => chamar<ListaRodas>('GET', '/bafo/rodas', token),
+  roda: (token: string, id: string) => chamar<RodaBafo>('GET', `/bafo/rodas/${id}`, token),
+  criarRoda: (token: string, convidados: string[], figurinhas: string[]) =>
+    chamar<RodaBafo>('POST', '/bafo/rodas', token, { convidados, figurinhas }),
+  entrarRoda: (token: string, id: string, figurinhas: string[]) => chamar<RodaBafo>('POST', `/bafo/rodas/${id}/entrar`, token, { figurinhas }),
+  recusarRoda: (token: string, id: string) => chamar<RodaBafo>('POST', `/bafo/rodas/${id}/recusar`, token),
+  comecarRoda: (token: string, id: string) => chamar<RodaBafo>('POST', `/bafo/rodas/${id}/comecar`, token),
+  cancelarRoda: (token: string, id: string) => chamar<RodaBafo>('POST', `/bafo/rodas/${id}/cancelar`, token),
+  baterRoda: (token: string, id: string, precisao: number) => chamar<RodaBafo>('POST', `/bafo/rodas/${id}/bater`, token, { precisao }),
   pedirAmizade: (token: string, apelido: string) =>
     chamar<{ status: 'PENDENTE' | 'ACEITA'; usuario: UsuarioResumo }>('POST', '/amigos', token, { apelido }),
   aceitarAmizade: (token: string, id: string) => chamar<void>('POST', `/amigos/${id}/aceitar`, token),

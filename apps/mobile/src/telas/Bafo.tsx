@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { api, ErroApi, ListaAmigos, ListaBafo, PartidaBafo, UsuarioResumo } from '../api';
+import { api, ErroApi, ListaAmigos, ListaBafo, ListaRodas, PartidaBafo, RodaBafo, UsuarioResumo } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Figurinha } from '../componentes/Figurinha';
 import { MiniFigurinhas, SeletorFigurinhas } from '../componentes/MiniFigurinhas';
@@ -11,8 +11,48 @@ import { cores } from '../tema';
 const nativo = Platform.OS !== 'web';
 const MAX_CARTAS = 3;
 
-type Escolha = { modo: 'computador' } | { modo: 'desafio'; amigo: UsuarioResumo } | { modo: 'aceitar'; partida: PartidaBafo };
-type Tela = { tipo: 'lobby' } | { tipo: 'escolher'; escolha: Escolha } | { tipo: 'mesa'; partida: PartidaBafo };
+type Escolha =
+  | { modo: 'computador' }
+  | { modo: 'desafio'; amigo: UsuarioResumo }
+  | { modo: 'aceitar'; partida: PartidaBafo }
+  | { modo: 'roda'; amigos: UsuarioResumo[] }
+  | { modo: 'entrarRoda'; roda: RodaBafo };
+
+/** O que a mesa mostra: uma partida 1 contra 1 ou uma rodinha convertida para o mesmo formato. */
+type MesaDados = PartidaBafo & {
+  roda?: boolean;
+  jogadores?: { apelido: string; placar: number; minha: boolean; daVez: boolean }[];
+};
+type Tela = { tipo: 'lobby' } | { tipo: 'escolher'; escolha: Escolha } | { tipo: 'mesa'; partida: MesaDados };
+
+/** Converte a rodinha para o formato da mesa (cartas minhas = 'EU', dos outros = 'ADVERSARIO'). */
+function rodaParaMesa(r: RodaBafo): MesaDados {
+  const eu = r.jogadores.find((j) => j.minha)?.id;
+  const dentro = r.jogadores.filter((j) => j.lado);
+  return {
+    id: r.id,
+    roda: true,
+    status: r.status,
+    contraComputador: false,
+    quantidade: r.quantidade,
+    euDesafiei: r.souAnfitriao,
+    adversario: { id: r.vez?.id ?? null, apelido: r.vez?.apelido ?? 'a rodinha' },
+    cartasDesafiante: r.cartasAnfitriao,
+    monte: r.monte.map((c) => ({
+      minha: c.minha,
+      virou: c.virouPor === null ? null : c.virouPor === eu ? 'EU' : 'ADVERSARIO',
+      codigo: c.codigo,
+    })),
+    batidas: r.batidas.map((b) => ({ minha: b.minha, precisao: b.precisao, viradas: b.viradas, especial: b.especial, apelido: b.apelido })),
+    minhaVez: r.minhaVez,
+    placar: { eu: dentro.find((j) => j.minha)?.placar ?? 0, adversario: dentro.filter((j) => !j.minha).reduce((s, j) => s + j.placar, 0) },
+    recebi: r.recebi,
+    expiraEm: r.expiraEm,
+    novas: r.novas,
+    recompensas: r.recompensas,
+    jogadores: dentro.map((j) => ({ apelido: j.minha ? 'Você' : j.apelido, placar: j.placar, minha: j.minha, daVez: r.vez?.id === j.id })),
+  };
+}
 
 const mensagemDeErro = (e: unknown) => (e instanceof ErroApi || e instanceof Error ? e.message : 'Algo deu errado.');
 
@@ -56,10 +96,12 @@ function Lobby({
 }: {
   aoVoltar: () => void;
   aoEscolher: (e: Escolha) => void;
-  aoAbrir: (p: PartidaBafo) => void;
+  aoAbrir: (p: MesaDados) => void;
 }) {
   const { sessao, album, recarregar } = useJogo();
   const [lista, setLista] = useState<ListaBafo | null>(null);
+  const [rodas, setRodas] = useState<ListaRodas | null>(null);
+  const [convidando, setConvidando] = useState<Set<string> | null>(null);
   const [amigos, setAmigos] = useState<ListaAmigos | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
@@ -67,9 +109,10 @@ function Lobby({
 
   const carregar = useCallback(async () => {
     try {
-      const [l, a] = await Promise.all([api.bafo(token), api.amigos(token)]);
+      const [l, a, r] = await Promise.all([api.bafo(token), api.amigos(token), api.rodas(token).catch(() => null)]);
       setLista(l);
       setAmigos(a);
+      setRodas(r);
       setErro(null);
     } catch (e) {
       setErro(mensagemDeErro(e));
@@ -196,6 +239,108 @@ function Lobby({
               ))}
             </Secao>
 
+
+            <Secao titulo="Rodinha (3 a 6 amigos)">
+              {(rodas?.convites ?? []).map((r) => (
+                <View key={r.id} style={estilos.item}>
+                  <Text style={estilos.itemTitulo}>
+                    {r.anfitriao.apelido} chamou você para uma rodinha · {r.quantidade} figurinha{r.quantidade > 1 ? 's' : ''} cada
+                  </Text>
+                  <Text style={estilos.legenda}>Na rodinha: {r.jogadores.filter((j) => j.status !== 'RECUSOU').map((j) => j.apelido).join(', ')}</Text>
+                  <MiniFigurinhas itens={agrupar(r.cartasAnfitriao)} />
+                  <View style={estilos.linhaBotoes}>
+                    <View style={{ flex: 1 }}>
+                      <Botao titulo="Entrar" onPress={() => aoEscolher({ modo: 'entrarRoda', roda: r })} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Botao titulo="Recusar" variante="secundario" carregando={ocupado === r.id} onPress={() => acao(r.id, () => api.recusarRoda(token, r.id))} />
+                    </View>
+                  </View>
+                </View>
+              ))}
+              {(rodas?.emAndamento ?? []).map((r) => (
+                <Pressable key={r.id} style={estilos.item} onPress={() => aoAbrir(rodaParaMesa(r))} accessibilityRole="button">
+                  <Text style={estilos.itemTitulo}>
+                    Rodinha · {r.jogadores.filter((j) => j.lado).map((j) => `${j.minha ? 'Você' : j.apelido} ${j.placar}`).join(' · ')}
+                  </Text>
+                  <Text style={[estilos.legenda, r.minhaVez && { color: cores.destaque, fontWeight: '800' }]}>
+                    {r.minhaVez ? 'Sua vez de bater! Toque para jogar.' : `Vez de ${r.vez?.apelido ?? '...'}.`}
+                  </Text>
+                </Pressable>
+              ))}
+              {(rodas?.esperando ?? []).map((r) => {
+                const dentro = r.jogadores.filter((j) => j.status === 'DENTRO').length;
+                return (
+                  <View key={r.id} style={estilos.item}>
+                    <Text style={estilos.itemTitulo}>Rodinha esperando · {dentro} de {r.jogadores.filter((j) => j.status !== 'RECUSOU').length} dentro</Text>
+                    <Text style={estilos.legenda}>
+                      {r.jogadores.map((j) => `${j.minha ? 'Você' : j.apelido} ${j.status === 'DENTRO' ? '✓' : j.status === 'RECUSOU' ? '✗' : '…'}`).join('  ')}
+                    </Text>
+                    {r.souAnfitriao && (
+                      <View style={estilos.linhaBotoes}>
+                        <View style={{ flex: 1 }}>
+                          <Botao titulo="Começar" desabilitado={dentro < 3} carregando={ocupado === r.id + 'c'} onPress={() => acao(r.id + 'c', () => api.comecarRoda(token, r.id))} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Botao titulo="Cancelar" variante="secundario" carregando={ocupado === r.id + 'x'} onPress={() => acao(r.id + 'x', () => api.cancelarRoda(token, r.id))} />
+                        </View>
+                      </View>
+                    )}
+                    {r.souAnfitriao && dentro < 3 && <Text style={estilos.legenda}>Dá para começar com 3 ou mais dentro.</Text>}
+                  </View>
+                );
+              })}
+              {convidando === null ? (
+                <Botao
+                  titulo="Criar rodinha"
+                  variante="secundario"
+                  desabilitado={repetidas === 0 || (amigos?.amigos ?? []).length < 2}
+                  onPress={() => setConvidando(new Set())}
+                />
+              ) : (
+                <View style={estilos.item}>
+                  <Text style={estilos.itemTitulo}>Quem vai para a rodinha? ({convidando.size}/5)</Text>
+                  {(amigos?.amigos ?? []).map((a) => {
+                    const marcado = convidando.has(a.usuario.id);
+                    return (
+                      <Pressable
+                        key={a.id}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: marcado }}
+                        onPress={() => {
+                          const n = new Set(convidando);
+                          if (marcado) n.delete(a.usuario.id);
+                          else if (n.size < 5) n.add(a.usuario.id);
+                          setConvidando(n);
+                        }}
+                        style={[estilos.amigo, marcado && { borderColor: cores.destaque, borderWidth: 2 }]}
+                      >
+                        <Text style={estilos.amigoNome}>{a.usuario.apelido}</Text>
+                        <Text style={[estilos.desafiarTexto, { paddingRight: 10 }]}>{marcado ? '✓' : ''}</Text>
+                      </Pressable>
+                    );
+                  })}
+                  <View style={estilos.linhaBotoes}>
+                    <View style={{ flex: 1 }}>
+                      <Botao
+                        titulo="Escolher figurinhas"
+                        desabilitado={convidando.size < 2}
+                        onPress={() => {
+                          const escolhidos = (amigos?.amigos ?? []).filter((a) => convidando.has(a.usuario.id)).map((a) => a.usuario);
+                          setConvidando(null);
+                          aoEscolher({ modo: 'roda', amigos: escolhidos });
+                        }}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Botao titulo="Voltar" variante="secundario" onPress={() => setConvidando(null)} />
+                    </View>
+                  </View>
+                </View>
+              )}
+              {(amigos?.amigos ?? []).length < 2 && <Text style={estilos.legenda}>Você precisa de pelo menos 2 amigos para uma rodinha.</Text>}
+            </Secao>
+
             {lista.convitesEnviados.length > 0 && (
               <Secao titulo="Esperando resposta">
                 {lista.convitesEnviados.map((p) => (
@@ -268,16 +413,17 @@ function agrupar(codigos: string[]) {
 
 // ---------------------------------------------------------------------------
 
-function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; aoVoltar: () => void; aoComecar: (p: PartidaBafo) => void }) {
+function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; aoVoltar: () => void; aoComecar: (p: MesaDados) => void }) {
   const { sessao, album, recarregar, porCodigo, temporada: escolhida, perfil } = useJogo();
   // O monte é de uma temporada só: a das cartas do desafio, ou a escolhida no seletor.
-  const temporada =
-    escolha.modo === 'aceitar' ? (porCodigo[escolha.partida.cartasDesafiante[0]]?.temporada ?? 1) : escolhida;
+  const cartasDoOutro =
+    escolha.modo === 'aceitar' ? escolha.partida.cartasDesafiante : escolha.modo === 'entrarRoda' ? escolha.roda.cartasAnfitriao : null;
+  const temporada = cartasDoOutro ? (porCodigo[cartasDoOutro[0]]?.temporada ?? 1) : escolhida;
   const variasTemporadas = (perfil?.temporadas?.length ?? 1) > 1;
   const [marcadas, setMarcadas] = useState<Set<string>>(new Set());
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const exato = escolha.modo === 'aceitar' ? escolha.partida.quantidade : null;
+  const exato = escolha.modo === 'aceitar' ? escolha.partida.quantidade : escolha.modo === 'entrarRoda' ? escolha.roda.quantidade : null;
   const maximo = exato ?? MAX_CARTAS;
 
   const repetidas = useMemo(
@@ -297,7 +443,16 @@ function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; ao
   };
 
   const pronto = exato ? marcadas.size === exato : marcadas.size >= 1;
-  const titulo = escolha.modo === 'computador' ? 'Contra o computador' : escolha.modo === 'desafio' ? `Desafiar ${escolha.amigo.apelido}` : `Aceitar desafio de ${escolha.partida.adversario.apelido}`;
+  const titulo =
+    escolha.modo === 'computador'
+      ? 'Contra o computador'
+      : escolha.modo === 'desafio'
+        ? `Desafiar ${escolha.amigo.apelido}`
+        : escolha.modo === 'aceitar'
+          ? `Aceitar desafio de ${escolha.partida.adversario.apelido}`
+          : escolha.modo === 'roda'
+            ? `Rodinha com ${escolha.amigos.map((a) => a.apelido).join(', ')}`
+            : `Rodinha de ${escolha.roda.anfitriao.apelido}`;
 
   const confirmar = async () => {
     if (!sessao) return;
@@ -305,12 +460,16 @@ function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; ao
     setEnviando(true);
     try {
       const cartas = [...marcadas];
-      const p =
+      const p: MesaDados =
         escolha.modo === 'computador'
           ? await api.bafoComputador(sessao.token, cartas)
           : escolha.modo === 'desafio'
             ? await api.desafiarBafo(sessao.token, escolha.amigo.id, cartas)
-            : await api.aceitarBafo(sessao.token, escolha.partida.id, cartas);
+            : escolha.modo === 'aceitar'
+              ? await api.aceitarBafo(sessao.token, escolha.partida.id, cartas)
+              : escolha.modo === 'roda'
+                ? rodaParaMesa(await api.criarRoda(sessao.token, escolha.amigos.map((a) => a.id), cartas))
+                : rodaParaMesa(await api.entrarRoda(sessao.token, escolha.roda.id, cartas));
       await recarregar();
       aoComecar(p);
     } catch (e) {
@@ -328,13 +487,15 @@ function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; ao
         <Text style={estilos.legenda}>
           {exato
             ? `Escolha ${exato} repetida${exato > 1 ? 's' : ''} sua${exato > 1 ? 's' : ''} para pôr no monte.`
-            : `Escolha de 1 a ${MAX_CARTAS} repetidas. ${escolha.modo === 'computador' ? 'O computador põe figurinhas da mesma raridade.' : 'Seu amigo põe a mesma quantidade.'}`}{' '}
-          As que o adversário virar ficam com ele.
+            : `Escolha de 1 a ${MAX_CARTAS} repetidas. ${escolha.modo === 'computador' ? 'O computador põe figurinhas da mesma raridade.' : escolha.modo === 'roda' ? 'Cada amigo põe a mesma quantidade.' : 'Seu amigo põe a mesma quantidade.'}`}{' '}
+          As que outro jogador virar ficam com ele.
         </Text>
-        {escolha.modo === 'aceitar' && (
+        {cartasDoOutro && (
           <View style={estilos.item}>
-            <Text style={estilos.legenda}>No monte de {escolha.partida.adversario.apelido}:</Text>
-            <MiniFigurinhas itens={agrupar(escolha.partida.cartasDesafiante)} />
+            <Text style={estilos.legenda}>
+              No monte de {escolha.modo === 'aceitar' ? escolha.partida.adversario.apelido : escolha.modo === 'entrarRoda' ? escolha.roda.anfitriao.apelido : ''}:
+            </Text>
+            <MiniFigurinhas itens={agrupar(cartasDoOutro)} />
           </View>
         )}
         <Text style={estilos.rotulo}>
@@ -349,7 +510,7 @@ function EscolherCartas({ escolha, aoVoltar, aoComecar }: { escolha: Escolha; ao
       </ScrollView>
       <View style={estilos.rodape}>
         <Botao
-          titulo={escolha.modo === 'desafio' ? 'Enviar desafio' : 'Ir para o monte'}
+          titulo={escolha.modo === 'desafio' ? 'Enviar desafio' : escolha.modo === 'roda' ? 'Enviar convites' : escolha.modo === 'entrarRoda' ? 'Entrar na rodinha' : 'Ir para o monte'}
           onPress={confirmar}
           carregando={enviando}
           desabilitado={!pronto}
@@ -375,10 +536,14 @@ const LARGURA_CARTA = 74;
 const PERIODO_BARRA = 1100;
 const ALTURA_CARTA = (LARGURA_CARTA * 392) / 280;
 
-function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVoltar: () => void; aoJogarDeNovo: () => void }) {
+function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: MesaDados; aoVoltar: () => void; aoJogarDeNovo: () => void }) {
   const { sessao, porCodigo, clubes, recarregar } = useJogo();
   const token = sessao?.token ?? '';
-  const [partida, setPartida] = useState(inicial);
+  const [partida, setPartida] = useState<MesaDados>(inicial);
+  const buscarPartida = (id: string): Promise<MesaDados> =>
+    inicial.roda ? api.roda(token, id).then(rodaParaMesa) : api.partidaBafo(token, id);
+  const baterNaPartida = (id: string, precisao: number): Promise<MesaDados> =>
+    inicial.roda ? api.baterRoda(token, id, precisao).then(rodaParaMesa) : api.baterBafo(token, id, precisao);
   /** Quantas batidas já foram mostradas (as seguintes são animadas uma a uma). */
   const [mostradas, setMostradas] = useState(inicial.batidas.length);
   const [mensagem, setMensagem] = useState<string | null>(null);
@@ -467,7 +632,7 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
 
   /** Mostra, uma a uma, as batidas que chegaram do servidor. */
   const mostrarNovas = useCallback(
-    async (p: PartidaBafo, desde: number, pularMinhaMao: boolean) => {
+    async (p: MesaDados, desde: number, pularMinhaMao: boolean) => {
       revelando.current = true;
       try {
         for (let i = desde; i < p.batidas.length; i++) {
@@ -475,7 +640,7 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
           if (!(b.minha && pularMinhaMao && i === desde)) await animarBatida(b.minha ? 'EU' : 'ADVERSARIO');
           await revelar(i + 1, !!b.especial);
           const n = b.viradas.length;
-          const quem = b.minha ? 'Você' : p.adversario.apelido;
+          const quem = b.minha ? 'Você' : (b.apelido ?? p.adversario.apelido);
           const zona = b.precisao >= 0.97 ? 'no ponto dourado' : b.precisao >= 0.85 ? 'no verde' : b.precisao >= 0.5 ? 'no amarelo' : 'no vermelho';
           setMensagem(
             b.especial
@@ -501,8 +666,8 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
     const id = setInterval(async () => {
       if (revelando.current) return;
       try {
-        const p = await api.partidaBafo(token, partida.id);
-        if (p.batidas.length > partida.batidas.length || p.status !== partida.status) {
+        const p = await buscarPartida(partida.id);
+        if (p.batidas.length > partida.batidas.length || p.status !== partida.status || p.minhaVez !== partida.minhaVez) {
           const desde = Math.min(mostradas, partida.batidas.length);
           setPartida(p);
           await mostrarNovas(p, desde, false);
@@ -546,7 +711,7 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
     setErro(null);
     setMensagem(null);
     try {
-      const [p] = await Promise.all([api.baterBafo(token, partida.id, precisao), animarBatida('EU')]);
+      const [p] = await Promise.all([baterNaPartida(partida.id, precisao), animarBatida('EU')]);
       const desde = partida.batidas.length;
       novasRef.current = p.novas ?? [];
       setPartida(p);
@@ -560,6 +725,16 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
   };
 
   const terminou = partida.status !== 'JOGANDO' && mostradas >= partida.batidas.length;
+  // Rodinha: placar de cada um contando só as batidas já mostradas.
+  const placarRoda = useMemo(() => {
+    if (!partida.jogadores) return [];
+    const conta: Record<string, number> = {};
+    partida.batidas.slice(0, mostradas).forEach((b) => {
+      const nome = b.minha ? 'Você' : (b.apelido ?? '');
+      conta[nome] = (conta[nome] ?? 0) + b.viradas.length;
+    });
+    return partida.jogadores.map((j) => conta[j.apelido] ?? 0);
+  }, [partida, mostradas]);
   // Duas mãos: entram pelas laterais (minha vez, de baixo; adversário, de cima) e se encontram no monte.
   const maoY = mao.interpolate({ inputRange: [0, 1, 2], outputRange: maoDeQuem === 'EU' ? [180, 0, 180] : [-180, 0, -180] });
   const maoEsqX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [-120, -38, -120] });
@@ -570,7 +745,19 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1F5130' }}>
-      <Barra titulo={`Bafo · ${partida.adversario.apelido}`} aoVoltar={aoVoltar} escura />
+      <Barra titulo={partida.roda ? 'Rodinha de bafo' : `Bafo · ${partida.adversario.apelido}`} aoVoltar={aoVoltar} escura />
+      {partida.jogadores ? (
+        <View style={estilos.placarRoda} accessibilityLiveRegion="polite">
+          {partida.jogadores.map((j, i) => (
+            <View key={i} style={[estilos.placarRodaItem, j.daVez && !terminou && estilos.placarRodaVez]}>
+              <Text style={estilos.placarRodaNumero}>{placarRoda[i] ?? j.placar}</Text>
+              <Text style={estilos.placarNome} numberOfLines={1}>
+                {j.apelido}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
       <View style={estilos.placar} accessibilityLiveRegion="polite">
         <View style={estilos.placarLado}>
           <Text style={estilos.placarNumero}>{placar.eu}</Text>
@@ -584,6 +771,7 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
           </Text>
         </View>
       </View>
+      )}
 
       <Animated.View
         style={[estilos.mesa, { transform: [{ translateX: tremorX }] }]}
@@ -797,6 +985,10 @@ const estilos = StyleSheet.create({
   erro: { fontSize: 14, color: cores.erro, fontWeight: '600' },
   placar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18, paddingVertical: 4 },
   placarLado: { alignItems: 'center', minWidth: 90 },
+  placarRoda: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 4 },
+  placarRodaItem: { alignItems: 'center', minWidth: 64, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 2, borderColor: 'transparent' },
+  placarRodaVez: { borderColor: '#FDE047' },
+  placarRodaNumero: { fontSize: 26, fontWeight: '800', color: '#FFFFFF' },
   placarNumero: { fontSize: 38, fontWeight: '800', color: '#FFFFFF' },
   placarNome: { fontSize: 13, fontWeight: '700', color: '#BBF7D0', maxWidth: 120 },
   placarX: { fontSize: 24, fontWeight: '800', color: '#86EFAC' },

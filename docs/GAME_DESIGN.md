@@ -233,6 +233,12 @@ Mini jogo de "bafo" com figurinhas repetidas, contra o computador ou contra amig
   de aceitar e põe a mesma quantidade. As figurinhas ficam **reservadas** (saem do álbum)
   enquanto o jogo dura. Prazos: 24 h para aceitar e 24 h para cada vez; contra o
   computador, 2 h. Se o prazo vence, a partida termina como está (convite: tudo volta).
+- **Rodinha (3 a 6 amigos):** o anfitrião convida de 2 a 5 amigos e põe as cartas; cada um entra
+  pondo a mesma quantidade (ficam reservadas). Começa sozinha quando todos respondem (com 3+ dentro)
+  ou quando o anfitrião manda; se sobrar menos de 3, é desfeita e tudo volta. Ordem em cobrinha
+  (A B C, C B A, A B C) e chance de virar multiplicada por 0,55 (3) a 0,27 (6 jogadores), para quem
+  começa não levar quase todo o monte (vantagem ≤ 0,2 carta em simulação). Vez não jogada em 24 h
+  é pulada.
 - **Limite:** 10 partidas por dia contra o computador (`BAFO.partidasPorDiaComputador`). Entre amigos não há limite.
 - **Segurança:** o sorteio é feito no servidor com o gerador criptográfico. A precisão é
   informada pelo app (dá para trapacear com um app modificado); o ganho máximo é limitado
