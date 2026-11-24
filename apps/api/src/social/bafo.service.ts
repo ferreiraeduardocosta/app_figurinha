@@ -387,7 +387,7 @@ export class BafoService {
         virou: c.virou === null ? null : c.virou === meuLado ? 'EU' : 'ADVERSARIO',
         codigo: c.virou || fim ? c.codigo : null,
       })),
-      batidas: (estado?.batidas ?? []).map((x) => ({ minha: x.lado === meuLado, precisao: x.precisao, viradas: x.viradas })),
+      batidas: (estado?.batidas ?? []).map((x) => ({ minha: x.lado === meuLado, precisao: x.precisao, viradas: x.viradas, especial: !!x.especial })),
       minhaVez: b.status === 'JOGANDO' && !!estado && !estado.terminou && estado.vez === meuLado,
       placar,
       recebi: resultado ? resultado[meuLado].recebe : null,

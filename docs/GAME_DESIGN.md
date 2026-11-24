@@ -218,10 +218,14 @@ Mini jogo de "bafo" com figurinhas repetidas, contra o computador ou contra amig
 
 - **Monte:** cada lado põe de 1 a 3 repetidas (a última cópia nunca entra). Contra o
   computador, ele põe figurinhas sorteadas da **mesma raridade** das suas.
-- **Batida:** o jogador segura o botão, uma marca corre pela barra de força e ele solta.
-  Precisão = quão perto do centro soltou (0 a 1). Cada carta ainda para baixo vira com
-  chance de **8% + 30% × precisão** (8% a 38%). Precisão ≥ 0,95 é "bafo perfeito": vira
-  pelo menos uma. As que virarem ficam com quem bateu.
+- **Batida:** o jogador segura o botão, uma marca corre pela barra (1,1 s por travessia) e ele
+  solta. A posição vale pelo **tempo segurado** (não pela animação), então atraso de toque não
+  atrapalha. Precisão = quão perto do centro soltou (0 a 1). Cada carta ainda para baixo vira com
+  chance de **8% + 32% × precisão**. As que virarem ficam com quem bateu.
+- **Verde** (precisão ≥ 0,85, 42,5% a 57,5% da barra): vira **pelo menos 1** carta.
+- **Bafo de Ouro**: soltar no **ponto dourado** do centro (≥ 0,97, 3% da barra) ou, por sorte,
+  em **15%** das batidas no verde. A chance de cada carta dobra e vira **pelo menos 2**; a mesa
+  brilha em dourado. Duas mãos batem no monte (animação).
 - **Ordem:** A, B, B, A, A, B (3 batidas de cada lado). Começar alternando assim reduz a
   vantagem de quem bate primeiro de ~0,67 para ~0,15 carta em 3 (simulação com 20 mil
   partidas). O que ninguém virar volta para o dono.

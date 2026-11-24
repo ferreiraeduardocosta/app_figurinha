@@ -22,6 +22,8 @@ export interface BatidaBafo {
   precisao: number;
   /** Posições no monte das cartas que viraram nesta batida. */
   viradas: number[];
+  /** "Bafo de Ouro": acertou o centro (ou teve sorte no verde) e virou mais cartas. */
+  especial?: boolean;
 }
 
 export interface EstadoBafo {
@@ -36,9 +38,16 @@ export const BAFO = {
   batidasPorLado: 3,
   /** Chance de cada carta virar: base + bônus × precisão. */
   chanceBase: 0.08,
-  chanceBonus: 0.3,
-  /** A partir desta precisão é "bafo perfeito": vira pelo menos uma carta. */
-  perfeito: 0.95,
+  chanceBonus: 0.32,
+  /** Soltou no verde: vira pelo menos uma carta. */
+  verde: 0.85,
+  /** Soltou no ponto dourado do centro: Bafo de Ouro garantido. */
+  ouro: 0.97,
+  /** No verde (fora do dourado), chance de o Bafo de Ouro sair mesmo assim. */
+  sorteOuro: 0.15,
+  /** Bafo de Ouro: chance de cada carta virar dobra e vira pelo menos 2. */
+  multiplicadorOuro: 2,
+  minimoOuro: 2,
   /** Partidas por dia contra o computador. Entre amigos não há limite. */
   partidasPorDiaComputador: 10,
 } as const;
@@ -84,19 +93,23 @@ export function bater(estado: EstadoBafo, lado: LadoBafo, precisao: number, rng:
   if (estado.terminou) throw new ErroRegra('BAFO_INVALIDO', 'A partida já acabou.');
   if (estado.vez !== lado) throw new ErroRegra('BAFO_INVALIDO', 'Não é a sua vez.');
   const p = limitarPrecisao(precisao);
-  const chance = chanceDeVirar(p);
+  const especial = p >= BAFO.ouro || (p >= BAFO.verde && rng() < BAFO.sorteOuro);
+  const chance = Math.min(0.95, chanceDeVirar(p) * (especial ? BAFO.multiplicadorOuro : 1));
   const monte = estado.monte.map((c) => ({ ...c }));
   const paraBaixo = monte.map((c, i) => (c.virou ? -1 : i)).filter((i) => i >= 0);
   const viradas: number[] = [];
   for (const i of paraBaixo) {
     if (rng() < chance) viradas.push(i);
   }
-  if (viradas.length === 0 && p >= BAFO.perfeito && paraBaixo.length > 0) {
-    viradas.push(paraBaixo[Math.floor(rng() * paraBaixo.length)]);
+  // Garantias: verde vira pelo menos 1; Bafo de Ouro pelo menos 2 (se houver).
+  const minimo = especial ? BAFO.minimoOuro : p >= BAFO.verde ? 1 : 0;
+  const restantes = paraBaixo.filter((i) => !viradas.includes(i));
+  while (viradas.length < minimo && restantes.length > 0) {
+    viradas.push(restantes.splice(Math.floor(rng() * restantes.length), 1)[0]);
   }
   for (const i of viradas) monte[i].virou = lado;
 
-  const batidas = [...estado.batidas, { lado, precisao: p, viradas }];
+  const batidas = [...estado.batidas, { lado, precisao: p, viradas, ...(especial ? { especial: true } : {}) }];
   const acabaramAsBatidas = batidas.length >= ORDEM_BAFO.length;
   const acabouOMonte = monte.every((c) => c.virou);
   return {

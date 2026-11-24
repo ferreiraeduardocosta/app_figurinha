@@ -54,6 +54,30 @@ describe('bafo', () => {
     }
   });
 
+  it('no verde vira pelo menos uma carta; no dourado é Bafo de Ouro e vira pelo menos duas', () => {
+    for (let s = 0; s < 300; s++) {
+      const rng = rngComSemente(s);
+      const verde = bater(montarMonte(['X', 'Y', 'Z'], ['1', '2', '3'], rng), 'A', BAFO.verde, rng);
+      expect(verde.batidas[0].viradas.length).toBeGreaterThanOrEqual(1);
+      const ouro = bater(montarMonte(['X', 'Y', 'Z'], ['1', '2', '3'], rng), 'A', 1, rng);
+      expect(ouro.batidas[0].especial).toBe(true);
+      expect(ouro.batidas[0].viradas.length).toBeGreaterThanOrEqual(2);
+      const fora = bater(montarMonte(['X', 'Y', 'Z'], ['1', '2', '3'], rng), 'A', 0.5, rng);
+      expect(fora.batidas[0].especial).toBeUndefined();
+    }
+  });
+
+  it('no verde, o Bafo de Ouro sai por sorte em cerca de 15% das vezes', () => {
+    let n = 0;
+    const N = 4000;
+    for (let s = 0; s < N; s++) {
+      const rng = rngComSemente(s + 7000);
+      if (bater(montarMonte(['X'], ['Y'], rng), 'A', 0.9, rng).batidas[0].especial) n++;
+    }
+    expect(n / N).toBeGreaterThan(0.12);
+    expect(n / N).toBeLessThan(0.18);
+  });
+
   it('bafo perfeito vira pelo menos uma carta', () => {
     for (let s = 0; s < 200; s++) {
       const rng = rngComSemente(s);
@@ -94,10 +118,10 @@ describe('bafo', () => {
     expect(saldoMelhor / N).toBeGreaterThan(0.4);
   });
 
-  it('chance de virar vai de 8% a 38% e ignora precisões fora de 0..1', () => {
+  it('chance de virar vai de 8% a 40% e ignora precisões fora de 0..1', () => {
     expect(chanceDeVirar(0)).toBeCloseTo(0.08);
-    expect(chanceDeVirar(1)).toBeCloseTo(0.38);
-    expect(chanceDeVirar(7)).toBeCloseTo(0.38);
+    expect(chanceDeVirar(1)).toBeCloseTo(0.40);
+    expect(chanceDeVirar(7)).toBeCloseTo(0.40);
     expect(chanceDeVirar(Number.NaN)).toBeCloseTo(0.08);
   });
 

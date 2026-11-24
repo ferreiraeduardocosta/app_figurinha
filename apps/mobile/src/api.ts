@@ -79,7 +79,7 @@ export interface PartidaBafo {
   adversario: { id: string | null; apelido: string };
   cartasDesafiante: string[];
   monte: { minha: boolean; virou: 'EU' | 'ADVERSARIO' | null; codigo: string | null }[];
-  batidas: { minha: boolean; precisao: number; viradas: number[] }[];
+  batidas: { minha: boolean; precisao: number; viradas: number[]; especial?: boolean }[];
   minhaVez: boolean;
   placar: { eu: number; adversario: number };
   recebi: string[] | null;

@@ -371,6 +371,8 @@ const POSICOES = [
   { x: 0.5, y: 0.34, r: -26 },
 ];
 const LARGURA_CARTA = 74;
+/** Tempo (ms) da marca para atravessar a barra. Mais lento = mais fácil acertar o verde. */
+const PERIODO_BARRA = 1100;
 const ALTURA_CARTA = (LARGURA_CARTA * 392) / 280;
 
 function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVoltar: () => void; aoJogarDeNovo: () => void }) {
@@ -386,17 +388,23 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
   const novasRef = useRef<string[]>([]);
 
   const marcador = useRef(new Animated.Value(0)).current;
-  const valorMarcador = useRef(0);
+  /** Momento em que o dedo encostou: a posição da marca é calculada pelo tempo, não pela animação. */
+  const inicioToque = useRef<number | null>(null);
   const animMarcador = useRef<Animated.CompositeAnimation | null>(null);
   const mao = useRef(new Animated.Value(0)).current;
   const tremor = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(1)).current;
+  const brilho = useRef(new Animated.Value(0)).current;
   const [maoDeQuem, setMaoDeQuem] = useState<'EU' | 'ADVERSARIO'>('EU');
+  const [ouro, setOuro] = useState(false);
+  /** Enquanto mostra batidas uma a uma; fora disso o placar acompanha o servidor. */
+  const revelando = useRef(false);
 
+  // Rede de segurança do placar: se uma sequência de animação não terminar (app em segundo
+  // plano, animação interrompida), mostra direto o que o servidor já mandou.
   useEffect(() => {
-    const id = marcador.addListener(({ value }) => (valorMarcador.current = value));
-    return () => marcador.removeListener(id);
-  }, [marcador]);
+    if (!batendo && !revelando.current && mostradas < partida.batidas.length) setMostradas(partida.batidas.length);
+  }, [batendo, mostradas, partida]);
 
   // Cartas viradas até a batida `mostradas`.
   const viradasVisiveis = useMemo(() => {
@@ -411,15 +419,19 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
     partida.monte.forEach((c, i) => {
       if (!viradasVisiveis.has(i)) return;
       if (c.virou === 'EU') eu++;
-      else adv++;
+      else if (c.virou === 'ADVERSARIO') adv++;
     });
     return { eu, adv };
   }, [partida, viradasVisiveis]);
 
-  const animarBatida = (quem: 'EU' | 'ADVERSARIO') =>
-    new Promise<void>((fim) => {
-      setMaoDeQuem(quem);
-      mao.setValue(0);
+  /** Roda uma animação e resolve no fim, ou depois de `limite` ms se ela não avisar (Android em segundo plano). */
+  const rodar = (anim: Animated.CompositeAnimation, limite: number) =>
+    Promise.race([new Promise<void>((fim) => anim.start(() => fim())), esperar(limite)]);
+
+  const animarBatida = (quem: 'EU' | 'ADVERSARIO') => {
+    setMaoDeQuem(quem);
+    mao.setValue(0);
+    return rodar(
       Animated.sequence([
         Animated.timing(mao, { toValue: 1, duration: 260, easing: Easing.in(Easing.quad), useNativeDriver: nativo }),
         Animated.parallel([
@@ -430,31 +442,53 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
           ]),
           Animated.timing(mao, { toValue: 2, duration: 320, delay: 120, useNativeDriver: nativo }),
         ]),
-      ]).start(() => fim());
-    });
+      ]),
+      1200,
+    );
+  };
 
-  const revelar = (n: number) =>
-    new Promise<void>((fim) => {
-      pop.setValue(0.4);
-      setMostradas(n);
-      Animated.spring(pop, { toValue: 1, friction: 4, useNativeDriver: nativo }).start(() => fim());
-    });
+  const revelar = (n: number, especial: boolean) => {
+    pop.setValue(0.4);
+    setMostradas(n);
+    const animacoes = [Animated.spring(pop, { toValue: 1, friction: 4, useNativeDriver: nativo })];
+    if (especial) {
+      setOuro(true);
+      brilho.setValue(0);
+      animacoes.push(
+        Animated.sequence([
+          Animated.timing(brilho, { toValue: 1, duration: 180, useNativeDriver: nativo }),
+          Animated.delay(900),
+          Animated.timing(brilho, { toValue: 0, duration: 400, useNativeDriver: nativo }),
+        ]),
+      );
+    }
+    return rodar(Animated.parallel(animacoes), especial ? 2000 : 900).then(() => setOuro(false));
+  };
 
   /** Mostra, uma a uma, as batidas que chegaram do servidor. */
   const mostrarNovas = useCallback(
     async (p: PartidaBafo, desde: number, pularMinhaMao: boolean) => {
-      for (let i = desde; i < p.batidas.length; i++) {
-        const b = p.batidas[i];
-        if (!(b.minha && pularMinhaMao && i === desde)) await animarBatida(b.minha ? 'EU' : 'ADVERSARIO');
-        await revelar(i + 1);
-        const n = b.viradas.length;
-        const quem = b.minha ? 'Você' : p.adversario.apelido;
-        setMensagem(
-          n === 0
-            ? `${quem} bateu e não virou nenhuma${b.minha ? '. Tente soltar mais perto do centro!' : '.'}`
-            : `${quem} virou ${n} figurinha${n > 1 ? 's' : ''}!${b.minha && b.precisao >= 0.95 ? ' BAFO PERFEITO!' : ''}`,
-        );
-        if (i < p.batidas.length - 1) await esperar(1100);
+      revelando.current = true;
+      try {
+        for (let i = desde; i < p.batidas.length; i++) {
+          const b = p.batidas[i];
+          if (!(b.minha && pularMinhaMao && i === desde)) await animarBatida(b.minha ? 'EU' : 'ADVERSARIO');
+          await revelar(i + 1, !!b.especial);
+          const n = b.viradas.length;
+          const quem = b.minha ? 'Você' : p.adversario.apelido;
+          const zona = b.precisao >= 0.97 ? 'no ponto dourado' : b.precisao >= 0.85 ? 'no verde' : b.precisao >= 0.5 ? 'no amarelo' : 'no vermelho';
+          setMensagem(
+            b.especial
+              ? `BAFO DE OURO! ${quem} virou ${n} figurinha${n > 1 ? 's' : ''}!`
+              : n === 0
+                ? `${quem} bateu${b.minha ? ` ${zona}` : ''} e não virou nenhuma${b.minha ? '. Solte no verde: lá sempre vira!' : '.'}`
+                : `${quem} virou ${n} figurinha${n > 1 ? 's' : ''}${b.minha ? ` (${zona})` : ''}!`,
+          );
+          if (i < p.batidas.length - 1) await esperar(1100);
+        }
+      } finally {
+        revelando.current = false;
+        setMostradas((m) => Math.max(m, p.batidas.length));
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -465,10 +499,11 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
   useEffect(() => {
     if (partida.contraComputador || partida.status !== 'JOGANDO' || partida.minhaVez || batendo) return;
     const id = setInterval(async () => {
+      if (revelando.current) return;
       try {
         const p = await api.partidaBafo(token, partida.id);
         if (p.batidas.length > partida.batidas.length || p.status !== partida.status) {
-          const desde = mostradas;
+          const desde = Math.min(mostradas, partida.batidas.length);
           setPartida(p);
           await mostrarNovas(p, desde, false);
           if (p.status !== 'JOGANDO') recarregar();
@@ -480,23 +515,33 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
     return () => clearInterval(id);
   }, [partida, token, batendo, mostradas, mostrarNovas, recarregar]);
 
+  const posicaoNoTempo = (ms: number) => {
+    const fase = (ms % (2 * PERIODO_BARRA)) / PERIODO_BARRA;
+    return fase <= 1 ? fase : 2 - fase;
+  };
+
   const segurar = () => {
     if (!partida.minhaVez || batendo) return;
+    inicioToque.current = Date.now();
     marcador.setValue(0);
     animMarcador.current = Animated.loop(
       Animated.sequence([
-        Animated.timing(marcador, { toValue: 1, duration: 650, easing: Easing.linear, useNativeDriver: false }),
-        Animated.timing(marcador, { toValue: 0, duration: 650, easing: Easing.linear, useNativeDriver: false }),
+        Animated.timing(marcador, { toValue: 1, duration: PERIODO_BARRA, easing: Easing.linear, useNativeDriver: false }),
+        Animated.timing(marcador, { toValue: 0, duration: PERIODO_BARRA, easing: Easing.linear, useNativeDriver: false }),
       ]),
     );
     animMarcador.current.start();
   };
 
   const soltar = async () => {
-    if (!animMarcador.current || batendo) return;
+    if (!animMarcador.current || inicioToque.current === null || batendo) return;
     animMarcador.current.stop();
     animMarcador.current = null;
-    const precisao = Math.max(0, 1 - Math.abs(valorMarcador.current - 0.5) / 0.5);
+    // Posição calculada pelo tempo segurado: independe de atraso da animação.
+    const x = posicaoNoTempo(Date.now() - inicioToque.current);
+    inicioToque.current = null;
+    marcador.setValue(x);
+    const precisao = Math.max(0, 1 - Math.abs(x - 0.5) / 0.5);
     setBatendo(true);
     setErro(null);
     setMensagem(null);
@@ -515,10 +560,13 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
   };
 
   const terminou = partida.status !== 'JOGANDO' && mostradas >= partida.batidas.length;
-  const maoY = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [-160, 0, -160] });
+  // Duas mãos: entram pelas laterais (minha vez, de baixo; adversário, de cima) e se encontram no monte.
+  const maoY = mao.interpolate({ inputRange: [0, 1, 2], outputRange: maoDeQuem === 'EU' ? [180, 0, 180] : [-180, 0, -180] });
+  const maoEsqX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [-120, -38, -120] });
+  const maoDirX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [120, 38, 120] });
   const maoOpacidade = mao.interpolate({ inputRange: [0, 0.2, 1, 1.8, 2], outputRange: [0, 1, 1, 1, 0] });
+  const giro = maoDeQuem === 'EU' ? '0deg' : '180deg';
   const tremorX = tremor.interpolate({ inputRange: [-1, 1], outputRange: [-6, 6] });
-  const posicaoMarcador = marcador.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1F5130' }}>
@@ -568,13 +616,21 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
             </Animated.View>
           );
         })}
-        <Animated.Text
-          style={[estilos.mao, { opacity: maoOpacidade, transform: [{ translateY: maoY }, { scaleY: maoDeQuem === 'EU' ? 1 : -1 }] }]}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        >
-          🖐️
-        </Animated.Text>
+        <View style={estilos.maos} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <Animated.Text
+            style={[estilos.mao, { opacity: maoOpacidade, transform: [{ translateX: maoEsqX }, { translateY: maoY }, { rotate: giro }, { scaleX: -1 }] }]}
+          >
+            🖐️
+          </Animated.Text>
+          <Animated.Text style={[estilos.mao, { opacity: maoOpacidade, transform: [{ translateX: maoDirX }, { translateY: maoY }, { rotate: giro }] }]}>
+            🖐️
+          </Animated.Text>
+        </View>
+        {ouro && (
+          <Animated.View style={[StyleSheet.absoluteFill, estilos.ouro, { opacity: brilho }]} pointerEvents="none">
+            <Text style={estilos.ouroTexto}>✨ BAFO DE OURO ✨</Text>
+          </Animated.View>
+        )}
       </Animated.View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={estilos.painel}>
@@ -585,21 +641,19 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: PartidaBafo; aoVo
             <Text style={estilos.mensagem} accessibilityLiveRegion="polite">
               {mensagem ??
                 (partida.minhaVez
-                  ? 'Segure o botão, solte com a marca no verde!'
+                  ? 'Segure e solte com a marca no verde. No dourado é Bafo de Ouro!'
                   : `Esperando ${partida.adversario.apelido} bater...`)}
             </Text>
             <View style={estilos.barraForca} accessibilityElementsHidden importantForAccessibility="no">
+              {/* Faixas casam com as regras: verde = precisão ≥ 0,85 (42,5% a 57,5%); dourado = ≥ 0,97 (48,5% a 51,5%). */}
               <View style={[estilos.faixa, { left: '0%', width: '25%', backgroundColor: '#FCA5A5' }]} />
-              <View style={[estilos.faixa, { left: '25%', width: '17%', backgroundColor: '#FDE68A' }]} />
-              <View style={[estilos.faixa, { left: '42%', width: '16%', backgroundColor: '#86EFAC' }]} />
-              <View style={[estilos.faixa, { left: '47.5%', width: '5%', backgroundColor: '#16A34A' }]} />
-              <View style={[estilos.faixa, { left: '58%', width: '17%', backgroundColor: '#FDE68A' }]} />
+              <View style={[estilos.faixa, { left: '25%', width: '17.5%', backgroundColor: '#FDE68A' }]} />
+              <View style={[estilos.faixa, { left: '42.5%', width: '15%', backgroundColor: '#4ADE80' }]} />
+              <View style={[estilos.faixa, { left: '48.5%', width: '3%', backgroundColor: '#F59E0B' }]} />
+              <View style={[estilos.faixa, { left: '57.5%', width: '17.5%', backgroundColor: '#FDE68A' }]} />
               <View style={[estilos.faixa, { left: '75%', width: '25%', backgroundColor: '#FCA5A5' }]} />
               <Animated.View
-                style={[
-                  estilos.marcador,
-                  { left: posicaoMarcador.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) },
-                ]}
+                style={[estilos.marcador, { left: marcador.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]}
               />
             </View>
             <Pressable
@@ -759,7 +813,17 @@ const estilos = StyleSheet.create({
   },
   versoTexto: { fontSize: 8, fontWeight: '800', color: '#FDE047', textAlign: 'center', letterSpacing: 1 },
   cartaVirada: { borderWidth: 3, borderRadius: 10 },
-  mao: { position: 'absolute', alignSelf: 'center', top: 90, fontSize: 96 },
+  maos: { position: 'absolute', left: 0, right: 0, top: 95, flexDirection: 'row', justifyContent: 'center' },
+  mao: { fontSize: 84, marginHorizontal: -10 },
+  ouro: { backgroundColor: 'rgba(251, 191, 36, 0.35)', alignItems: 'center', justifyContent: 'center' },
+  ouroTexto: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    textShadowColor: '#B45309',
+    textShadowRadius: 8,
+    textShadowOffset: { width: 0, height: 0 },
+  },
   painel: { padding: 16, gap: 12 },
   mensagem: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', textAlign: 'center', minHeight: 44 },
   barraForca: { height: 26, borderRadius: 13, overflow: 'hidden', backgroundColor: '#E5E7EB' },
