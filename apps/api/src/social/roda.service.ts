@@ -13,6 +13,7 @@ import { RecompensaNova } from '../pacotes/recompensas';
 import { rngSeguro } from '../pacotes/rng-seguro';
 import { PrismaService } from '../prisma/prisma.service';
 import { AmigosService } from './amigos.service';
+import { EventosService } from './eventos.service';
 import { BafoService, PRAZOS_BAFO, creditar } from './bafo.service';
 import { Tx, travarUsuarios } from './comum';
 
@@ -37,6 +38,7 @@ export class RodaService {
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(AmigosService) private readonly amigos: AmigosService,
     @Inject(BafoService) private readonly bafo: BafoService,
+    @Inject(EventosService) private readonly eventos: EventosService,
   ) {}
 
   async listar(eu: string, agora = new Date()) {
@@ -213,6 +215,8 @@ export class RodaService {
       .filter((p) => p.status === 'DENTRO')
       .sort((a, b) => (a.usuarioId === r.anfitriaoId ? -1 : b.usuarioId === r.anfitriaoId ? 1 : (a.entrouEm?.getTime() ?? 0) - (b.entrouEm?.getTime() ?? 0)));
     const estado = montarRoda(dentro.map((p) => p.cartas as string[]), this.rng);
+    const { bonusChance } = await this.eventos.efeitos(agora);
+    estado.fatorChance = (estado.fatorChance ?? 1) * bonusChance;
     const lados = ['A', 'B', 'C', 'D', 'E', 'F'];
     for (const [i, p] of dentro.entries()) {
       await tx.rodaParticipante.update({ where: { rodaId_usuarioId: { rodaId: id, usuarioId: p.usuarioId } }, data: { lado: lados[i] } });

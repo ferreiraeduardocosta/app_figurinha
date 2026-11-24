@@ -122,6 +122,7 @@ const ABAS = [
   ['usuarios', 'Usuários'],
   ['cupons', 'Cupons'],
   ['temporadas', 'Temporadas'],
+  ['eventos', 'Eventos'],
   ['testes', 'Testes'],
 ];
 
@@ -163,7 +164,7 @@ async function trocarAba(id) {
   const alvo = document.getElementById('conteudo');
   alvo.replaceChildren(h('p', { class: 'carregando' }, 'Carregando…'));
   try {
-    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons, temporadas: telaTemporadas, testes: telaTestes };
+    const telas = { resumo: telaResumo, figurinhas: telaFigurinhas, alteracoes: telaAlteracoes, usuarios: telaUsuarios, cupons: telaCupons, temporadas: telaTemporadas, eventos: telaEventos, testes: telaTestes };
     await telas[id](alvo);
   } catch (err) {
     if (err.status !== 401) alvo.replaceChildren(h('p', { class: 'erro', role: 'alert' }, err.message));
@@ -874,3 +875,138 @@ async function telaTemporadas(alvo) {
   desenhar(await api('GET', '/admin/temporadas'));
 }
 
+
+/* ---------- eventos de bafo ---------- */
+
+const TIPOS_EVENTO = {
+  DOBRADO: 'Fim de semana dobrado',
+  TORNEIO: 'Torneio relâmpago',
+  TEMATICO: 'Bafo temático',
+};
+const SITUACAO_EVENTO = { AGORA: 'Acontecendo', EM_BREVE: 'Em breve', ENCERRADO: 'Encerrado' };
+
+async function telaEventos(alvo) {
+  const erro = h('p', { class: 'erro', role: 'alert', hidden: true });
+  const ok = h('p', { class: 'sucesso', role: 'status', hidden: true });
+  const corpo = h('tbody');
+  const mostrarErro = (err) => { if (err.status !== 401) { erro.textContent = err.message; erro.hidden = false; } };
+  const regra = (e) => {
+    if (e.tipo === 'DOBRADO') return `Limite contra o computador ×${e.multiplicadorLimite}; chance de virar +${Math.round((e.bonusChance - 1) * 100)}%`;
+    const tema = e.tipo === 'TEMATICO' ? ` só com ${[e.filtroClube, e.filtroRaridade && RARIDADES[e.filtroRaridade]].filter(Boolean).join(' / ')};` : '';
+    return `${tema} ${e.premioPacotes} pacote(s) para os ${e.premiados} primeiro(s)`.trim();
+  };
+  const desenhar = (lista) => {
+    corpo.replaceChildren(...(lista.length ? lista.map((e) => {
+      const ranking = e.ranking == null ? '—' : e.ranking.length ? e.ranking.map((r, i) => `${i + 1}º ${r.apelido} (${r.vitorias})`).join(', ') : 'Ninguém venceu ainda';
+      const situacao = !e.ativo ? 'Desativado' : SITUACAO_EVENTO[e.situacao] + (e.premiosEntreguesEm ? ' · prêmios entregues' : '');
+      return h('tr', {},
+        h('td', {}, h('strong', {}, e.nome), e.descricao ? h('div', { class: 'aviso' }, e.descricao) : null),
+        h('td', {}, TIPOS_EVENTO[e.tipo]),
+        h('td', {}, `${dataBrasilia(e.inicio)} → ${dataBrasilia(e.fim)}`),
+        h('td', {}, regra(e)),
+        h('td', {}, h('span', { class: 'chip ' + (e.ativo && e.situacao !== 'ENCERRADO' ? 'ATIVO' : 'DESATIVADO') }, situacao)),
+        h('td', {}, ranking),
+        h('td', {}, e.premiosEntreguesEm ? '' : h('button', {
+          class: e.ativo ? 'botao perigo pequeno' : 'botao pequeno',
+          type: 'button',
+          onclick: async (ev) => {
+            erro.hidden = ok.hidden = true;
+            ev.target.disabled = true;
+            try { desenhar(await api('PATCH', '/admin/eventos/' + e.id, { ativo: !e.ativo })); }
+            catch (err) { mostrarErro(err); ev.target.disabled = false; }
+          },
+        }, e.ativo ? 'Desativar' : 'Reativar')),
+      );
+    }) : [h('tr', {}, h('td', { colspan: 7 }, 'Nenhum evento criado ainda.'))]));
+  };
+
+  // Formulário
+  const tipo = h('select', { name: 'tipo' }, Object.entries(TIPOS_EVENTO).map(([v, n]) => h('option', { value: v }, n)));
+  const nome = h('input', { name: 'nome', maxlength: 60, required: true });
+  const descricao = h('input', { name: 'descricao', maxlength: 200 });
+  const inicio = h('input', { type: 'datetime-local', name: 'inicio', required: true });
+  const fim = h('input', { type: 'datetime-local', name: 'fim', required: true });
+  const mult = h('input', { type: 'number', name: 'multiplicadorLimite', min: 1, max: 10, value: 2 });
+  const bonus = h('select', { name: 'bonusChance' },
+    [['1', 'Sem bônus'], ['1.1', '+10%'], ['1.25', '+25%'], ['1.5', '+50%'], ['2', 'Dobro']].map(([v, n]) => h('option', { value: v }, n)));
+  bonus.value = '1.25';
+  const pacotes = h('input', { type: 'number', name: 'premioPacotes', min: 1, max: 20, value: 3 });
+  const premiados = h('input', { type: 'number', name: 'premiados', min: 1, max: 50, value: 3 });
+  const clube = h('select', { name: 'filtroClube' });
+  const raridade = h('select', { name: 'filtroRaridade' },
+    h('option', { value: '' }, 'Qualquer raridade'), Object.entries(RARIDADES).map(([v, n]) => h('option', { value: v }, n)));
+  const blocoDobrado = h('div', { class: 'grade-campos' },
+    h('label', {}, 'Multiplicar o limite contra o computador por', mult),
+    h('label', {}, 'Chance de virar', bonus));
+  const blocoTorneio = h('div', { class: 'grade-campos' },
+    h('label', {}, 'Pacotes de prêmio (cada)', pacotes),
+    h('label', {}, 'Quantos primeiros colocados ganham', premiados));
+  const blocoTema = h('div', { class: 'grade-campos' },
+    h('label', {}, 'Só figurinhas do clube', clube),
+    h('label', {}, 'Só figurinhas da raridade', raridade));
+  const dica = h('p', { class: 'aviso' });
+  const DICAS = {
+    DOBRADO: 'Durante o período, o limite diário de partidas contra o computador é multiplicado e as partidas que começarem viram mais cartas (contra o computador, entre amigos e na rodinha).',
+    TORNEIO: 'Conta as vitórias (terminar com mais figurinhas do que pôs) em partidas que começaram e terminaram no período, contra o computador, entre amigos ou na rodinha. No fim, os primeiros ganham pacotes, entregues automaticamente.',
+    TEMATICO: 'Como o torneio, mas só valem partidas em que todas as figurinhas do monte são do clube e/ou raridade escolhidos.',
+  };
+  const ajustar = () => {
+    blocoDobrado.hidden = tipo.value !== 'DOBRADO';
+    blocoTorneio.hidden = tipo.value === 'DOBRADO';
+    blocoTema.hidden = tipo.value !== 'TEMATICO';
+    dica.textContent = DICAS[tipo.value];
+    if (!nome.value || Object.values(TIPOS_EVENTO).includes(nome.value)) nome.value = TIPOS_EVENTO[tipo.value];
+  };
+  tipo.addEventListener('change', ajustar);
+  // Padrão: próximo sábado 00:00 até domingo 23:59.
+  const sabado = new Date();
+  sabado.setDate(sabado.getDate() + ((6 - sabado.getDay() + 7) % 7 || 7));
+  inicio.value = brasilia(sabado).slice(0, 11) + '00:00';
+  fim.value = brasilia(new Date(sabado.getTime() + 24 * 60 * 60 * 1000)).slice(0, 11) + '23:59';
+  ajustar();
+
+  const botao = h('button', { class: 'botao', type: 'submit' }, 'Criar evento');
+  const form = h('form', { class: 'form-cupom', onsubmit: async (e) => {
+    e.preventDefault();
+    erro.hidden = ok.hidden = true;
+    botao.disabled = true;
+    try {
+      const corpoEvento = { tipo: tipo.value, nome: nome.value, descricao: descricao.value, inicio: inicio.value.slice(0, 16), fim: fim.value.slice(0, 16) };
+      if (tipo.value === 'DOBRADO') Object.assign(corpoEvento, { multiplicadorLimite: Number(mult.value), bonusChance: Number(bonus.value) });
+      else Object.assign(corpoEvento, { premioPacotes: Number(pacotes.value), premiados: Number(premiados.value) });
+      if (tipo.value === 'TEMATICO') Object.assign(corpoEvento, { filtroClube: clube.value, filtroRaridade: raridade.value });
+      desenhar(await api('POST', '/admin/eventos', corpoEvento));
+      ok.textContent = `Evento "${corpoEvento.nome}" criado. Ele aparece no bafo do app.`;
+      ok.hidden = false;
+    } catch (err) { mostrarErro(err); } finally { botao.disabled = false; }
+  } },
+    h('h3', {}, 'Novo evento'),
+    h('div', { class: 'grade-campos' },
+      h('label', {}, 'Tipo', tipo),
+      h('label', {}, 'Nome', nome),
+      h('label', {}, 'Início (Brasília)', inicio),
+      h('label', {}, 'Fim (Brasília)', fim),
+    ),
+    dica,
+    blocoDobrado, blocoTorneio, blocoTema,
+    h('label', {}, 'Descrição para os jogadores (opcional)', descricao),
+    h('div', {}, botao),
+  );
+
+  alvo.replaceChildren(
+    h('h2', {}, 'Eventos de bafo'),
+    h('p', { class: 'aviso' }, 'Os eventos aparecem no bafo do app (em breve, acontecendo e encerrados há até 7 dias). Horário de Brasília.'),
+    erro, ok,
+    h('div', { class: 'cartao' }, form),
+    h('div', { class: 'caixa-tabela' },
+      h('table', {},
+        h('thead', {}, h('tr', {}, h('th', {}, 'Evento'), h('th', {}, 'Tipo'), h('th', {}, 'Período'), h('th', {}, 'Regra'),
+          h('th', {}, 'Situação'), h('th', {}, 'Ranking'), h('th', {}, ''))),
+        corpo,
+      ),
+    ),
+  );
+  const [lista, clubes] = await Promise.all([api('GET', '/admin/eventos'), api('GET', '/clubes?todas=1')]);
+  clube.replaceChildren(h('option', { value: '' }, 'Qualquer clube'), ...clubes.map((c) => h('option', { value: c.sigla }, `${c.nome} (T${c.temporada ?? 1})`)));
+  desenhar(lista);
+}

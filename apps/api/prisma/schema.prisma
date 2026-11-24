@@ -479,3 +479,40 @@ model RodaParticipante {
   @@id([rodaId, usuarioId])
   @@index([usuarioId, status])
 }
+
+enum TipoEventoBafo {
+  /// Limite contra o computador multiplicado e chance de virar maior.
+  DOBRADO
+  /// Quem vencer mais partidas no período ganha pacotes.
+  TORNEIO
+  /// Torneio que só conta partidas com figurinhas de um clube ou raridade.
+  TEMATICO
+}
+
+/// Evento de bafo criado no painel, com período e regras.
+model EventoBafo {
+  id                  String         @id @default(uuid())
+  nome                String
+  descricao           String?
+  tipo                TipoEventoBafo
+  inicio              DateTime
+  fim                 DateTime
+  ativo               Boolean        @default(true)
+  /// DOBRADO: limite diário contra o computador × este valor.
+  multiplicadorLimite Int            @default(1)
+  /// DOBRADO: chance de virar × este valor (ex.: 1.25).
+  bonusChance         Float          @default(1)
+  /// TEMATICO: só valem partidas em que todas as figurinhas são deste clube (sigla)...
+  filtroClube         String?
+  /// ...ou desta raridade.
+  filtroRaridade      Raridade?
+  /// TORNEIO/TEMATICO: pacotes para cada um dos primeiros colocados.
+  premioPacotes       Int            @default(0)
+  premiados           Int            @default(0)
+  /// Quando os prêmios foram entregues (uma vez só, depois do fim).
+  premiosEntreguesEm  DateTime?
+  criadoPor           String
+  criadoEm            DateTime       @default(now())
+
+  @@index([inicio, fim])
+}

@@ -23,6 +23,7 @@ import { diaLocal } from '../pacotes/dia';
 import { PacotesService } from '../pacotes/pacotes.service';
 import { RecompensaNova, entregarRecompensas } from '../pacotes/recompensas';
 import { rngSeguro } from '../pacotes/rng-seguro';
+import { EventosService } from './eventos.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AmigosService } from './amigos.service';
 import { Tx, travarUsuarios } from './comum';
@@ -45,6 +46,7 @@ export class BafoService {
     @Inject(PrismaService) private readonly prisma: PrismaService,
     @Inject(PacotesService) private readonly pacotes: PacotesService,
     @Inject(AmigosService) private readonly amigos: AmigosService,
+    @Inject(EventosService) private readonly eventos: EventosService,
   ) {}
 
   async listar(eu: string, agora = new Date()) {
@@ -61,10 +63,12 @@ export class BafoService {
       this.jogadasHoje(this.prisma, eu, agora),
       this.jogadasComputadorHoje(this.prisma, eu, agora),
     ]);
+    const efeitos = await this.eventos.efeitos(agora);
     const lista = (l: BafoCompleto[]) => l.map((b) => this.apresentar(b, eu));
     return {
       // Só contra o computador há limite; entre amigos é livre.
-      limiteComputador: BAFO.partidasPorDiaComputador,
+      limiteComputador: BAFO.partidasPorDiaComputador * efeitos.multiplicadorLimite,
+      bonusChance: efeitos.bonusChance,
       jogadasComputadorHoje,
       // Campos das versões antigas do app (que bloqueavam tudo ao atingir limiteDia):
       // um número alto mantém os desafios entre amigos liberados nelas.
@@ -86,11 +90,13 @@ export class BafoService {
   async contraComputador(eu: string, figurinhas: string[], agora = new Date()) {
     return this.prisma.$transaction(async (tx) => {
       await travarUsuarios(tx, [eu]);
-      await this.exigirLimiteComputador(tx, eu, agora);
+      const efeitos = await this.eventos.efeitos(agora);
+      await this.exigirLimiteComputador(tx, eu, agora, BAFO.partidasPorDiaComputador * efeitos.multiplicadorLimite);
       const temporada = await this.temporadaDoMonte(tx, [eu], figurinhas);
       await this.reservar(tx, eu, figurinhas);
       const cartasB = figurinhas.map((c) => this.sortearMesmaRaridade(c, temporada));
       const estado = this.regra(() => montarMonte(figurinhas, cartasB, this.rng));
+      if (efeitos.bonusChance > 1) estado.fatorChance = efeitos.bonusChance;
       const b = await tx.bafo.create({
         data: {
           desafianteId: eu,
@@ -156,6 +162,8 @@ export class BafoService {
       await this.temporadaDoMonte(tx, [eu], [...(b.cartasA as string[]), ...figurinhas]);
       await this.reservar(tx, eu, figurinhas);
       const estado = this.regra(() => montarMonte(b.cartasA as string[], figurinhas, this.rng));
+      const { bonusChance } = await this.eventos.efeitos(agora);
+      if (bonusChance > 1) estado.fatorChance = bonusChance;
       const atualizado = await tx.bafo.update({
         where: { id },
         data: {
@@ -291,11 +299,11 @@ export class BafoService {
     return tx.bafo.count({ where: { dia: diaLocal(agora), desafianteId: usuarioId, contraComputador: true } });
   }
 
-  private async exigirLimiteComputador(tx: Tx, usuarioId: string, agora: Date) {
-    if ((await this.jogadasComputadorHoje(tx, usuarioId, agora)) >= BAFO.partidasPorDiaComputador) {
+  private async exigirLimiteComputador(tx: Tx, usuarioId: string, agora: Date, limite: number) {
+    if ((await this.jogadasComputadorHoje(tx, usuarioId, agora)) >= limite) {
       throw new ConflictException({
         codigo: 'LIMITE_BAFO_DIA',
-        mensagem: `Limite de ${BAFO.partidasPorDiaComputador} partidas contra o computador por dia atingido. Volte amanhã, ou desafie um amigo: entre amigos não tem limite!`,
+        mensagem: `Limite de ${limite} partidas contra o computador por dia atingido. Volte amanhã, ou desafie um amigo: entre amigos não tem limite!`,
       });
     }
   }

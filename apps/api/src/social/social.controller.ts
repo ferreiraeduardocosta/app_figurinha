@@ -4,6 +4,7 @@ import { UsuarioAutenticado } from '../auth/auth.service';
 import * as v from '../comum/validacao';
 import { AmigosService } from './amigos.service';
 import { BafoService } from './bafo.service';
+import { EventosService } from './eventos.service';
 import { RodaService } from './roda.service';
 import { RankingService } from './ranking.service';
 import { TrocasService } from './trocas.service';
@@ -20,6 +21,7 @@ export class SocialController {
     @Inject(RankingService) private readonly rankingService: RankingService,
     @Inject(BafoService) private readonly bafo: BafoService,
     @Inject(RodaService) private readonly rodas: RodaService,
+    @Inject(EventosService) private readonly eventos: EventosService,
   ) {}
 
   /** Ranking de colecionadores: ?escopo=geral (padrão) ou amigos. */
@@ -94,6 +96,12 @@ export class SocialController {
   @Get('bafo')
   listarBafo(@UsuarioAtual() u: UsuarioAutenticado) {
     return this.bafo.listar(u.id);
+  }
+
+  /** Eventos de bafo: agora, em breve e encerrados há pouco, com ranking. */
+  @Get('bafo/eventos')
+  eventosBafo(@UsuarioAtual() u: UsuarioAutenticado) {
+    return this.eventos.listar(u.id);
   }
 
   // ---------------- Rodinha de bafo ----------------

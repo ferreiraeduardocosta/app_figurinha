@@ -240,6 +240,14 @@ Mini jogo de "bafo" com figurinhas repetidas, contra o computador ou contra amig
   começa não levar quase todo o monte (vantagem ≤ 0,2 carta em simulação). Vez não jogada em 24 h
   é pulada.
 - **Limite:** 10 partidas por dia contra o computador (`BAFO.partidasPorDiaComputador`). Entre amigos não há limite.
+- **Eventos (painel, aba Eventos):** criados com nome, período (horário de Brasília, até 31 dias) e tipo:
+  - *Fim de semana dobrado*: limite contra o computador × N e chance de virar × 1,1 a 2 nas
+    partidas que **começarem** no período (computador, amigos e rodinha);
+  - *Torneio relâmpago*: conta vitórias (terminar com mais figurinhas do que pôs) em partidas que
+    começaram e terminaram no período; no fim, os N primeiros ganham pacotes extras;
+  - *Bafo temático*: torneio que só conta montes com todas as figurinhas do clube e/ou raridade escolhidos.
+  Os prêmios são entregues uma vez, na primeira consulta depois do fim (app ou painel). O app
+  mostra eventos em breve (14 dias), acontecendo e encerrados há até 7 dias, com o ranking.
 - **Segurança:** o sorteio é feito no servidor com o gerador criptográfico. A precisão é
   informada pelo app (dá para trapacear com um app modificado); o ganho máximo é limitado
   pelo monte de 3 cartas e pelo limite diário.

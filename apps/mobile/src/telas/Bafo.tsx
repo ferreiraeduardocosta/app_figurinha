@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { api, ErroApi, ListaAmigos, ListaBafo, ListaRodas, PartidaBafo, RodaBafo, UsuarioResumo } from '../api';
+import { api, ErroApi, EventoBafo, ListaAmigos, ListaBafo, ListaRodas, PartidaBafo, RodaBafo, UsuarioResumo } from '../api';
 import { Botao } from '../componentes/Botao';
 import { Figurinha } from '../componentes/Figurinha';
 import { MiniFigurinhas, SeletorFigurinhas } from '../componentes/MiniFigurinhas';
 import { useJogo } from '../jogo';
-import { cores } from '../tema';
+import { cores, estiloRaridade } from '../tema';
 
 const nativo = Platform.OS !== 'web';
 const MAX_CARTAS = 3;
@@ -101,6 +101,7 @@ function Lobby({
   const { sessao, album, recarregar } = useJogo();
   const [lista, setLista] = useState<ListaBafo | null>(null);
   const [rodas, setRodas] = useState<ListaRodas | null>(null);
+  const [eventos, setEventos] = useState<EventoBafo[]>([]);
   const [convidando, setConvidando] = useState<Set<string> | null>(null);
   const [amigos, setAmigos] = useState<ListaAmigos | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -109,10 +110,16 @@ function Lobby({
 
   const carregar = useCallback(async () => {
     try {
-      const [l, a, r] = await Promise.all([api.bafo(token), api.amigos(token), api.rodas(token).catch(() => null)]);
+      const [l, a, r, ev] = await Promise.all([
+        api.bafo(token),
+        api.amigos(token),
+        api.rodas(token).catch(() => null),
+        api.eventosBafo(token).catch(() => [] as EventoBafo[]),
+      ]);
       setLista(l);
       setAmigos(a);
       setRodas(r);
+      setEventos(ev);
       setErro(null);
     } catch (e) {
       setErro(mensagemDeErro(e));
@@ -203,6 +210,14 @@ function Lobby({
                       {p.minhaVez ? 'Sua vez de bater! Toque para jogar.' : `Vez de ${p.adversario.apelido}.`}
                     </Text>
                   </Pressable>
+                ))}
+              </Secao>
+            )}
+
+            {eventos.length > 0 && (
+              <Secao titulo="Eventos">
+                {eventos.map((e) => (
+                  <CartaoEvento key={e.id} evento={e} />
                 ))}
               </Secao>
             )}
@@ -937,6 +952,66 @@ function Barra({ titulo, aoVoltar, escura = false }: { titulo: string; aoVoltar:
       <Text style={[estilos.titulo, { color: cor }]} numberOfLines={1}>
         {titulo}
       </Text>
+    </View>
+  );
+}
+
+const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+function quando(iso: string) {
+  const d = new Date(iso);
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `${DIAS[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${hora}`;
+}
+
+const ICONE_EVENTO: Record<EventoBafo['tipo'], string> = { DOBRADO: '⚡', TORNEIO: '🏆', TEMATICO: '🎯' };
+
+/** Cartão de um evento de bafo: regra, período e, nos torneios, o ranking. */
+function CartaoEvento({ evento: e }: { evento: EventoBafo }) {
+  const agora = e.situacao === 'AGORA';
+  const tema = [e.filtroClube && `do clube ${e.filtroClube}`, e.filtroRaridade && `de raridade ${estiloRaridade[e.filtroRaridade].nome}`]
+    .filter(Boolean)
+    .join(' e ');
+  const regra =
+    e.tipo === 'DOBRADO'
+      ? `${e.multiplicadorLimite}× partidas contra o computador` +
+        (e.bonusChance > 1 ? ` e ${Math.round((e.bonusChance - 1) * 100)}% mais chance de virar` : '') +
+        ' em todas as partidas.'
+      : `Vença mais partidas${e.tipo === 'TEMATICO' ? ` só com figurinhas ${tema}` : ''}: os ${e.premiados} primeiros ganham ${e.premioPacotes} pacote${e.premioPacotes > 1 ? 's' : ''}. Vitória = sair com mais figurinhas do que pôs.`;
+  const periodo =
+    e.situacao === 'EM_BREVE' ? `Começa ${quando(e.inicio)} · vai até ${quando(e.fim)}` : e.situacao === 'AGORA' ? `Até ${quando(e.fim)}` : `Encerrado em ${quando(e.fim)}`;
+  return (
+    <View style={[estilos.item, agora && { borderColor: cores.destaque, borderWidth: 2 }, e.situacao === 'ENCERRADO' && { opacity: 0.75 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text style={{ fontSize: 22 }} accessibilityElementsHidden importantForAccessibility="no">
+          {ICONE_EVENTO[e.tipo]}
+        </Text>
+        <Text style={[estilos.itemTitulo, { flex: 1 }]}>{e.nome}</Text>
+        <Text style={[estilos.legenda, { fontWeight: '800', color: agora ? cores.destaque : cores.apagado }]}>
+          {agora ? 'AGORA' : e.situacao === 'EM_BREVE' ? 'EM BREVE' : 'FIM'}
+        </Text>
+      </View>
+      {!!e.descricao && <Text style={estilos.legenda}>{e.descricao}</Text>}
+      <Text style={estilos.legenda}>{regra}</Text>
+      <Text style={[estilos.legenda, { fontWeight: '700' }]}>{periodo}</Text>
+      {e.ranking && e.situacao !== 'EM_BREVE' && (
+        <View style={{ gap: 2, marginTop: 4 }}>
+          {e.ranking.length === 0 ? (
+            <Text style={estilos.legenda}>Ninguém venceu ainda. Seja o primeiro!</Text>
+          ) : (
+            e.ranking.slice(0, 5).map((r, i) => (
+              <Text key={r.apelido} style={estilos.legenda}>
+                {['🥇', '🥈', '🥉'][i] ?? `${i + 1}º`} {r.apelido} · {r.vitorias} vitória{r.vitorias > 1 ? 's' : ''}
+              </Text>
+            ))
+          )}
+          <Text style={[estilos.legenda, { color: cores.destaque, fontWeight: '800' }]}>
+            {e.minhaPosicao
+              ? `Você: ${e.minhaPosicao}º lugar, ${e.minhasVitorias} vitória${e.minhasVitorias > 1 ? 's' : ''}` +
+                (e.situacao === 'ENCERRADO' && e.minhaPosicao <= e.premiados ? ` · ganhou ${e.premioPacotes} pacote${e.premioPacotes > 1 ? 's' : ''}!` : '')
+              : 'Você ainda não venceu neste evento.'}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

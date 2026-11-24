@@ -121,10 +121,31 @@ export interface ListaBafo {
   /** Limite diário contra o computador (entre amigos não há limite). */
   limiteComputador?: number;
   jogadasComputadorHoje?: number;
+  /** Bônus de chance de virar de um evento "dobrado" em andamento (1 = sem bônus). */
+  bonusChance?: number;
   convitesRecebidos: PartidaBafo[];
   convitesEnviados: PartidaBafo[];
   emAndamento: PartidaBafo[];
   recentes: PartidaBafo[];
+}
+
+export interface EventoBafo {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  tipo: 'DOBRADO' | 'TORNEIO' | 'TEMATICO';
+  inicio: string;
+  fim: string;
+  situacao: 'EM_BREVE' | 'AGORA' | 'ENCERRADO';
+  multiplicadorLimite: number;
+  bonusChance: number;
+  filtroClube: string | null;
+  filtroRaridade: Raridade | null;
+  premioPacotes: number;
+  premiados: number;
+  ranking: { apelido: string; vitorias: number }[] | null;
+  minhasVitorias: number;
+  minhaPosicao: number | null;
 }
 
 export interface Missao {
@@ -397,6 +418,7 @@ export const api = {
   recusarBafo: (token: string, id: string) => chamar<PartidaBafo>('POST', `/bafo/${id}/recusar`, token),
   cancelarBafo: (token: string, id: string) => chamar<PartidaBafo>('POST', `/bafo/${id}/cancelar`, token),
   baterBafo: (token: string, id: string, precisao: number) => chamar<PartidaBafo>('POST', `/bafo/${id}/bater`, token, { precisao }),
+  eventosBafo: (token: string) => chamar<EventoBafo[]>('GET', '/bafo/eventos', token),
   rodas: (token: string) => chamar<ListaRodas>('GET', '/bafo/rodas', token),
   roda: (token: string, id: string) => chamar<RodaBafo>('GET', `/bafo/rodas/${id}`, token),
   criarRoda: (token: string, convidados: string[], figurinhas: string[]) =>
