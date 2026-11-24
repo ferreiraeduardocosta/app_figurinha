@@ -750,10 +750,12 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: MesaDados; aoVolt
     });
     return partida.jogadores.map((j) => conta[j.apelido] ?? 0);
   }, [partida, mostradas]);
-  // Duas mãos: entram pelas laterais (minha vez, de baixo; adversário, de cima) e se encontram no monte.
-  const maoY = mao.interpolate({ inputRange: [0, 1, 2], outputRange: maoDeQuem === 'EU' ? [180, 0, 180] : [-180, 0, -180] });
-  const maoEsqX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [-120, -38, -120] });
-  const maoDirX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [120, 38, 120] });
+  // Duas mãos sobrepostas, uma em cima da outra (como no bafo de verdade): descem juntas sobre o monte
+  // (minha vez, de baixo; adversário, de cima) e se apertam um pouco na hora da batida.
+  const maoY = mao.interpolate({ inputRange: [0, 1, 2], outputRange: maoDeQuem === 'EU' ? [200, 0, 200] : [-200, 0, -200] });
+  const maoTrasX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [-30, -16, -30] });
+  const maoFrenteX = mao.interpolate({ inputRange: [0, 1, 2], outputRange: [30, 12, 30] });
+  const maoAperto = mao.interpolate({ inputRange: [0, 0.85, 1, 1.15, 2], outputRange: [1, 1, 0.92, 1, 1] });
   const maoOpacidade = mao.interpolate({ inputRange: [0, 0.2, 1, 1.8, 2], outputRange: [0, 1, 1, 1, 0] });
   const giro = maoDeQuem === 'EU' ? '0deg' : '180deg';
   const tremorX = tremor.interpolate({ inputRange: [-1, 1], outputRange: [-6, 6] });
@@ -820,14 +822,16 @@ function Mesa({ inicial, aoVoltar, aoJogarDeNovo }: { inicial: MesaDados; aoVolt
           );
         })}
         <View style={estilos.maos} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <Animated.Text
-            style={[estilos.mao, { opacity: maoOpacidade, transform: [{ translateX: maoEsqX }, { translateY: maoY }, { rotate: giro }, { scaleX: -1 }] }]}
-          >
-            🖐️
-          </Animated.Text>
-          <Animated.Text style={[estilos.mao, { opacity: maoOpacidade, transform: [{ translateX: maoDirX }, { translateY: maoY }, { rotate: giro }] }]}>
-            🖐️
-          </Animated.Text>
+          <Animated.View style={[estilos.maosJuntas, { opacity: maoOpacidade, transform: [{ translateY: maoY }, { rotate: giro }, { scale: maoAperto }] }]}>
+            {/* Mão de trás: espelhada (esquerda), mais alta e um pouco apagada para dar profundidade. */}
+            <Animated.Text
+              style={[estilos.mao, estilos.maoTras, { transform: [{ translateX: maoTrasX }, { translateY: -12 }, { rotate: '-14deg' }, { scaleX: -1 }] }]}
+            >
+              🖐️
+            </Animated.Text>
+            {/* Mão da frente: por cima da outra. */}
+            <Animated.Text style={[estilos.mao, { transform: [{ translateX: maoFrenteX }, { translateY: 10 }, { rotate: '10deg' }] }]}>🖐️</Animated.Text>
+          </Animated.View>
         </View>
         {ouro && (
           <Animated.View style={[StyleSheet.absoluteFill, estilos.ouro, { opacity: brilho }]} pointerEvents="none">
@@ -1080,8 +1084,10 @@ const estilos = StyleSheet.create({
   },
   versoTexto: { fontSize: 8, fontWeight: '800', color: '#FDE047', textAlign: 'center', letterSpacing: 1 },
   cartaVirada: { borderWidth: 3, borderRadius: 10 },
-  maos: { position: 'absolute', left: 0, right: 0, top: 95, flexDirection: 'row', justifyContent: 'center' },
-  mao: { fontSize: 84, marginHorizontal: -10 },
+  maos: { position: 'absolute', left: 0, right: 0, top: 95, alignItems: 'center' },
+  maosJuntas: { width: 120, height: 120 },
+  mao: { position: 'absolute', left: 10, top: 0, width: 100, textAlign: 'center', fontSize: 84 },
+  maoTras: { opacity: 0.8 },
   ouro: { backgroundColor: 'rgba(251, 191, 36, 0.35)', alignItems: 'center', justifyContent: 'center' },
   ouroTexto: {
     fontSize: 26,
